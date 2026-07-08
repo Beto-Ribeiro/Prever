@@ -175,21 +175,27 @@ export async function getWebAccessForUser(authUser) {
   }
 }
 
-export async function createWebAccessRequest({ institution, name, email, role, agentType }) {
+export async function createWebAccessRequest({ institution, name, email, role, agentType, documentNumber }) {
   const payload = {
     saw_nome: name?.trim(),
     saw_email: email?.trim().toLowerCase(),
+    saw_documento: documentNumber?.trim() || null,
     saw_instituicao: institution?.trim(),
     saw_cargo: role?.trim(),
     saw_tipo_agente: agentType?.trim() || role?.trim(),
     saw_status: 'pendente',
   }
 
-  const { data, error } = await supabase
+  if (!payload.saw_nome || !payload.saw_email || !payload.saw_instituicao || !payload.saw_cargo) {
+    throw new Error('Preencha todos os campos obrigatórios antes de solicitar acesso.')
+  }
+
+  // Importante: visitantes/anon têm permissão para INSERIR solicitações, mas não para
+  // LER a tabela. Usar `.select()` depois do insert faz o PostgREST exigir uma política
+  // SELECT e derruba o fluxo com erro de RLS, mesmo quando a solicitação foi criada.
+  const { error } = await supabase
     .from('Solicitacao_Acesso_Web')
-    .insert(payload)
-    .select('*')
-    .single()
+    .insert(payload, { returning: 'minimal' })
 
   if (error) {
     if (isMissingRelationError(error)) {
@@ -198,8 +204,13 @@ export async function createWebAccessRequest({ institution, name, email, role, a
       )
     }
 
+    const message = String(error.message || '').toLowerCase()
+    if (message.includes('row level security') || message.includes('policy')) {
+      throw new Error('Não foi possível enviar a solicitação porque a política pública de cadastro está bloqueando o envio.')
+    }
+
     throw error
   }
 
-  return data
+  return { ...payload, created: true }
 }

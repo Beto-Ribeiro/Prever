@@ -31,6 +31,7 @@ export function mapAlertRow(row) {
     lat: row.alw_lat,
     lng: row.alw_lng,
     metadata: row.alw_metadata || {},
+    radiusKm: row.alw_metadata?.raio_km || row.alw_metadata?.radiusKm || null,
     sentAt: row.alw_created_at,
   }
 }
@@ -62,6 +63,23 @@ export async function listAlerts(filters = {}) {
   return (data || []).map(mapAlertRow)
 }
 
+export async function countRecipientsInArea({ lat, lng, radiusKm }) {
+  if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) return 0
+
+  const { data, error } = await supabase.rpc('usuarios_no_raio', {
+    p_lat: Number(lat),
+    p_lng: Number(lng),
+    p_raio_km: Math.max(0.5, Number(radiusKm) || 3),
+  })
+
+  if (error) {
+    console.warn('Não foi possível contar destinatários por área:', error.message)
+    return 0
+  }
+
+  return Array.isArray(data) ? data.length : 0
+}
+
 export async function countRecipients() {
   const { count, error } = await supabase
     .from('Cidadao')
@@ -90,7 +108,7 @@ export async function countAlertsToday() {
   return count || 0
 }
 
-export async function dispatchAlert({ form, currentUser, recipients }) {
+export async function dispatchAlert({ form, currentUser, recipients, radiusKm }) {
   if (!currentUser?.id) throw new Error('Usuário inválido para disparar alerta.')
 
   const payload = {
@@ -107,6 +125,10 @@ export async function dispatchAlert({ form, currentUser, recipients }) {
     alw_metadata: {
       origem: 'web-reportar',
       criado_por_email: currentUser.email || null,
+      segmentacao: 'raio_geografico',
+      raio_km: Math.max(0.5, Number(radiusKm) || 3),
+      centro: { lat: Number(form.lat), lng: Number(form.lng) },
+      push_scope: 'usuarios_no_raio',
     },
   }
 

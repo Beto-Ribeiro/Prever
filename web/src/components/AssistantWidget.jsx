@@ -168,36 +168,6 @@ function UserAvatar({ account }) {
   )
 }
 
-function AccountBadge({ account, compact = false }) {
-  if (!account) return null
-
-  return (
-    <div className={`flex items-center gap-2 ${compact ? 'justify-end' : ''}`}>
-      {account.avatar ? (
-        <img
-          src={account.avatar}
-          alt=""
-          className="h-7 w-7 rounded-full border border-white/30 object-cover"
-          aria-hidden="true"
-        />
-      ) : (
-        <span
-          className="flex h-7 w-7 items-center justify-center rounded-full border border-white/30 bg-slate-200 text-[10px] font-black text-slate-700"
-          aria-hidden="true"
-        >
-          {initialsFromName(account.name)}
-        </span>
-      )}
-
-      <span className={`min-w-0 ${compact ? 'text-right' : ''}`}>
-        <span className="block truncate text-[11px] font-black leading-tight text-inherit">
-          {account.name || 'Usuário'}
-        </span>
-      </span>
-    </div>
-  )
-}
-
 function clearPendingAiActions() {
   window.__SMDN_AI_PENDING_USER_ACTION = null
   window.__SMDN_AI_PENDING_DASHBOARD_ACTION = null
@@ -268,7 +238,7 @@ function normalizeDashboardAction(action) {
   }
 }
 
-export default function AssistantWidget({ currentScreen, setCurrentScreen, compact = false }) {
+export default function AssistantWidget({ currentScreen, setCurrentScreen, compact = false, dense = false }) {
   const { user, session } = useAuth()
   const { settings } = useSmdnSettings()
   const [open, setOpen] = useState(false)
@@ -522,7 +492,7 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
         ref={buttonRef}
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-on-dark hover:bg-white/5 hover:text-white transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${compact ? 'justify-center' : ''}`}
+        className={`w-full flex items-center gap-3 px-3 ${dense ? 'py-2' : 'py-2.5'} rounded-lg text-sm font-medium text-text-on-dark hover:bg-white/5 hover:text-white transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${compact ? 'justify-center' : ''}`}
         aria-expanded={open}
         aria-label="Abrir Nimbo"
       >

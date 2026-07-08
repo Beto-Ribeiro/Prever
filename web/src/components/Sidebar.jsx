@@ -1,18 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth.js'
-import dashboardIcon from '../assets/menu/ativo/map-pin.svg'
-import dashboardIconWHITE from '../assets/menu/hover/map-pin.svg'
-import reportIcon from '../assets/menu/ativo/flag.svg'
-import reportIconWHITE from '../assets/menu/hover/flag.svg'
-import ocorrenciasIcon from '../assets/menu/ativo/alert-triangle.svg'
-import ocorrenciasIconWHITE from '../assets/menu/hover/alert-triangle.svg'
-import relatoriosIcon from '../assets/menu/ativo/pie-chart.svg'
-import relatoriosIconWHITE from '../assets/menu/hover/pie-chart.svg'
-import auditoriaIcon from '../assets/menu/ativo/lock.svg'
-import auditoriaIconWHITE from '../assets/menu/hover/lock.svg'
-import perfilIcon from '../assets/menu/ativo/user.svg'
-import perfilIconWHITE from '../assets/menu/hover/user.svg'
-import logoutIcon from '../assets/menu/ativo/log-out.svg'
 import logoClaro from '../assets/logo-claro.svg'
 import logoEscuro from '../assets/logo.svg'
 import faviconIcon from '../assets/favicon.svg'
@@ -21,6 +8,89 @@ import AssistantWidget from './AssistantWidget.jsx'
 import { useSmdnSettings } from '../hooks/useSmdnSettings.js'
 import { supabase } from '../backend/supabase/client.js'
 import { toFriendlyMessage } from '../utils/friendlyMessages.js'
+
+
+function FeatherIcon({ name, size = 20 }) {
+  const commonProps = {
+    width: size,
+    height: size,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: '2',
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    'aria-hidden': 'true',
+    focusable: 'false',
+  }
+
+  const paths = {
+    'map-pin': (
+      <>
+        <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 1 1 18 0Z" />
+        <circle cx="12" cy="10" r="3" />
+      </>
+    ),
+    flag: (
+      <>
+        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+        <line x1="4" y1="22" x2="4" y2="15" />
+      </>
+    ),
+    home: (
+      <>
+        <path d="M3 11.5 12 4l9 7.5" />
+        <path d="M5.5 10.5V20h13v-9.5" />
+        <path d="M9.5 20v-6h5v6" />
+      </>
+    ),
+    'alert-triangle': (
+      <>
+        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </>
+    ),
+    'pie-chart': (
+      <>
+        <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+        <path d="M22 12A10 10 0 0 0 12 2v10z" />
+      </>
+    ),
+    lock: (
+      <>
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+      </>
+    ),
+    user: (
+      <>
+        <path d="M20 21a8 8 0 0 0-16 0" />
+        <circle cx="12" cy="7" r="4" />
+      </>
+    ),
+    shield: (
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+    ),
+    users: (
+      <>
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </>
+    ),
+    'log-out': (
+      <>
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+        <polyline points="16 17 21 12 16 7" />
+        <line x1="21" y1="12" x2="9" y2="12" />
+      </>
+    ),
+  }
+
+  return <svg {...commonProps}>{paths[name] || paths.user}</svg>
+}
 
 function getLocalDevBypass() {
   const isLocalhost =
@@ -40,17 +110,18 @@ function getLocalDevBypass() {
 }
 
 const NAV_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard', icon: <img src={dashboardIcon} width="20" height="20" alt="map-pin" />, iconWhite: <img src={dashboardIconWHITE} width="20" height="20" alt="map-pin" /> },
-  { id: 'reportar', label: 'Reportar', icon: <img src={reportIcon} width="20" height="20" alt="flag" />, iconWhite: <img src={reportIconWHITE} width="20" height="20" alt="flag" /> },
-  { id: 'ocorrencias', label: 'Ocorrências', icon: <img src={ocorrenciasIcon} width="20" height="20" alt="alert-triangle" />, iconWhite: <img src={ocorrenciasIconWHITE} width="20" height="20" alt="alert-triangle" /> },
-  { id: 'relatorios', label: 'Relatórios', icon: <img src={relatoriosIcon} width="20" height="20" alt="pie-chart" />, iconWhite: <img src={relatoriosIconWHITE} width="20" height="20" alt="pie-chart" /> },
-  { id: 'auditoria', label: 'Auditoria', icon: <img src={auditoriaIcon} width="20" height="20" alt="lock" />, iconWhite: <img src={auditoriaIconWHITE} width="20" height="20" alt="lock" /> },
-  { id: 'perfil', label: 'Perfil', icon: <img src={perfilIcon} width="20" height="20" alt="user" />, iconWhite: <img src={perfilIconWHITE} width="20" height="20" alt="user" /> },
+  { id: 'dashboard', label: 'Dashboard', icon: <FeatherIcon name="map-pin" />, iconWhite: <FeatherIcon name="map-pin" /> },
+  { id: 'reportar', label: 'Reportar', icon: <FeatherIcon name="flag" />, iconWhite: <FeatherIcon name="flag" /> },
+  { id: 'abrigos', label: 'Abrigos', permissionKey: 'ocorrencias', icon: <FeatherIcon name="home" />, iconWhite: <FeatherIcon name="home" /> },
+  { id: 'ocorrencias', label: 'Ocorrências', icon: <FeatherIcon name="alert-triangle" />, iconWhite: <FeatherIcon name="alert-triangle" /> },
+  { id: 'relatorios', label: 'Relatórios', icon: <FeatherIcon name="pie-chart" />, iconWhite: <FeatherIcon name="pie-chart" /> },
+  { id: 'auditoria', label: 'Auditoria', icon: <FeatherIcon name="lock" />, iconWhite: <FeatherIcon name="lock" /> },
+  { id: 'perfil', label: 'Perfil', icon: <FeatherIcon name="user" />, iconWhite: <FeatherIcon name="user" /> },
 ]
 
 const ADMIN_ITEMS = [
-  { id: 'admin', label: 'Painel do Admin', icon: <img src={auditoriaIcon} width="20" height="20" alt="admin" />, iconWhite: <img src={auditoriaIconWHITE} width="20" height="20" alt="admin" /> },
-  { id: 'users', label: 'Lista de Usuário', icon: <img src={perfilIcon} width="20" height="20" alt="usuários" />, iconWhite: <img src={perfilIconWHITE} width="20" height="20" alt="usuários" /> },
+  { id: 'admin', label: 'Painel do Admin', icon: <FeatherIcon name="shield" />, iconWhite: <FeatherIcon name="shield" /> },
+  { id: 'users', label: 'Lista de Usuário', icon: <FeatherIcon name="users" />, iconWhite: <FeatherIcon name="users" /> },
 ]
 
 const DASHBOARD_ALERTS_SEEN_KEY = 'smdn_dashboard_alerts_seen_count'
@@ -75,20 +146,29 @@ function getInitials(name) {
 
 function UserAvatar({ user, size = 'sm' }) {
   const avatarUrl = user?.avatar || user?.perfil?.prf_avatar_url
-  const sizeClass = size === 'lg' ? 'w-16 h-16 text-xl' : 'w-8 h-8 text-xs'
+  const sizeClasses = {
+    sm: 'w-8 h-8 text-xs',
+    collapsed: 'w-10 h-10 text-xs',
+    lg: 'w-16 h-16 text-xl',
+  }
+  const sizeClass = sizeClasses[size] || sizeClasses.sm
+  const compactClass =
+    size === 'collapsed'
+      ? 'border-white/70 bg-bg-surface shadow-sm ring-2 ring-white/40'
+      : 'border-white/10 bg-text-main/30'
 
   if (avatarUrl) {
     return (
       <img
         src={avatarUrl}
         alt={user?.name || 'Foto do usuário'}
-        className={`${sizeClass} rounded-full object-cover border border-white/10 bg-text-main/30 flex-shrink-0`}
+        className={`${sizeClass} block rounded-full object-cover object-center border ${compactClass} flex-shrink-0`}
       />
     )
   }
 
   return (
-    <div className={`${sizeClass} rounded-full bg-text-main/30 flex items-center justify-center flex-shrink-0`}>
+    <div className={`${sizeClass} rounded-full ${compactClass} flex items-center justify-center flex-shrink-0`}>
       <span className="text-text-on-dark font-bold">
         {getInitials(user?.name)}
       </span>
@@ -107,11 +187,11 @@ function NavButton({ item, currentScreen, setCurrentScreen, badge, collapsed = f
       onClick={() => setCurrentScreen(item.id)}
       aria-current={active ? 'page' : undefined}
       className={`
-        group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left transition-all duration-200 ease-out ${collapsed ? 'justify-center' : ''}
+        group relative w-full flex items-center gap-3 rounded-lg text-sm font-medium text-left transition-all duration-200 ease-out ${collapsed ? 'h-9 justify-center px-0 py-0' : 'h-9 px-3 py-0'}
         focus-visible:outline focus-visible:outline-2 focus-visible:outline-text-main
         ${active
           ? 'bg-text-main text-white shadow-sm'
-          : 'text-text-on-dark hover:bg-text-main/10 hover:text-text-main hover:translate-x-1 hover:shadow-sm'
+          : `text-text-on-dark hover:bg-text-main/10 hover:text-text-main hover:shadow-sm ${collapsed ? '' : 'hover:translate-x-1'}`
         }
       `}
     >
@@ -144,7 +224,7 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
   const permissions = displayUser?.permissions || {}
   const visibleNavItems = NAV_ITEMS.filter((item) => {
     if (item.id === 'perfil') return true
-    return Boolean(permissions[item.id]) || devBypassAuth
+    return Boolean(permissions[item.permissionKey || item.id]) || devBypassAuth
   })
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
@@ -256,18 +336,18 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
   return (
     <>
       <aside
-        className={`sidebar-scroll relative flex flex-col h-screen bg-bg-sidebar shadow-sidebar overflow-y-auto z-[10000] transition-[width,min-width] duration-200 ${collapsed ? 'w-[76px] min-w-[76px]' : 'w-[220px] min-w-[220px]'}`}
+        className={`sidebar-scroll relative flex h-screen flex-col overflow-hidden bg-bg-sidebar shadow-sidebar z-[10000] transition-[width,min-width] duration-200 ${collapsed ? 'w-[76px] min-w-[76px]' : 'w-[220px] min-w-[220px]'}`}
       >
-        <div className={`relative border-b border-white/5 ${collapsed ? 'px-3 pt-14 pb-8' : 'px-5 pt-6 pb-6'}`}>
+        <div className={`relative shrink-0 border-b border-white/5 ${collapsed ? 'px-2 pt-9 pb-3' : 'px-5 pt-5 pb-4'}`}>
           <img
             src={collapsed ? faviconIcon : (effectiveTheme === 'light' ? logoEscuro : logoClaro)}
             alt="SMDN Logo"
-            className={collapsed ? 'mx-auto h-11 w-11 max-w-[44px] rounded-xl object-contain' : 'w-full max-w-[160px]'}
+            className={collapsed ? 'mx-auto h-10 w-10 max-w-[40px] rounded-xl object-contain' : 'h-12 w-full max-w-[160px] object-contain object-left'}
           />
           <button
             type="button"
             onClick={() => setCollapsed((value) => !value)}
-            className={`absolute ${collapsed ? 'left-1/2 top-3 -translate-x-1/2' : 'right-2 top-2'} inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-text-on-dark/80 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white`}
+            className={`absolute ${collapsed ? 'left-1/2 top-2 -translate-x-1/2' : 'right-2 top-2'} inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-text-on-dark/80 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white`}
             aria-label={collapsed ? 'Expandir menu lateral' : 'Minimizar menu lateral'}
             title={collapsed ? 'Expandir menu' : 'Minimizar menu'}
           >
@@ -307,7 +387,7 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
           </button>
         </div>
 
-        <nav className={`flex-1 py-4 space-y-0.5 ${collapsed ? 'px-2' : 'px-3'}`}>
+        <nav className={`min-h-0 flex-1 overflow-hidden ${collapsed ? 'px-2 py-2 space-y-1' : 'px-3 py-2.5 space-y-0.5'}`}>
           {visibleNavItems.map((item) => (
             <NavButton
               key={item.id}
@@ -320,8 +400,8 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
           ))}
 
           {showAdmin && (
-            <div className="pt-4 mt-4 border-t border-white/10">
-              <p className={`px-3 pb-2 text-[10px] uppercase tracking-[0.18em] text-text-on-dark/50 font-bold ${collapsed ? 'sr-only' : ''}`}>
+            <div className={collapsed ? 'mt-2 border-t border-white/10 pt-2' : 'pt-2 mt-2 border-t border-white/10'}>
+              <p className={`px-3 pb-1 text-[10px] uppercase tracking-[0.18em] text-text-on-dark/50 font-bold ${collapsed ? 'sr-only' : ''}`}>
                 Administração
               </p>
 
@@ -341,8 +421,8 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
           )}
         </nav>
 
-        <div className={`px-3 py-4 border-t border-white/5 space-y-2 ${collapsed ? 'px-2' : 'px-3'}`}>
-          <AssistantWidget currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} compact={collapsed} />
+        <div className={`shrink-0 border-t border-white/5 ${collapsed ? 'px-2 py-2 space-y-1' : 'px-3 py-2.5 space-y-1'}`}>
+          <AssistantWidget currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} compact={collapsed} dense />
 
           {displayUser && (
             <div className="relative">
@@ -350,9 +430,14 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
                 ref={buttonRef}
                 type="button"
                 onClick={() => { setAccountSwitchError(''); setShowProfilePopup((value) => !value) }}
-                className={`w-full flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-white/5 transition-all ${collapsed ? 'justify-center' : ''}`}
+                title={collapsed ? `${displayUser.name} - abrir perfil` : undefined}
+                aria-label={collapsed ? `${displayUser.name} - abrir perfil` : undefined}
+                className={collapsed
+                  ? 'mx-auto flex h-11 w-11 items-center justify-center rounded-2xl p-0 transition-all hover:bg-text-main/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-text-main'
+                  : 'w-full flex items-center gap-3 rounded-lg px-3 py-1.5 hover:bg-white/5 transition-all'
+                }
               >
-                <UserAvatar user={displayUser} />
+                <UserAvatar user={displayUser} size={collapsed ? 'collapsed' : 'sm'} />
 
                 <div className={collapsed ? 'sr-only' : 'min-w-0 text-left'}>
                   <p className="text-text-on-dark text-xs font-semibold truncate">
@@ -383,7 +468,7 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
                     title="Sair"
                     aria-label="Sair da conta"
                   >
-                    <img src={logoutIcon} width="18" height="18" alt="" />
+                    <FeatherIcon name="log-out" size={18} />
                   </button>
 
                   <div className="flex flex-col items-center">
@@ -471,13 +556,7 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
 
           <div className="relative bg-bg-surface rounded-2xl shadow-modal px-8 py-7 flex flex-col items-center gap-4 max-w-xs w-full mx-4 animate-slide-up border border-border-soft">
             <div className="w-12 h-12 rounded-full bg-text-main/10 text-text-main flex items-center justify-center">
-              <img
-                src={logoutIcon}
-                width="22"
-                height="22"
-                alt="log-out"
-                className="logout-confirm-icon-img"
-              />
+              <FeatherIcon name="log-out" size={22} />
             </div>
 
             <div className="text-center">

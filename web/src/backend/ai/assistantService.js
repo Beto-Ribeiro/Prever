@@ -49,7 +49,7 @@ function getFirebaseApp() {
 
 function sanitizeText(value, maxLength = 4000) {
   return String(value || '')
-    .replace(/\u0000/g, '')
+    .replaceAll(String.fromCharCode(0), '')
     .trim()
     .slice(0, maxLength)
 }
@@ -453,7 +453,8 @@ export async function askSmdnAssistant({
     throw new Error(
       error?.message ||
       error?.code ||
-      'Não foi possível consultar o Nimbo pelo Vertex AI.'
+      'Não foi possível consultar o Nimbo pelo Vertex AI.',
+      { cause: error }
     )
   }
 }

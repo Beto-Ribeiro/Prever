@@ -23,8 +23,10 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const isRegisterValid = institution && name && email && role
-  const isLoginValid = email && password
+  const normalizedEmail = email.trim().toLowerCase()
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
+  const isRegisterValid = Boolean(institution.trim() && name.trim() && role.trim() && isValidEmail)
+  const isLoginValid = Boolean(normalizedEmail && password)
 
   const handleSubmit = async () => {
     setError('')
@@ -33,7 +35,7 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
     try {
       if (isRegister) {
         if (!isRegisterValid) return
-        await onRegister?.({ institution, name, email, role })
+        await onRegister?.({ institution: institution.trim(), name: name.trim(), email: normalizedEmail, role: role.trim() })
         setShowSuccess(true)
         setInstitution('')
         setName('')
@@ -43,7 +45,7 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
       }
 
       if (!isLoginValid) return
-      await onLogin({ email, password, rememberMe })
+      await onLogin({ email: normalizedEmail, password, rememberMe })
     } catch (err) {
       setError(toFriendlyMessage(err, 'Não foi possível concluir a ação. Tente novamente.'))
     } finally {
@@ -69,7 +71,7 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
       </div>
       <div
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/src/assets/map-bg.png')", filter: 'blur(px) brightness(0.7)' }}
+        style={{ backgroundImage: "url('/src/assets/map-bg.png')", filter: 'blur(2px) brightness(0.7)' }}
       />
       <div className="absolute inset-0 bg-bg-sidebar/30" />
 
