@@ -2,13 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../controles/controle_acessibilidade.dart';
+import 'icone_clima.dart';
 
 class ClimaDetalheTela extends StatelessWidget {
   final String cidade;
   final String temperatura;
   final String descricao;
 
-  // Previsão por hora. Cada item: {"hora": "15h", "temperatura": "20°", "descricao": "céu limpo"}
+  // Código da condição climática atual (campo "id" da API OpenWeatherMap)
+  // e código do ícone (ex: "01d", "10n"), usados para escolher o ícone certo.
+  final String? idAtual;
+  final String? iconeAtual;
+
+  // Previsão por hora. Cada item pode conter:
+  // {"hora": "15h", "temperatura": "20°", "descricao": "céu limpo",
+  //  "id": "800", "icone": "01d"}
   // Opcional: se não for passada, mostra um exemplo (mock) só para visualização do layout.
   final List<Map<String, String>>? previsaoHoraria;
 
@@ -21,6 +29,8 @@ class ClimaDetalheTela extends StatelessWidget {
     required this.cidade,
     required this.temperatura,
     required this.descricao,
+    this.idAtual,
+    this.iconeAtual,
     this.previsaoHoraria,
     this.onChangePage,
   });
@@ -31,22 +41,6 @@ class ClimaDetalheTela extends StatelessWidget {
     {"hora": "17h", "temperatura": "17°", "descricao": "nublado"},
     {"hora": "18h", "temperatura": "17°", "descricao": "nublado"},
   ];
-
-  // Escolhe um ícone com base no texto da descrição do clima.
-  IconData _iconePara(String descricao) {
-    final texto = descricao.toLowerCase();
-    if (texto.contains("limpo") ||
-        texto.contains("sol") ||
-        texto.contains("ensolarado")) {
-      return Icons.wb_sunny_outlined;
-    }
-    if (texto.contains("chuva") ||
-        texto.contains("garoa") ||
-        texto.contains("tempestade")) {
-      return Icons.grain;
-    }
-    return Icons.cloud_outlined;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,16 +75,16 @@ class ClimaDetalheTela extends StatelessWidget {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(33),
                       onTap: () {
-                        // Esta tela (e a clima_tela.dart antes dela) foram
-                        // empilhadas com Navigator.push por cima da tela
-                        // base, que é quem realmente controla o
-                        // onChangePage. Por isso, em vez de dar apenas um
-                        // pop (o que deixaria a clima_tela.dart visível por
-                        // cima), voltamos até a primeira rota da pilha —
-                        // aí sim a troca de página pro perfil (índice 8)
-                        // fica visível, igual ao ContainerPerfilSuperior.
+                        // Armazena o callback antes de modificar a navegação
+                        final Function(int)? callback = onChangePage;
+                        // Volta para a tela principal
                         Navigator.popUntil(context, (route) => route.isFirst);
-                        onChangePage?.call(8);
+                        // Garante que a navegação foi processada antes de chamar o callback
+                        Future.microtask(() {
+                          if (callback != null) {
+                            callback(8);
+                          }
+                        });
                       },
                       child: Container(
                         width: 65,
@@ -128,7 +122,11 @@ class ClimaDetalheTela extends StatelessWidget {
 
             // Ícone grande do clima atual
             Icon(
-              _iconePara(descricao),
+              iconeParaClima(
+                icone: iconeAtual,
+                id: idAtual,
+                descricao: descricao,
+              ),
               size: 130,
               color: acessibilidade.corPrimaria,
             ),
@@ -164,11 +162,6 @@ class ClimaDetalheTela extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(18, 40, 18, 20),
                   child: Column(
                     children: [
-                      Icon(
-                        Icons.wb_sunny_outlined,
-                        color: acessibilidade.corPrimaria,
-                        size: 26,
-                      ),
                       const SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -176,7 +169,11 @@ class ClimaDetalheTela extends StatelessWidget {
                           return _CardHora(
                             hora: item["hora"] ?? "",
                             temperatura: item["temperatura"] ?? "",
-                            icone: _iconePara(item["descricao"] ?? ""),
+                            icone: iconeParaClima(
+                              icone: item["icone"],
+                              id: item["id"],
+                              descricao: item["descricao"],
+                            ),
                             cor: acessibilidade.corPrimaria,
                           );
                         }).toList(),
