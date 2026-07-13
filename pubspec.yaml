@@ -44,6 +44,7 @@ dependencies:
     http: ^1.2.0
     firebase_core: ^4.10.0
     firebase_ai: ^3.12.2
+    mask_text_input_formatter: ^2.9.0
 
 dev_dependencies:
   flutter_test:
