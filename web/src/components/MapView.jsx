@@ -79,13 +79,13 @@ function getShelterMeta(status) {
   return { label: 'Disponível', color: '#00c000', text: '#052e12' }
 }
 
-function createShelterIcon(status = 'disponivel') {
+function createShelterIcon(status = 'disponivel', selected = false) {
   const meta = getShelterMeta(status)
-  const safeLabel = escapeHtml(`Abrigo ${meta.label}`)
+  const safeLabel = escapeHtml(`Abrigo ${meta.label}${selected ? ', selecionado' : ''}`)
 
   return L.divIcon({
     className: 'smdn-shelter-div-icon',
-    html: `<span class="smdn-shelter-marker" title="${safeLabel}" style="--shelter-color:${meta.color};--shelter-text:${meta.text};"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></svg><span class="smdn-marker-sr">${safeLabel}</span></span>`,
+    html: `<span class="smdn-shelter-marker${selected ? ' is-selected' : ''}" title="${safeLabel}" style="--shelter-color:${meta.color};--shelter-text:${meta.text};"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></svg><span class="smdn-marker-sr">${safeLabel}</span></span>`,
     iconSize: [34, 34],
     iconAnchor: [17, 17],
     popupAnchor: [0, -17],
@@ -184,7 +184,7 @@ function createVictimPopupNode(item, onVictimAssistance, savingVictimId) {
 }
 
 const MapView = forwardRef(function MapView(
-  { ocorrencias = [], vitimas = [], abrigos = [], onMapClick, onOccurrenceDetails, onVictimAssistance, savingVictimId, targetLocation, heatmap = false, mapMode, colorBlind = false, selectionRadiusKm = 3, showSelectionRadius = true },
+  { ocorrencias = [], vitimas = [], abrigos = [], onMapClick, onOccurrenceDetails, onVictimAssistance, onShelterSelect, savingVictimId, selectedShelterId, targetLocation, heatmap = false, mapMode, colorBlind = false, selectionRadiusKm = 3, showSelectionRadius = true },
   ref
 ) {
   const mapRef = useRef(null)
@@ -385,6 +385,20 @@ const MapView = forwardRef(function MapView(
           stroke-linejoin: round;
         }
 
+        .smdn-shelter-marker.is-selected {
+          transform: scale(1.18);
+          box-shadow:
+            0 0 0 3px rgba(255,255,255,.96),
+            0 0 0 7px rgba(14,165,233,.48),
+            0 10px 20px rgba(15,23,42,.48);
+          animation: smdnShelterSelected 1.5s ease-in-out infinite;
+        }
+
+        @keyframes smdnShelterSelected {
+          0%, 100% { box-shadow: 0 0 0 3px rgba(255,255,255,.96), 0 0 0 7px rgba(14,165,233,.34), 0 10px 20px rgba(15,23,42,.48); }
+          50% { box-shadow: 0 0 0 3px rgba(255,255,255,.96), 0 0 0 11px rgba(14,165,233,.12), 0 10px 22px rgba(15,23,42,.52); }
+        }
+
         .smdn-marker-sr {
           position: absolute;
           width: 1px;
@@ -574,21 +588,35 @@ const MapView = forwardRef(function MapView(
         .addTo(victimLayerRef.current)
     })
 
+    let selectedShelterMarker = null
+    const selectedShelter = validShelters.find((item) => item.id === selectedShelterId) || null
+
     validShelters.forEach((item) => {
-      L.marker([item.lat, item.lng], { icon: createShelterIcon(item.status), keyboard: true, zIndexOffset: 700 })
+      const isSelected = item.id === selectedShelterId
+      const marker = L.marker([item.lat, item.lng], {
+        icon: createShelterIcon(item.status, isSelected),
+        keyboard: true,
+        zIndexOffset: isSelected ? 1100 : 700,
+      })
         .bindPopup(createShelterPopupNode(item))
         .addTo(shelterLayerRef.current)
+
+      marker.on('click', () => onShelterSelect?.(item))
+      if (isSelected) selectedShelterMarker = marker
     })
 
     const visiblePoints = effectiveMode === 'victims'
       ? [...validVictims, ...validShelters]
       : [...validOccurrences, ...validVictims, ...validShelters]
 
-    if (visiblePoints.length > 0) {
+    if (selectedShelter) {
+      map.flyTo([selectedShelter.lat, selectedShelter.lng], 16, { duration: 0.9 })
+      selectedShelterMarker?.openPopup()
+    } else if (visiblePoints.length > 0) {
       const bounds = L.latLngBounds(visiblePoints.map((item) => [item.lat, item.lng]))
       map.fitBounds(bounds.pad(0.25), { maxZoom: 12, animate: true })
     }
-  }, [ocorrencias, vitimas, abrigos, effectiveMode, showOccurrences, showHeat, onOccurrenceDetails, onVictimAssistance, savingVictimId, colorBlind])
+  }, [ocorrencias, vitimas, abrigos, effectiveMode, showOccurrences, showHeat, onOccurrenceDetails, onVictimAssistance, onShelterSelect, savingVictimId, selectedShelterId, colorBlind])
 
   useEffect(() => {
     if (!targetLocation || !mapInstanceRef.current) return

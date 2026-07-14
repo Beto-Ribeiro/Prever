@@ -11,6 +11,7 @@ const SHELTER_COLUMNS = [
   'abr_coordenador',
   'abr_telefone_principal',
   'abr_telefone_secundario',
+  'abr_detalhes',
   'abr_cidade',
   'abr_bairro',
   'abr_lat',
@@ -25,6 +26,7 @@ function getStatusFromOccupancy(occupied, capacity, fallback = 'disponivel') {
   const total = Number(capacity) || 0
   const current = Number(occupied) || 0
 
+  if (fallback === 'inativo') return 'inativo'
   if (total <= 0) return fallback || 'disponivel'
   if (current >= total) return 'lotado'
   if (current >= total * 0.85) return 'quase_lotado'
@@ -32,6 +34,7 @@ function getStatusFromOccupancy(occupied, capacity, fallback = 'disponivel') {
 }
 
 function toNumberOrNull(value) {
+  if (value === '' || value === null || value === undefined) return null
   const numeric = Number(value)
   return Number.isFinite(numeric) ? numeric : null
 }
@@ -53,6 +56,7 @@ function mapShelterRow(row) {
     coordinator: row.abr_coordenador || '',
     phone: row.abr_telefone_principal || '',
     phone2: row.abr_telefone_secundario || '',
+    details: row.abr_detalhes || '',
     city: row.abr_cidade || '',
     location: row.abr_bairro || '',
     lat: toNumberOrNull(row.abr_lat),
@@ -67,9 +71,10 @@ function mapShelterRow(row) {
 function normalizeShelterPayload(payload, { forceStatusFromOccupancy = false } = {}) {
   const capacity = Number(payload.capacity || payload.maxCapacity || 0)
   const occupied = Math.max(0, Math.min(Number(payload.occupied || 0), capacity || 0))
+  const requestedStatus = payload.status || getStatusFromOccupancy(occupied, capacity)
   const status = forceStatusFromOccupancy
-    ? getStatusFromOccupancy(occupied, capacity, payload.status)
-    : payload.status || getStatusFromOccupancy(occupied, capacity)
+    ? getStatusFromOccupancy(occupied, capacity, requestedStatus)
+    : requestedStatus
 
   const lat = toNumberOrNull(payload.lat)
   const lng = toNumberOrNull(payload.lng)
@@ -84,6 +89,7 @@ function normalizeShelterPayload(payload, { forceStatusFromOccupancy = false } =
     abr_coordenador: String(payload.coordinator || '').trim() || null,
     abr_telefone_principal: String(payload.phone || '').trim() || null,
     abr_telefone_secundario: String(payload.phone2 || '').trim() || null,
+    abr_detalhes: String(payload.details || '').trim() || null,
     abr_cidade: String(payload.city || '').trim() || null,
     abr_bairro: String(payload.location || '').trim() || null,
     abr_lat: lat,
@@ -133,9 +139,24 @@ export async function createShelter(payload) {
   return mapShelterRow(data)
 }
 
-export async function updateShelterOccupancy(id, occupied, capacity) {
+export async function updateShelter(id, payload) {
+  const row = normalizeShelterPayload(payload, { forceStatusFromOccupancy: true })
+  validateShelterPayload(row)
+
+  const { data, error } = await supabase
+    .from('Abrigo')
+    .update(row)
+    .eq('abr_id', id)
+    .select(SHELTER_COLUMNS)
+    .single()
+
+  if (error) throw error
+  return mapShelterRow(data)
+}
+
+export async function updateShelterOccupancy(id, occupied, capacity, currentStatus = 'disponivel') {
   const nextOccupied = Math.max(0, Math.min(Number(occupied) || 0, Number(capacity) || 0))
-  const nextStatus = getStatusFromOccupancy(nextOccupied, capacity)
+  const nextStatus = getStatusFromOccupancy(nextOccupied, capacity, currentStatus)
 
   const { data, error } = await supabase
     .from('Abrigo')
@@ -150,6 +171,15 @@ export async function updateShelterOccupancy(id, occupied, capacity) {
 
   if (error) throw error
   return mapShelterRow(data)
+}
+
+export async function deleteShelter(id) {
+  const { error } = await supabase
+    .from('Abrigo')
+    .delete()
+    .eq('abr_id', id)
+
+  if (error) throw error
 }
 
 export function subscribeShelterChanges(callback) {
