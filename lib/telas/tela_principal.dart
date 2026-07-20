@@ -23,7 +23,6 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
   late int _currentIndex;
 
-
   String? emailCadastro;
   String? senhaCadastro;
 
@@ -66,11 +65,12 @@ class _TelaPrincipalState extends State<TelaPrincipal>
   // ── Inicializa a lista de telas ───────────────────────────────────────────
   void _inicializarTelas() {
     _telas = [
-      Home(title: "SOS", onChangePage: changePage),                          // 0
-      Maps_alertas(title: "SOS", onChangePage: changePage),                  // 1
-      Relatos_tela(title: "Relato", onChangePage: changePage),               // 2
-      ClimaTela(),                                                            // 3
-      Cadastro_tela(                                                          // 4
+      Home(title: "SOS", onChangePage: changePage), // 0
+      Maps_alertas(title: "SOS", onChangePage: changePage), // 1
+      Relatos_tela(title: "Relato", onChangePage: changePage), // 2
+      ClimaTela(onChangePage: changePage), // 3
+      Cadastro_tela(
+        // 4
         title: "Cadastro",
         onChangePage: changePage,
         onCadastroPendente: (email, senha) {
@@ -90,16 +90,17 @@ class _TelaPrincipalState extends State<TelaPrincipal>
           });
         },
       ),
-      sLogCad(title: "Landing Page", onChangePage: changePage),              // 5
-      confEmail(                                                              // 6
+      sLogCad(title: "Landing Page", onChangePage: changePage), // 5
+      confEmail(
+        // 6
         title: "Confirmação",
         onChangePage: changePage,
         email: emailCadastro,
         senha: senhaCadastro,
       ),
-      sLogin(title: "Login", onChangePage: changePage),                      // 7
-      TelaPerfil(title: "Perfil", onChangePage: changePage),                 // 8
-      ChatbotTela(title: 'Nimbo', onChangePage: changePage),                 // 9 — IA Chatbot
+      sLogin(title: "Login", onChangePage: changePage), // 7
+      TelaPerfil(title: "Perfil", onChangePage: changePage), // 8
+      ChatbotTela(title: 'Nimbo', onChangePage: changePage), // 9 — IA Chatbot
     ];
   }
 
@@ -124,13 +125,12 @@ class _TelaPrincipalState extends State<TelaPrincipal>
   @override
   Widget build(BuildContext context) {
     // Telas que ocultam nav bar E o botão Nimbo
-    final bool ocultarNav = (
-      _currentIndex == 4 ||
-      _currentIndex == 5 ||
-      _currentIndex == 6 ||
-      _currentIndex == 7 ||
-      _currentIndex == 8
-    );
+    final bool ocultarNav =
+        (_currentIndex == 4 ||
+        _currentIndex == 5 ||
+        _currentIndex == 6 ||
+        _currentIndex == 7 ||
+        _currentIndex == 8);
     final bool noNimbo = _currentIndex == 9; // já está no chatbot
 
     return Scaffold(
@@ -233,17 +233,24 @@ class CustomAnimatedBottomBar extends StatelessWidget {
     return SizedBox(
       height: 90,
       child: TweenAnimationBuilder<double>(
-        tween: Tween<double>(begin: currentIndex.toDouble(), end: currentIndex.toDouble()),
+        tween: Tween<double>(
+          begin: currentIndex.toDouble(),
+          end: currentIndex.toDouble(),
+        ),
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOutBack,
         builder: (context, value, child) {
-          final double segmentWidth = MediaQuery.of(context).size.width / icones.length;
-          final double buttonLeftOffset = (segmentWidth * value) + (segmentWidth / 2) - 28;
+          final double segmentWidth =
+              MediaQuery.of(context).size.width / icones.length;
+          final double buttonLeftOffset =
+              (segmentWidth * value) + (segmentWidth / 2) - 28;
 
           return Stack(
             children: [
               Positioned(
-                bottom: 0, left: 0, right: 0,
+                bottom: 0,
+                left: 0,
+                right: 0,
                 child: ClipPath(
                   clipper: MenuClipper(value, icones.length),
                   child: Container(
@@ -260,7 +267,9 @@ class CustomAnimatedBottomBar extends StatelessWidget {
                             height: 70,
                             child: Icon(
                               icones[index],
-                              color: currentIndex == index ? Colors.transparent : corIconeInativo,
+                              color: currentIndex == index
+                                  ? Colors.transparent
+                                  : corIconeInativo,
                               size: 28,
                             ),
                           ),
@@ -283,7 +292,11 @@ class CustomAnimatedBottomBar extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 3.5),
                     ),
-                    child: Icon(icones[currentIndex], color: Colors.white, size: 28),
+                    child: Icon(
+                      icones[currentIndex],
+                      color: Colors.white,
+                      size: 28,
+                    ),
                   ),
                 ),
               ),
@@ -316,7 +329,13 @@ class MenuClipper extends CustomClipper<Path> {
     path.lineTo(notchCenter - 45, 0);
     path.cubicTo(notchCenter - 20, 0, notchCenter - 30, 45, notchCenter, 45);
     path.cubicTo(
-        notchCenter + 30, 45, notchCenter + 20, 0, notchCenter + 45, 0);
+      notchCenter + 30,
+      45,
+      notchCenter + 20,
+      0,
+      notchCenter + 45,
+      0,
+    );
     path.lineTo(width, 0);
     path.lineTo(width, height);
     path.lineTo(0, height);

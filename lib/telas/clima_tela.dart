@@ -28,6 +28,11 @@ class _ClimaTelaState extends State<ClimaTela> {
 
   final String apiKey = "b5ead541b23bfa3331c7cf3de0678295";
 
+  // Controla o estado de carregamento do botão de localização,
+  // exibindo um spinner e evitando cliques duplicados enquanto
+  // o GPS/API ainda estão sendo consultados.
+  bool _carregandoLocalizacao = false;
+
   Future<void> buscarClima() async {
     final cidadeBusca = cidadeController.text.trim();
     if (cidadeBusca.isEmpty) return;
@@ -57,6 +62,8 @@ class _ClimaTelaState extends State<ClimaTela> {
   }
 
   Future<void> buscarClimaPorLocalizacao() async {
+    setState(() => _carregandoLocalizacao = true);
+
     try {
       bool serviceEnabled;
       LocationPermission permission;
@@ -109,6 +116,10 @@ class _ClimaTelaState extends State<ClimaTela> {
       }
     } catch (e) {
       _mostrarErro("Erro ao obter a localização");
+    } finally {
+      if (mounted) {
+        setState(() => _carregandoLocalizacao = false);
+      }
     }
   }
 
@@ -265,13 +276,22 @@ class _ClimaTelaState extends State<ClimaTela> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  IconButton(
-                    icon: const Icon(Icons.location_on, size: 35),
-                    onPressed: () {
-                      cidadeController.clear();
-                      buscarClimaPorLocalizacao();
-                    },
-                  ),
+                  _carregandoLocalizacao
+                      ? const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2.5),
+                          ),
+                        )
+                      : IconButton(
+                          icon: const Icon(Icons.location_on, size: 35),
+                          onPressed: () {
+                            cidadeController.clear();
+                            buscarClimaPorLocalizacao();
+                          },
+                        ),
                 ],
               ),
 
