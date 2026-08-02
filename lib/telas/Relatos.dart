@@ -456,7 +456,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
                 ),
               ),
             ),
-            ContainerPerfilSuperior(onChangePage: widget.onChangePage),
+
           ],
         ),
       ),

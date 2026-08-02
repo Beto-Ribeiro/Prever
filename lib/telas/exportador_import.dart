@@ -14,4 +14,6 @@ export 'confEmail.dart';
 export 'perfil.dart';
 export 'clima_tela.dart';
 export 'chatbot_tela.dart';
-export 'Relatos.dart';
+export 'Relatos.dart';
+export 'dart:typed_data';
+export 'package:flutter/services.dart';

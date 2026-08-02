@@ -1,8 +1,8 @@
-import 'package:branch1/telas/Relatos.dart';
 import 'package:branch1/telas/login_tela.dart';
 import 'package:branch1/services/chatbot_service.dart';
 import 'package:flutter/material.dart';
 import 'exportador_import.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -16,6 +16,62 @@ class TelaPrincipal extends StatefulWidget {
 
 class _TelaPrincipalState extends State<TelaPrincipal>
     with SingleTickerProviderStateMixin {
+
+  final supabase = Supabase.instance.client;
+  String nome = '';
+  bool carregando = true;
+  String tipoUsuario = '';
+
+  Future<void> _esperarSessaoECarregar() async {
+    // Se já tem usuário, carrega direto
+    if (supabase.auth.currentUser != null) {
+      carregarDados();
+      return;
+    }
+
+    // Aguarda o evento de sessão restaurada
+    supabase.auth.onAuthStateChange.listen((data) {
+      if (data.session != null && mounted) {
+        carregarDados();
+      }
+    });
+  }
+
+
+  Future<void> carregarDados() async {
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      print('=== USER ID: $userId ===');
+      if (userId == null) {
+        print('=== USUÁRIO NULO ===');
+        setState(
+              () => carregando = false,
+        ); // <-- não esquece de parar o loading
+        return;
+      }
+
+      // ── PERFIL ────────────────────────────────────────────────────────────
+      try {
+        final perfil = await supabase
+            .from('Perfis')
+            .select()
+            .eq('prf_id', userId)
+            .limit(1)
+            .single();
+        print('=== PERFIL OK: $perfil ===');
+        setState(() {
+          nome = perfil['prf_nome'] ?? '';
+          tipoUsuario = perfil['prf_tipo'] ?? '';
+        });
+      } catch (e) {
+        print('=== ERRO PERFIL: $e ===');
+      }
+  } catch (e) {
+      print('=== ERRO PERFIL: $e ===');
+    }
+  }
+
+
   // ── Variáveis de estado ───────────────────────────────────────────────────
   late List<Widget> _telas;
 
@@ -42,6 +98,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
   @override
   void initState() {
     super.initState();
+    _esperarSessaoECarregar();
     _currentIndex = Supabase.instance.client.auth.currentUser == null ? 5 : 0;
 
     // Animação do botão Nimbo
@@ -138,9 +195,12 @@ class _TelaPrincipalState extends State<TelaPrincipal>
       body: Stack(
         children: [
           // ── Conteúdo principal ────────────────────────────────────────────
-          IndexedStack(
-            index: _currentIndex,
-            children: _telas,
+          Padding(
+            padding: _currentIndex == 0? const EdgeInsets.only(top: 0) : const EdgeInsets.only(top: 30) ,
+            child: IndexedStack(
+              index: _currentIndex,
+              children: _telas,
+            ),
           ),
 
           // ── Botão flutuante Nimbo ─────────────────────────────────────────
@@ -192,7 +252,12 @@ class _TelaPrincipalState extends State<TelaPrincipal>
                   ),
                 ),
               ),
-            ),
+            ),SafeArea(
+              child: ContainerPerfilSuperior(
+                onChangePage: changePage, nome: nome,
+              ),
+          ),
+
         ],
       ),
       bottomNavigationBar: ocultarNav || noNimbo

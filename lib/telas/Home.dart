@@ -117,7 +117,7 @@ class _Home_State extends State<Home> {
                   child: SingleChildScrollView(
                     child: Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(0, 30, 0, 0),
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
                       child: Column(
                         children: [
                           // Reserva o espaço do avatar
@@ -390,9 +390,7 @@ class _Home_State extends State<Home> {
                 ),
               ],
             ),
-            ContainerPerfilSuperior(
-              onChangePage: widget.onChangePage,
-            ),
+
           ],
         ),
       ),
