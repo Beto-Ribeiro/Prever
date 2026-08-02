@@ -196,7 +196,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
         children: [
           // ── Conteúdo principal ────────────────────────────────────────────
           Padding(
-            padding: _currentIndex == 0? const EdgeInsets.only(top: 0) : const EdgeInsets.only(top: 30) ,
+            padding: ocultarNav? const EdgeInsets.only(top: 0) : _currentIndex == 0? const EdgeInsets.only(top: 0) : const EdgeInsets.only(top: 30) ,
             child: IndexedStack(
               index: _currentIndex,
               children: _telas,
@@ -252,7 +252,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
                   ),
                 ),
               ),
-            ),SafeArea(
+            ),ocultarNav ? Container() : SafeArea(
               child: ContainerPerfilSuperior(
                 onChangePage: changePage, nome: nome,
               ),
