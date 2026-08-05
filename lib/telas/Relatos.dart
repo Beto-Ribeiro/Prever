@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:branch1/telas/exportador_import.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
@@ -36,6 +37,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
   Set<Marker> markers = {};
   bool _isLoadingMap = true;
   bool _utilizarLocalizacaoAtual = true;
+  ScrollPhysics _scrollPhysics = const ClampingScrollPhysics(); // NOVO
 
   @override
   void initState() {
@@ -193,12 +195,12 @@ class _Relatos_telaState extends State<Relatos_tela> {
       final List<Map<String, dynamic>> respostaRelato = await supabase
           .from('Relato')
           .insert({
-            'rel_tipo_desastre': tipoDesastre,
-            'rel_descricao': nivelRisco,
-            'rel_cid_id': meuUserIdDoSupabase,
-            'rel_localizacao': pontoGeografico,
-            'rel_data_hora': DateTime.now().toIso8601String(),
-          })
+        'rel_tipo_desastre': tipoDesastre,
+        'rel_descricao': nivelRisco,
+        'rel_cid_id': meuUserIdDoSupabase,
+        'rel_localizacao': pontoGeografico,
+        'rel_data_hora': DateTime.now().toIso8601String(),
+      })
           .select();
 
       if (respostaRelato.isEmpty) {
@@ -243,6 +245,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
         child: Stack(
           children: [
             SingleChildScrollView(
+              physics: _scrollPhysics, // NOVO
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -271,18 +274,18 @@ class _Relatos_telaState extends State<Relatos_tela> {
                         ),
                         child: imagemBytes == null
                             ? const Center(
-                                child: Text(
-                                  'Insira uma imagem',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                              )
+                          child: Text(
+                            'Insira uma imagem',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        )
                             : ClipRRect(
-                                borderRadius: BorderRadius.circular(11),
-                                child: Image.memory(
-                                  imagemBytes!,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
+                          borderRadius: BorderRadius.circular(11),
+                          child: Image.memory(
+                            imagemBytes!,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 25),
@@ -370,35 +373,65 @@ class _Relatos_telaState extends State<Relatos_tela> {
                     const SizedBox(height: 15),
 
                     // Mapa: sem texto dentro, altura fixa é segura aqui.
-                    Container(
-                      height: 180,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade400),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(11),
-                        child: _isLoadingMap
-                            ? const Center(child: CircularProgressIndicator())
-                            : GoogleMap(
-                                initialCameraPosition: CameraPosition(
-                                  target:
-                                      localizacaoSelecionada ??
-                                      const LatLng(-23.5505, -46.6333),
-                                  zoom: 15,
-                                ),
-                                onMapCreated: (controller) =>
-                                    mapController = controller,
-                                markers: markers,
-                                onTap: (LatLng posicao) {
-                                  setState(() {
-                                    _utilizarLocalizacaoAtual = false;
-                                    localizacaoSelecionada = posicao;
-                                    _atualizarMarcador(posicao);
-                                  });
-                                },
-                              ),
+                    Listener(
+                      onPointerDown: (event) {
+                        if (event.kind == PointerDeviceKind.touch) {
+                          setState(
+                                () => _scrollPhysics =
+                            const NeverScrollableScrollPhysics(),
+                          );
+                        }
+                      },
+                      onPointerUp: (event) {
+                        if (event.kind == PointerDeviceKind.touch) {
+                          setState(
+                                () => _scrollPhysics = const ClampingScrollPhysics(),
+                          );
+                        }
+                      },
+                      onPointerCancel: (event) {
+                        if (event.kind == PointerDeviceKind.touch) {
+                          setState(
+                                () => _scrollPhysics = const ClampingScrollPhysics(),
+                          );
+                        }
+                      },
+                      onPointerSignal: (event) {
+                        if (event is PointerScrollEvent) {
+                          GestureBinding.instance.pointerSignalResolver
+                              .register(event, (event) {});
+                        }
+                      },
+                      child: Container(
+                        height: 180,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade400),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(11),
+                          child: _isLoadingMap
+                              ? const Center(child: CircularProgressIndicator())
+                              : GoogleMap(
+                            initialCameraPosition: CameraPosition(
+                              target:
+                              localizacaoSelecionada ??
+                                  const LatLng(-23.5505, -46.6333),
+                              zoom: 15,
+                            ),
+                            onMapCreated: (controller) =>
+                            mapController = controller,
+                            markers: markers,
+                            onTap: (LatLng posicao) {
+                              setState(() {
+                                _utilizarLocalizacaoAtual = false;
+                                localizacaoSelecionada = posicao;
+                                _atualizarMarcador(posicao);
+                              });
+                            },
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 10),
