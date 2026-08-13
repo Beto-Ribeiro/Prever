@@ -18,7 +18,7 @@ export async function signInWithEmailAndPassword({ email, password }) {
   const cleanEmail = email?.trim().toLowerCase()
   const cleanPassword = String(password ?? '')
 
-  console.info('[SMDN Login] Tentando entrada:', { email: cleanEmail })
+  console.info('[PREVER Login] Tentando entrada:', { email: cleanEmail })
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email: cleanEmail,
@@ -26,7 +26,7 @@ export async function signInWithEmailAndPassword({ email, password }) {
   })
 
   if (error) {
-    console.error('[SMDN Login] Erro ao entrar:', {
+    console.error('[PREVER Login] Erro ao entrar:', {
       name: error.name,
       message: error.message,
       status: error.status,
@@ -34,7 +34,7 @@ export async function signInWithEmailAndPassword({ email, password }) {
     throw new Error(mapAuthError(error))
   }
 
-  console.info('[SMDN Login] Entrada confirmada:', {
+  console.info('[PREVER Login] Entrada confirmada:', {
     userId: data?.user?.id,
     hasSession: Boolean(data?.session),
   })

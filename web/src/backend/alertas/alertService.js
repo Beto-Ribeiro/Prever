@@ -26,7 +26,7 @@ export function mapAlertRow(row) {
     description: row.alw_descricao,
     recipients: row.alw_destinatarios || 0,
     operatorId: row.alw_operador_id,
-    operator: row.alw_operador_nome || 'Usuário SMDN',
+    operator: row.alw_operador_nome || 'Usuário PREVER',
     status: row.alw_status,
     lat: row.alw_lat,
     lng: row.alw_lng,
@@ -119,7 +119,7 @@ export async function dispatchAlert({ form, currentUser, recipients, radiusKm })
     alw_descricao: form.description,
     alw_destinatarios: recipients || 0,
     alw_operador_id: currentUser.id,
-    alw_operador_nome: currentUser.name || currentUser.email || 'Usuário SMDN',
+    alw_operador_nome: currentUser.name || currentUser.email || 'Usuário PREVER',
     alw_lat: form.lat || null,
     alw_lng: form.lng || null,
     alw_metadata: {

@@ -27,7 +27,7 @@ function buildAccessResult({ authUser, perfil, role, allowed, admin, reason }) {
     ...(perfil?.prf_permissoes || {}),
     admin,
   }
-  const name = perfil?.prf_nome || authUser.email?.split('@')[0] || 'Usuário SMDN'
+  const name = perfil?.prf_nome || authUser.email?.split('@')[0] || 'Usuário PREVER'
 
   if (!allowed) {
     return {
@@ -66,7 +66,7 @@ async function getWebAccessByRpc(authUser) {
   const { data, error } = await supabase.rpc('get_my_web_access')
 
   if (error) {
-    console.warn('[SMDN Acesso] Validação principal indisponível, usando alternativa:', error.message)
+    console.warn('[PREVER Acesso] Validação principal indisponível, usando alternativa:', error.message)
     return null
   }
 
@@ -145,7 +145,7 @@ export async function getWebAccessForUser(authUser) {
     }
   }
 
-  const name = perfil?.prf_nome || authUser.email?.split('@')[0] || 'Usuário SMDN'
+  const name = perfil?.prf_nome || authUser.email?.split('@')[0] || 'Usuário PREVER'
   const role = inferredRole
   const permissions = {
     ...(perfil?.prf_permissoes || {}),

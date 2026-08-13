@@ -79,9 +79,9 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
         <div className="flex flex-col md:flex-row w-full max-w-3xl shadow-modal overflow-hidden rounded-2xl" style={{ minHeight: '560px' }}>
           <div className="md:w-1/2 bg-bg-sidebar text-text-on-dark flex flex-col justify-center items-center p-8 space-y-8">
             <div className="flex flex-col items-center text-center">
-              <img src={logo} alt="SMDN Logo" className="w-full max-w-[200px] mb-4" />
+              <img src={logo} alt="PREVER Logo" className="w-full max-w-[200px] mb-4" />
               <p className="text-sm font-medium opacity-80 leading-snug">
-                Sistema de Monitoramento de Desastres Naturais
+                Plataforma de Resiliência e Vigilância de Eventos de Risco
               </p>
             </div>
             <div className="space-y-5 w-full">
@@ -201,7 +201,7 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
                 onClick={() => { setError(''); setView(isRegister ? 'login' : 'cadastro') }}
                 className="text-text-main font-bold cursor-pointer hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-text-main rounded"
               >
-                {isRegister ? 'Já tenho acesso SMDN' : 'Solicitar acesso ao SMDN'}
+                {isRegister ? 'Já tenho acesso PREVER' : 'Solicitar acesso ao PREVER'}
               </span>
             </p>
 

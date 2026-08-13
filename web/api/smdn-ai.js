@@ -67,7 +67,7 @@ function buildPrompt({ message, currentScreen, screenTitle, screenIntro, history
     : ''
 
   return [
-    `Tela atual: ${sanitizeText(screenTitle || currentScreen || 'SMDN', 120)}`,
+    `Tela atual: ${sanitizeText(screenTitle || currentScreen || 'PREVER', 120)}`,
     screenIntro ? `Contexto da tela: ${sanitizeText(screenIntro, 500)}` : '',
     recentHistory ? `Histórico recente:\n${recentHistory}` : '',
     `Pergunta do usuário:\n${sanitizeText(message, 2000)}`,

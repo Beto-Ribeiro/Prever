@@ -28,7 +28,7 @@ function publicAccountData(session, accessUser) {
   return {
     id: session.user.id,
     email: session.user.email || accessUser?.email || '',
-    name: accessUser?.name || session.user.email?.split('@')[0] || 'Usuário SMDN',
+    name: accessUser?.name || session.user.email?.split('@')[0] || 'Usuário PREVER',
     roleLabel: accessUser?.roleLabel || accessUser?.role || 'Usuário',
     avatar: accessUser?.avatar || accessUser?.perfil?.prf_avatar_url || null,
     lastAccess: Date.now(),
@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }) => {
 
     const access = await getWebAccessForUser(nextSession.user)
 
-    console.info('[SMDN Acesso] Resultado da autorização web:', {
+    console.info('[PREVER Acesso] Resultado da autorização web:', {
       allowed: access?.allowed,
       role: access?.role,
       isAdmin: access?.isAdmin,
@@ -121,7 +121,7 @@ export const AuthProvider = ({ children }) => {
 
         await applySession(data?.session ?? null)
       } catch (error) {
-        console.error('[SMDN Acesso] Erro ao carregar sessão:', error)
+        console.error('[PREVER Acesso] Erro ao carregar sessão:', error)
         if (mounted) {
           setAccessError(toFriendlyMessage(error, 'Não foi possível carregar sua sessão. Entre novamente.'))
           setSession(null)
@@ -146,7 +146,7 @@ export const AuthProvider = ({ children }) => {
 
         applySession(nextSession)
           .catch((error) => {
-            console.error('[SMDN Acesso] Erro ao aplicar sessão:', error)
+            console.error('[PREVER Acesso] Erro ao aplicar sessão:', error)
             if (mounted) {
               setAccessError(toFriendlyMessage(error, 'Não foi possível confirmar seu acesso. Entre novamente.'))
               setSession(null)
@@ -176,7 +176,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     await recordLoginActivity(access.user?.id).catch((error) => {
-      console.warn('[SMDN Acesso] Login confirmado, mas a atividade não foi registrada:', error.message)
+      console.warn('[PREVER Acesso] Login confirmado, mas a atividade não foi registrada:', error.message)
     })
 
     return data

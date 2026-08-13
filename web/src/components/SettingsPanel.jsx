@@ -108,7 +108,7 @@ export default function SettingsPanel({ variant = 'row', className = '', panelCl
           ref={panelRef}
           className={`fixed bottom-16 left-[210px] z-[99999] w-[360px] max-h-[calc(100vh-5rem)] overflow-y-auto rounded-3xl border border-border-soft bg-bg-surface p-5 shadow-2xl animate-slide-up ${panelClassName}`}
           role="dialog"
-          aria-label="Configurações do SMDN"
+          aria-label="Configurações do PREVER"
         >
           <div className="flex items-center justify-end border-b border-border-soft pb-3 mb-4">
             <button

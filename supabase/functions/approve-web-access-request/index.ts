@@ -29,7 +29,7 @@ function normalizeHistory(history: unknown) {
   return history
     .slice(-8)
     .map((item) => {
-      const role = item?.role === 'assistant' ? 'IA SMDN' : 'Usuário'
+      const role = item?.role === 'assistant' ? 'IA PREVER' : 'Usuário'
       const text = sanitizeText(item?.text, 1200)
       return text ? `${role}: ${text}` : ''
     })
@@ -38,7 +38,7 @@ function normalizeHistory(history: unknown) {
 }
 
 function buildPrompt(body: Record<string, unknown>) {
-  const screenTitle = sanitizeText(body.screenTitle || body.currentScreen || 'SMDN', 120)
+  const screenTitle = sanitizeText(body.screenTitle || body.currentScreen || 'PREVER', 120)
   const screenIntro = sanitizeText(body.screenIntro, 500)
   const history = normalizeHistory(body.history)
   const message = sanitizeText(body.message, 2000)
@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
           parts: [
             {
               text: [
-                'Você é a IA SMDN, assistente operacional do Sistema de Monitoramento de Desastres Naturais.',
+                'Você é a IA PREVER, assistente operacional da Plataforma de Resiliência e Vigilância de Eventos de Risco.',
                 'Responda sempre em português do Brasil.',
                 'Ajude agentes públicos a entender telas, priorizar ocorrências, revisar alertas, interpretar relatórios e consultar auditoria.',
                 'Não invente dados do sistema.',

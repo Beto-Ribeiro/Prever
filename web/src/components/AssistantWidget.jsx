@@ -130,7 +130,7 @@ function getAccountProfile(user, session) {
       authUser?.roleLabel ||
       authUser?.role ||
       perfil?.prf_tipo ||
-      'Conta SMDN',
+      'Conta PREVER',
   }
 }
 
@@ -591,7 +591,7 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
                   aria-hidden="true"
                 />
                 <div className="rounded-2xl bg-slate-100 px-3 py-2 text-sm text-slate-700 mr-3">
-                  Nimbo está consultando dados reais do SMDN e pensando...
+                  Nimbo está consultando dados reais do PREVER e pensando...
                 </div>
               </div>
             )}

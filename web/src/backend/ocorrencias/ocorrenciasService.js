@@ -72,7 +72,7 @@ async function reverseGeocode(lat, lng) {
     geocodeCache.set(cacheKey, result)
     return result
   } catch (error) {
-    console.warn('[SMDN Ocorrências] Geocodificação reversa indisponível:', error.message)
+    console.warn('[PREVER Ocorrências] Geocodificação reversa indisponível:', error.message)
     geocodeCache.set(cacheKey, null)
     return null
   }
@@ -119,7 +119,7 @@ async function getPhotoUrl(photoPath) {
     .createSignedUrl(photoPath, 60 * 60)
 
   if (error) {
-    console.warn('[SMDN Ocorrências] Não foi possível assinar foto:', error.message)
+    console.warn('[PREVER Ocorrências] Não foi possível assinar foto:', error.message)
     return ''
   }
 

@@ -75,7 +75,7 @@ function useReportData(period) {
       const data = await getRelatoriosData(period)
       setState({ loading: false, error: '', data })
     } catch (err) {
-      console.error('[SMDN Relatórios] Erro ao carregar dados reais:', err)
+      console.error('[PREVER Relatórios] Erro ao carregar dados reais:', err)
       setState((prev) => ({
         loading: false,
         error: toFriendlyMessage(err, 'Não foi possível carregar os relatórios. Tente novamente.'),
@@ -143,7 +143,7 @@ async function exportToPDF(element, period) {
   pdf.setTextColor(255, 255, 255)
   pdf.setFontSize(9)
   pdf.setFont('helvetica', 'bold')
-  pdf.text('SMDN – Sistema de Monitoramento de Desastres Naturais', margin, 9)
+  pdf.text('PREVER – Plataforma de Resiliência e Vigilância de Eventos de Risco', margin, 9)
   pdf.setFont('helvetica', 'normal')
   pdf.text(`Relatório · ${period} · Gerado em ${new Date().toLocaleDateString('pt-BR')}`, pageW - margin, 9, { align: 'right' })
 
@@ -180,7 +180,7 @@ async function exportToPDF(element, period) {
     pdf.text(`Página ${i} de ${totalPages}`, pageW / 2, pageH - 4, { align: 'center' })
   }
 
-  pdf.save(`SMDN_Relatorio_${period.replace(/\s+/g, '_')}.pdf`)
+  pdf.save(`PREVER_Relatorio_${period.replace(/\s+/g, '_')}.pdf`)
 }
 
 /**
@@ -313,7 +313,7 @@ function exportToExcel(data, period) {
           <x:ExcelWorkbook>
             <x:ExcelWorksheets>
               <x:ExcelWorksheet>
-                <x:Name>SMDN Relatório</x:Name>
+                <x:Name>PREVER Relatório</x:Name>
                 <x:WorksheetOptions>
                   <x:PageSetup><x:Layout x:Orientation="Landscape"/></x:PageSetup>
                   <x:FitToPage/>
@@ -357,11 +357,11 @@ function exportToExcel(data, period) {
       <body>
         <div class="sheet">
           <table class="hero">
-            <tr><td class="hero-title" colspan="4">SMDN — Relatório de Ocorrências</td></tr>
+            <tr><td class="hero-title" colspan="4">PREVER — Relatório de Ocorrências</td></tr>
             <tr>
               <td class="hero-meta">Período: ${escapeHtml(period)}</td>
               <td class="hero-meta">Gerado em: ${escapeHtml(generatedAt)}</td>
-              <td class="hero-meta">Fonte: Painel SMDN</td>
+              <td class="hero-meta">Fonte: Painel PREVER</td>
               <td class="hero-meta">Formato: Executivo</td>
             </tr>
           </table>

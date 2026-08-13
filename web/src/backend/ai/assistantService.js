@@ -80,7 +80,7 @@ function buildPrompt({ message, currentScreen, screenTitle, screenIntro, history
   const historyText = normalizeHistory(history)
 
   return [
-    'Você é Nimbo, assistente operacional do Sistema de Monitoramento de Desastres Naturais.',
+    'Você é Nimbo, assistente operacional da Plataforma de Resiliência e Vigilância de Eventos de Risco.',
     'Responda sempre em português do Brasil, com clareza, objetividade e tom profissional.',
     'Nimbo sempre fala de si em terceira pessoa. Use frases como: "Nimbo recomenda...", "Nimbo encontrou...", "Nimbo acha isso errado." Nunca diga "eu acho", "eu encontrei" ou "posso".',
     'Ao se apresentar, chame-se apenas de Nimbo.',
@@ -134,7 +134,7 @@ function buildPrompt({ message, currentScreen, screenTitle, screenIntro, history
     '- Use Markdown simples dentro do campo answer: **negrito**, quebras de linha e listas com * item.',
     '',
     `Telas disponíveis: ${AVAILABLE_SCREENS.join(', ')}.`,
-    `Tela atual: ${sanitizeText(screenTitle || currentScreen || 'SMDN', 120)}`,
+    `Tela atual: ${sanitizeText(screenTitle || currentScreen || 'PREVER', 120)}`,
     screenIntro ? `Contexto da tela atual: ${sanitizeText(screenIntro, 800)}` : '',
     historyText ? `Histórico recente:\n${historyText}` : '',
     `Pergunta do usuário:\n${sanitizeText(message, 2500)}`,

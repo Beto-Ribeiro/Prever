@@ -341,7 +341,7 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
         <div className={`relative shrink-0 border-b border-white/5 ${collapsed ? 'px-2 pt-9 pb-3' : 'px-5 pt-5 pb-4'}`}>
           <img
             src={collapsed ? faviconIcon : (effectiveTheme === 'light' ? logoEscuro : logoClaro)}
-            alt="SMDN Logo"
+            alt="PREVER Logo"
             className={collapsed ? 'mx-auto h-10 w-10 max-w-[40px] rounded-xl object-contain' : 'h-12 w-full max-w-[160px] object-contain object-left'}
           />
           <button
@@ -485,7 +485,7 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
                     </div>
 
                     <div className="w-full border-t mt-3 pt-3 text-sm text-slate-600 space-y-2 text-center">
-                      <p>{displayUser.institution || displayUser.instituicao?.ins_numero || 'SMDN'}</p>
+                      <p>{displayUser.institution || displayUser.instituicao?.ins_numero || 'PREVER'}</p>
                     </div>
 
                     <button

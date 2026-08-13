@@ -663,7 +663,7 @@ function buildCurrentProfileSummary({ authUser, users, activities }) {
     ? compactUser(currentProfile)
     : {
         id: authUser.id,
-        name: authUser.email?.split('@')[0] || 'Usuário SMDN',
+        name: authUser.email?.split('@')[0] || 'Usuário PREVER',
         type: 'perfil autenticado',
         email: authUser.email || null,
         phone: null,
