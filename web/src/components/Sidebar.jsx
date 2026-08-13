@@ -342,7 +342,7 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
           <img
             src={collapsed ? faviconIcon : (effectiveTheme === 'light' ? logoEscuro : logoClaro)}
             alt="PREVER Logo"
-            className={collapsed ? 'mx-auto h-10 w-10 max-w-[40px] rounded-xl object-contain' : 'h-12 w-full max-w-[160px] object-contain object-left'}
+            className={collapsed ? 'mx-auto h-10 w-10 max-w-[40px] rounded-xl object-contain' : 'mx-auto h-12 w-full max-w-[160px] object-contain object-center'}
           />
           <button
             type="button"
