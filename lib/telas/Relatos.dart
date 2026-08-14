@@ -37,7 +37,15 @@ class _Relatos_telaState extends State<Relatos_tela> {
   Set<Marker> markers = {};
   bool _isLoadingMap = true;
   bool _utilizarLocalizacaoAtual = true;
-  ScrollPhysics _scrollPhysics = const ClampingScrollPhysics(); // NOVO
+  ScrollPhysics _scrollPhysics = const ClampingScrollPhysics();
+
+  // Rótulos e cores usados no seletor de severidade (Leve / Moderada / Severa)
+  final List<String> _opcoesSeveridade = const ['Leve', 'Moderada', 'Severa'];
+  final List<Color> _coresSeveridade = [
+    Colors.amber.shade600,
+    Colors.orange.shade700,
+    Colors.red.shade700,
+  ];
 
   @override
   void initState() {
@@ -125,6 +133,22 @@ class _Relatos_telaState extends State<Relatos_tela> {
     }
   }
 
+  // Texto descritivo exibido conforme o tipo de desastre selecionado
+  String _descricaoTipo(int? tipo) {
+    switch (tipo) {
+      case 0:
+        return 'Água acumulada nas ruas, casas alagadas ou rios transbordando.';
+      case 1:
+        return 'Ventos fortes, destruição de estruturas e risco de queda de árvores.';
+      case 2:
+        return 'Barrancos caindo, terra ou rochas deslizando em encostas, rachaduras grandes no solo ou muros estufados.';
+      case 3:
+        return 'Chuva intensa e contínua, risco de alagamentos e deslizamentos.';
+      default:
+        return '';
+    }
+  }
+
   // Envia os dados e coordenadas para o Supabase
   Future<void> enviarRelato() async {
     try {
@@ -154,13 +178,13 @@ class _Relatos_telaState extends State<Relatos_tela> {
       String tipoDesastre = '';
       switch (tipoSelecionado) {
         case 0:
-          tipoDesastre = 'Enchente';
+          tipoDesastre = 'Alagamento';
           break;
         case 1:
-          tipoDesastre = 'Ciclone';
+          tipoDesastre = 'Tornado';
           break;
         case 2:
-          tipoDesastre = 'Deslizamento';
+          tipoDesastre = 'Desabamento';
           break;
         case 3:
           tipoDesastre = 'Chuva Forte';
@@ -170,19 +194,13 @@ class _Relatos_telaState extends State<Relatos_tela> {
       String nivelRisco = '';
       switch (nivelSelecionado) {
         case 0:
-          nivelRisco = 'Baixo';
+          nivelRisco = 'Leve';
           break;
         case 1:
-          nivelRisco = 'Moderado';
+          nivelRisco = 'Moderada';
           break;
         case 2:
-          nivelRisco = 'Alto';
-          break;
-        case 3:
-          nivelRisco = 'Muito Alto';
-          break;
-        case 4:
-          nivelRisco = 'Crítico';
+          nivelRisco = 'Severa';
           break;
       }
 
@@ -223,6 +241,17 @@ class _Relatos_telaState extends State<Relatos_tela> {
         'fto_cid_id': meuUserIdDoSupabase,
       });
 
+      // Limpa todos os campos preenchidos e mostra a mensagem de sucesso
+      setState(() {
+        imagemSelecionada = null;
+        imagemBytes = null;
+        tipoSelecionado = null;
+        nivelSelecionado = null;
+        localizacaoSelecionada = null;
+        markers.clear();
+        _utilizarLocalizacaoAtual = true;
+      });
+      _getCurrentLocation();
       _mostrarSnackBar('Relato e foto enviados com sucesso!', Colors.green);
     } catch (e) {
       _mostrarSnackBar('Erro: $e', Colors.red);
@@ -245,7 +274,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
         child: Stack(
           children: [
             SingleChildScrollView(
-              physics: _scrollPhysics, // NOVO
+              physics: _scrollPhysics,
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -262,32 +291,8 @@ class _Relatos_telaState extends State<Relatos_tela> {
                     ),
                     const SizedBox(height: 20),
 
-                    GestureDetector(
-                      onTap: selecionarImagem,
-                      child: Container(
-                        width: double.infinity,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          border: Border.all(color: Colors.black54),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: imagemBytes == null
-                            ? const Center(
-                          child: Text(
-                            'Insira uma imagem',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        )
-                            : ClipRRect(
-                          borderRadius: BorderRadius.circular(11),
-                          child: Image.memory(
-                            imagemBytes!,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    ),
+                    // Seleção de imagem: caixa tracejada "Adicionar" + caixa decorativa
+                    _buildImagePicker(),
                     const SizedBox(height: 25),
 
                     Text(
@@ -300,9 +305,6 @@ class _Relatos_telaState extends State<Relatos_tela> {
                     ),
                     const SizedBox(height: 15),
 
-                    // Wrap em vez de Row: se os nomes não couberem numa
-                    // linha (fonte grande), eles quebram pra linha de
-                    // baixo em vez de estourar a largura da tela.
                     Wrap(
                       alignment: WrapAlignment.center,
                       spacing: 12,
@@ -311,55 +313,67 @@ class _Relatos_telaState extends State<Relatos_tela> {
                         _iconDesastre(
                           0,
                           'gfx/png/icons/tipo_inundacao.png',
-                          'Enchente',
+                          'Alagamento',
+                          Icons.water_drop_outlined,
                         ),
                         _iconDesastre(
                           1,
                           'gfx/png/icons/tipo_tornado.png',
-                          'Ciclone',
+                          'Tornado',
+                          Icons.cyclone_outlined,
                         ),
                         _iconDesastre(
                           2,
                           'gfx/png/icons/tipo_deslizamento.png',
-                          'Deslizamento',
+                          'Desabamento',
+                          Icons.terrain_outlined,
                         ),
                         _iconDesastre(
                           3,
                           'gfx/png/icons/tipo_tempestade.png',
                           'Chuva Forte',
+                          Icons.thunderstorm_outlined,
                         ),
                       ],
+                    ),
+
+                    // Caixinha com a descrição do tipo selecionado (some/aparece animando)
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                      child: tipoSelecionado == null
+                          ? const SizedBox(width: double.infinity)
+                          : Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(top: 14),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blueGrey.shade50,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          _descricaoTipo(tipoSelecionado),
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 25),
 
                     Text(
-                      'Classifique a periculosidade/risco:',
+                      'Escolha o nível de severidade:',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: acessibilidade.corPrimaria,
                       ),
                     ),
-                    const Text(
-                      '(considere 1 menor periculosidade 5 maior periculosidade)',
-                      style: TextStyle(fontSize: 12, color: Colors.black54),
-                    ),
                     const SizedBox(height: 15),
 
-                    // Wrap também aqui, pelo mesmo motivo (5 itens é mais
-                    // apertado ainda que os 4 de cima).
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 14,
-                      runSpacing: 12,
-                      children: [
-                        _ensureNivelBox(0, Colors.yellow.shade700, "1"),
-                        _ensureNivelBox(1, Colors.orange.shade400, "2"),
-                        _ensureNivelBox(2, Colors.orange.shade700, "3"),
-                        _ensureNivelBox(3, Colors.red.shade400, "4"),
-                        _ensureNivelBox(4, Colors.red.shade900, "5"),
-                      ],
-                    ),
+                    // Seletor animado de severidade (a "pílula" desliza e muda de cor)
+                    _buildSeveridadeSelector(),
                     const SizedBox(height: 25),
 
                     Text(
@@ -372,7 +386,6 @@ class _Relatos_telaState extends State<Relatos_tela> {
                     ),
                     const SizedBox(height: 15),
 
-                    // Mapa: sem texto dentro, altura fixa é segura aqui.
                     Listener(
                       onPointerDown: (event) {
                         if (event.kind == PointerDeviceKind.touch) {
@@ -460,14 +473,12 @@ class _Relatos_telaState extends State<Relatos_tela> {
                     ),
                     const SizedBox(height: 30),
 
-                    // Sem altura fixa: o botão cresce com o texto em vez
-                    // de estourar quando a letra está maior.
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: enviarRelato,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF5A1818),
+                          backgroundColor: const Color(0xFFC1272D),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
@@ -489,47 +500,180 @@ class _Relatos_telaState extends State<Relatos_tela> {
                 ),
               ),
             ),
-
           ],
         ),
       ),
     );
   }
 
-  Widget _iconDesastre(int valor, String caminhoAsset, String nomeDesastre) {
+  // Caixa de seleção de imagem: a caixa da esquerda ("Adicionar") é o botão
+  // que abre o seletor; a preview da foto escolhida aparece na caixa da
+  // direita (em vez de substituir o botão "Adicionar").
+  Widget _buildImagePicker() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: selecionarImagem,
+            child: SizedBox(
+              height: 92,
+              child: CustomPaint(
+                painter: _DashedBorderPainter(
+                  color: Colors.black45,
+                  radius: 12,
+                ),
+                child: const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.camera_alt_outlined,
+                        size: 26,
+                        color: Colors.black54,
+                      ),
+                      SizedBox(height: 6),
+                      Text(
+                        'Adicionar',
+                        style: TextStyle(fontSize: 13, color: Colors.black54),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: GestureDetector(
+            onTap: selecionarImagem, // também permite trocar a foto por aqui
+            child: Container(
+              height: 92,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: imagemBytes == null
+                  ? null
+                  : ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.memory(
+                  imagemBytes!,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Seletor de severidade em formato de pílula com 3 opções. O preenchimento
+  // colorido desliza (AnimatedPositioned) e troca de cor (AnimatedContainer)
+  // conforme a opção escolhida.
+  Widget _buildSeveridadeSelector() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double largura = constraints.maxWidth;
+        final double larguraItem = largura / _opcoesSeveridade.length;
+        final int indiceAtivo = nivelSelecionado ?? 0;
+
+        return Container(
+          height: 46,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Stack(
+            children: [
+              if (nivelSelecionado != null)
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  left: larguraItem * indiceAtivo,
+                  top: 0,
+                  bottom: 0,
+                  width: larguraItem,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    decoration: BoxDecoration(
+                      color: _coresSeveridade[indiceAtivo],
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                ),
+              Row(
+                children: List.generate(_opcoesSeveridade.length, (index) {
+                  final bool selecionado = nivelSelecionado == index;
+                  return Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => setState(() => nivelSelecionado = index),
+                      child: SizedBox(
+                        height: 46,
+                        child: Center(
+                          child: Text(
+                            _opcoesSeveridade[index],
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: selecionado
+                                  ? Colors.white
+                                  : Colors.black54,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _iconDesastre(
+      int valor,
+      String caminhoAsset,
+      String nomeDesastre,
+      IconData iconeFallback,
+      ) {
     bool selecionado = tipoSelecionado == valor;
     return GestureDetector(
       onTap: () => setState(() => tipoSelecionado = valor),
       child: SizedBox(
-        width: 75,
+        width: 76,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: selecionado
-                    ? const Color(0xFF8AB3FF)
-                    : const Color(0xFF09162E),
+                color: selecionado ? Colors.blue.shade50 : Colors.white,
                 border: Border.all(
-                  color: selecionado ? Colors.blueAccent : Colors.transparent,
-                  width: 2,
+                  color: selecionado ? Colors.blue.shade700 : Colors.grey.shade300,
+                  width: selecionado ? 2.6 : 1.4,
                 ),
               ),
               child: Image.asset(
                 caminhoAsset,
-                width: 32,
-                height: 32,
+                width: 38,
+                height: 38,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
                   return Icon(
-                    Icons.warning_amber_rounded,
-                    color: selecionado
-                        ? const Color(0xFF09162E)
-                        : const Color(0xFF8AB3FF),
-                    size: 32,
+                    iconeFallback,
+                    color: Colors.blue.shade300,
+                    size: 38,
                   );
                 },
               ),
@@ -549,37 +693,54 @@ class _Relatos_telaState extends State<Relatos_tela> {
       ),
     );
   }
+}
 
-  Widget _ensureNivelBox(int valor, Color cor, String texto) {
-    bool selecionado = nivelSelecionado == valor;
-    return GestureDetector(
-      onTap: () => setState(() => nivelSelecionado = valor),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              color: selecionado ? cor : Colors.transparent,
-              border: Border.all(color: cor, width: 2),
-            ),
-            child: selecionado
-                ? const Icon(Icons.check, size: 18, color: Colors.white)
-                : const SizedBox(),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            texto,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: cor,
-            ),
-          ),
-        ],
-      ),
+// Desenha uma borda tracejada arredondada (usada na caixa "Adicionar" imagem).
+class _DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double radius;
+  final double dashWidth;
+  final double dashSpace;
+
+  _DashedBorderPainter({
+    this.color = Colors.black45,
+    this.strokeWidth = 1.4,
+    this.radius = 12,
+    this.dashWidth = 6,
+    this.dashSpace = 4,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Radius.circular(radius),
     );
+
+    final path = Path()..addRRect(rrect);
+    final dashedPath = Path();
+
+    for (final metric in path.computeMetrics()) {
+      double distance = 0;
+      while (distance < metric.length) {
+        final double proximo = distance + dashWidth;
+        dashedPath.addPath(
+          metric.extractPath(distance, proximo.clamp(0, metric.length)),
+          Offset.zero,
+        );
+        distance = proximo + dashSpace;
+      }
+    }
+
+    canvas.drawPath(dashedPath, paint);
   }
+
+  @override
+  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) => false;
 }
