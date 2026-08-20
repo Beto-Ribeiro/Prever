@@ -88,8 +88,12 @@ class ContainerPerfilSuperior extends StatelessWidget {
 }
 
 class PinsVisao extends StatefulWidget {
+  Function() FecharPinVisao;
   String pinID;
-  PinsVisao({required this.pinID});
+  PinsVisao({
+    required this.pinID,
+    required this.FecharPinVisao,
+  });
 
   @override
   State<PinsVisao> createState() => _PinsVisaoState();
@@ -100,6 +104,9 @@ class _PinsVisaoState extends State<PinsVisao> {
 
   String? imagemURL;
   bool carregando = true;
+
+  String? TipoDesatrePinVisao;
+  String? MagnitudePinVisao;
 
   Future<void> carregarImagem(String id) async {
     try {
@@ -130,9 +137,9 @@ class _PinsVisaoState extends State<PinsVisao> {
       final url = await supabase.storage
           .from('Fotos_Storage')
           .createSignedUrl(
-        caminhoArquivo,
-        3600,
-      );
+            caminhoArquivo,
+            3600,
+          );
 
       setState(() {
         imagemURL = url;
@@ -148,6 +155,30 @@ class _PinsVisaoState extends State<PinsVisao> {
     }
   }
 
+  Future<void> CarregarDadosPin(String ID) async {
+    try {
+      final dados = await supabase
+          .from('relatos_mapa')
+          .select('rel_tipo_desastre, rel_descricao')
+          .eq('rel_id', ID)
+          .single();
+
+      if (!mounted) return;
+
+      setState(() {
+        TipoDesatrePinVisao = dados['rel_tipo_desastre'];
+        MagnitudePinVisao = dados['rel_descricao'];
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        TipoDesatrePinVisao = e.toString();
+        MagnitudePinVisao = e.toString();
+      });
+    }
+  }
+
   @override
   void didUpdateWidget(covariant PinsVisao oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -156,9 +187,12 @@ class _PinsVisaoState extends State<PinsVisao> {
       setState(() {
         carregando = true;
         imagemURL = null;
+        TipoDesatrePinVisao = null;
+        MagnitudePinVisao = null;
       });
 
       carregarImagem(widget.pinID);
+      CarregarDadosPin(widget.pinID);
     }
   }
 
@@ -166,23 +200,32 @@ class _PinsVisaoState extends State<PinsVisao> {
   void initState() {
     super.initState();
 
+    CarregarDadosPin(widget.pinID);
     carregarImagem(widget.pinID);
   }
 
+  double VerticalResponsivePadding = 0;
+  double HorizontalResponsivePadding = 0;
+
   @override
   Widget build(BuildContext context) {
+    //VARIAVEIS DE LAYOUT
+    VerticalResponsivePadding = MediaQuery.sizeOf(context).height * 0.05;
+    HorizontalResponsivePadding = MediaQuery.sizeOf(context).width * 0.1;
+
     return Column(
       mainAxisSize: MainAxisSize.max,
       verticalDirection: VerticalDirection.up,
       children: [
         Container(
-          height: 25,
-          width: double.infinity,
-        ),
-        Container(
           height: MediaQuery.sizeOf(context).height / 2.25,
           width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(10, 10, 10, 90),
+          padding: EdgeInsets.fromLTRB(
+            HorizontalResponsivePadding,
+            10,
+            HorizontalResponsivePadding,
+            90,
+          ),
           decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.only(
@@ -192,29 +235,101 @@ class _PinsVisaoState extends State<PinsVisao> {
           ),
           child: Column(
             mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Text('Imagem'),
+              Row(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      widget.FecharPinVisao();
+                    },
+                    child: Icon(
+                      Icons.close,
+                      color: Colors.black,
+                      size: 40,
+                    ),
+                  ),
+                ],
+              ),
               Container(
-                height: MediaQuery.sizeOf(context).height * 0.2,
+                height: 10,
+              ),
+              Container(
+                height: MediaQuery.sizeOf(context).height * 0.15,
                 width: MediaQuery.sizeOf(context).width * 0.9,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                   color: Colors.grey,
                 ),
+                alignment: AlignmentGeometry.topCenter,
                 clipBehavior: Clip.hardEdge,
 
                 child: carregando
                     ? const CircularProgressIndicator()
                     : imagemURL == null
-                    ? const Text('Nenhuma imagem encontrada')
+                    ? Column(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset("gfx/png/icons/camera-off.png"),
+                          Text('Nenhuma imagem encontrada'),
+                        ],
+                      )
                     : Image.network(
-                  imagemURL!,
-                  fit: BoxFit.fitHeight,
+                        imagemURL!,
+                        fit: BoxFit.fitHeight,
+                      ),
+              ),
+              Container(
+                alignment: AlignmentGeometry.centerLeft,
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          "Tipo de desastre: ",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.left,
+                        ),
+                        Text(
+                          TipoDesatrePinVisao ?? 'Carregando...',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          "Magnitude: ",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.left,
+                        ),
+                        Text(
+                          MagnitudePinVisao ?? 'Carregando...',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              )
-
-            ]),
+              ),
+            ],
+          ),
         ),
       ],
     );

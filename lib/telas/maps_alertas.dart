@@ -60,6 +60,12 @@ class _MapsAlertas extends State<Maps_alertas> {
     });
   }
 
+  FunctionFecharmarker(){
+    setState(() {
+      abriuMarker = false;
+    });
+  }
+
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
 
@@ -231,8 +237,8 @@ class _MapsAlertas extends State<Maps_alertas> {
                     : tornadoBluIcon!
               : chuvaForteBluIcon!,
 
-          infoWindow: const InfoWindow(
-            title: "Relato",
+          infoWindow: InfoWindow(
+            title: item['rel_tipo_desastre'].toString(),
           ),
         ),
       );
@@ -241,7 +247,42 @@ class _MapsAlertas extends State<Maps_alertas> {
     setState(() {
       markers = novosMarkers;
     });
+
+
+
   }
+
+   final estiloMapa = '''
+    [
+      {
+        "featureType": "poi.business",
+        "elementType": "all",
+        "stylers": [
+          {
+            "visibility": "off"
+          }
+        ]
+      },
+      {
+      "featureType": "poi.school",
+      "elementType": "all",
+      "stylers": [
+        {
+          "visibility": "off"
+        }
+      ]
+    },
+    {
+    "featureType": "poi.school",
+    "elementType": "all",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  }
+    ]
+    ''';
 
   @override
   Widget build(BuildContext context) {
@@ -254,12 +295,19 @@ class _MapsAlertas extends State<Maps_alertas> {
 
                 await carregarPins();
               },
+              style: estiloMapa,
 
               markers: markers,
 
               myLocationEnabled: true,
 
               myLocationButtonEnabled: false,
+
+              zoomControlsEnabled: false,
+
+              compassEnabled: false,
+
+              mapToolbarEnabled: false,
 
               initialCameraPosition: CameraPosition(
                 target: boolStatus && position != null
@@ -277,7 +325,7 @@ class _MapsAlertas extends State<Maps_alertas> {
             ),
 
             Positioned(
-              bottom: 100,
+              bottom: 150,
 
               right: 16,
 
@@ -298,7 +346,7 @@ class _MapsAlertas extends State<Maps_alertas> {
                 ),
               ),
             ),
-            abriuMarker ? PinsVisao(pinID: SelectedMarkerId) : Container(),
+            abriuMarker ? PinsVisao(pinID: SelectedMarkerId, FecharPinVisao: FunctionFecharmarker,) : Container(),
           ],
         ),
       );
