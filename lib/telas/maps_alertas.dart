@@ -174,6 +174,7 @@ class _MapsAlertas extends State<Maps_alertas> {
   }
 
   Future<void> carregarPins() async {
+
     final response = await supabase.from('relatos_mapa').select();
 
     Set<Marker> novosMarkers = {};
@@ -284,8 +285,17 @@ class _MapsAlertas extends State<Maps_alertas> {
     ]
     ''';
 
+
+
   @override
   Widget build(BuildContext context) {
+    var counter;
+    Timer.periodic(const Duration(seconds: 10), (timer) {
+      counter--;
+      if (counter == 0) {
+        carregarPins();
+      }
+    });
     return Expanded(
         child: Stack(
           children: [

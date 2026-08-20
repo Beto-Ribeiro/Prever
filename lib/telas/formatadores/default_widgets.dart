@@ -218,7 +218,7 @@ class _PinsVisaoState extends State<PinsVisao> {
       verticalDirection: VerticalDirection.up,
       children: [
         Container(
-          height: MediaQuery.sizeOf(context).height / 2.25,
+          height: MediaQuery.sizeOf(context).height * 0.45,
           width: double.infinity,
           padding: EdgeInsets.fromLTRB(
             HorizontalResponsivePadding,
@@ -248,7 +248,7 @@ class _PinsVisaoState extends State<PinsVisao> {
                     child: Icon(
                       Icons.close,
                       color: Colors.black,
-                      size: 40,
+                      size: VerticalResponsivePadding,
                     ),
                   ),
                 ],
@@ -273,7 +273,7 @@ class _PinsVisaoState extends State<PinsVisao> {
                         mainAxisSize: MainAxisSize.max,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.asset("gfx/png/icons/camera-off.png"),
+                          Image.asset("gfx/png/icons/camera-off.png", scale: 2,),
                           Text('Nenhuma imagem encontrada'),
                         ],
                       )
