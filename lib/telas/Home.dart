@@ -61,8 +61,6 @@ Future<void> Criar_SOS(
       'rel_localizacao': localizacao,
       'rel_data_hora': data,
     });
-
-    mostrarRelatoEnviado(context);
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -73,28 +71,32 @@ Future<void> Criar_SOS(
   }
 }
 
-void mostrarRelatoEnviado(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Sucesso'),
-      content: const Text(
-        'Ocorrência reportada com sucesso. As autoridades estão a caminho.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: const Text('OK'),
-        ),
-      ],
-    ),
-  );
-}
+
+//Message box para avisar que o relato foi enviado, ficou redundante.
+//void mostrarRelatoEnviado(BuildContext context) {
+//  showDialog(
+//    context: context,
+//    builder: (context) => AlertDialog(
+//      title: const Text('Sucesso'),
+//      content: const Text(
+//        'Ocorrência reportada com sucesso. As autoridades estão a caminho.',
+//      ),
+//      actions: [
+//        TextButton(
+//          onPressed: () {
+//            Navigator.pop(context);
+//          },
+//          child: const Text('OK'),
+//        ),
+//      ],
+//    ),
+//  );
+//}
 
 class _Home_State extends State<Home> {
   bool _sosEnviado = false;
+  bool _sosEnviando = false;
+
 
   @override
   Widget build(BuildContext context) {
@@ -159,7 +161,45 @@ class _Home_State extends State<Home> {
                                       ),
                                     ),
                                   )
-                                : Column(
+                                : _sosEnviando?
+                            Column(
+                              key: const ValueKey('enviando'),
+                              children: [
+                                Container(
+                                  width: double.infinity,
+                                  alignment: Alignment.center,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  child: Text(
+                                    "Enviando SOS para" ,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 34,
+                                      fontWeight: FontWeight.bold,
+                                      color: acessibilidade.corPrimaria,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  width: double.infinity,
+                                  alignment: Alignment.center,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  child: Text(
+                                    "as autoridades",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 34,
+                                      fontWeight: FontWeight.bold,
+                                      color: acessibilidade.corPrimaria,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ):
+                            Column(
                                     key: const ValueKey('inicial'),
                                     children: [
                                       Container(
@@ -169,7 +209,7 @@ class _Home_State extends State<Home> {
                                           horizontal: 16,
                                         ),
                                         child: Text(
-                                          "Precisa de ajuda de",
+                                          "Precisa de ajuda de" ,
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
                                             fontSize: 34,
@@ -218,6 +258,23 @@ class _Home_State extends State<Home> {
                                       ),
                                     ),
                                   )
+                                : _sosEnviando?
+                                  Container(
+                                    key: const ValueKey('subEnviando'),
+                                    width: double.infinity,
+                                    alignment: Alignment.center,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                    ),
+                                    child: Text(
+                                      "Por favor, aguarde alguns instantes.",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: acessibilidade.corSecundaria,
+                                      ),
+                                    ),
+                                  )
                                 : Container(
                                     key: const ValueKey('subInicial'),
                                     width: double.infinity,
@@ -246,6 +303,11 @@ class _Home_State extends State<Home> {
                               onTap: _sosEnviado
                                   ? null
                                   : () async {
+
+                                      setState(() {
+                                        _sosEnviando = true;
+                                      });
+
                                       Position posicao =
                                           await Geolocator.getCurrentPosition(
                                             locationSettings:
@@ -275,11 +337,48 @@ class _Home_State extends State<Home> {
                                       // desabilitar
                                       setState(() {
                                         _sosEnviado = true;
+                                        _sosEnviando = false;
                                       });
                                     },
                               child: Stack(
                                 alignment: Alignment.center,
+                                clipBehavior: Clip.none,
                                 children: [
+                                  AnimatedPositioned(
+                                    duration: Duration(seconds: 2),
+                                    curve: ElasticOutCurve(0.6),
+                                      left: _sosEnviado? -25: 100,
+                                      bottom: _sosEnviado? -25: 100,
+                                      child: AnimatedContainer(
+                                        duration: Duration(seconds: 1),
+                                              curve: Curves.easeInOut,
+                                              width: 70,
+                                              height: 70,
+                                        decoration: BoxDecoration(
+                                          image: DecorationImage(image: AssetImage("gfx/png/Image/chamadas.png")),
+                                          color: _sosEnviado
+                                              ? const Color.fromRGBO(
+                                            80,
+                                            80,
+                                            80,
+                                            0.4,
+                                          ) : _sosEnviando?
+                                          Colors.orangeAccent
+                                              : acessibilidade.daltonismo
+                                              ? const Color(
+                                            0xFFF4A261,
+                                          ).withValues(alpha: 0.5)
+                                              : const Color.fromRGBO(
+                                            200,
+                                            0,
+                                            0,
+                                            0.5,
+                                          ),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+
+                                  ),
                                   // Anel externo — vermelho ou laranja (daltonismo)
                                   AnimatedContainer(
                                     duration: const Duration(milliseconds: 600),
@@ -293,7 +392,8 @@ class _Home_State extends State<Home> {
                                               80,
                                               80,
                                               0.4,
-                                            )
+                                            ) : _sosEnviando?
+                                          Colors.orangeAccent
                                           : acessibilidade.daltonismo
                                           ? const Color(
                                               0xFFF4A261,
@@ -320,7 +420,8 @@ class _Home_State extends State<Home> {
                                               100,
                                               100,
                                               1,
-                                            )
+                                            ): _sosEnviando?
+                                      Colors.orange
                                           : acessibilidade.daltonismo
                                           ? const Color(0xFFF4A261)
                                           : const Color.fromRGBO(225, 0, 0, 1),

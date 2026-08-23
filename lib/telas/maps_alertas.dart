@@ -11,7 +11,6 @@ class Maps_alertas extends StatefulWidget {
   final Function(int) onChangePage;
   final String title;
 
-
   Maps_alertas({
     super.key,
     required this.title,
@@ -51,6 +50,16 @@ class _MapsAlertas extends State<Maps_alertas> {
   BitmapDescriptor? tipoTempestadeIcon;
   BitmapDescriptor? tipoTornadoIcon;
 
+  bool abriuMarker = false;
+  String SelectedMarkerId = '';
+
+  FunctionAbrirmarker(String ID) {
+    setState(() {
+      abriuMarker = true;
+      SelectedMarkerId = ID;
+    });
+  }
+
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
 
@@ -64,76 +73,49 @@ class _MapsAlertas extends State<Maps_alertas> {
   Position? position;
 
   Future<void> carregarIcones() async {
-    chuvaForteBluIcon =
-    await criarIconeMarker('chuva forte - blu.png');
+    chuvaForteBluIcon = await criarIconeMarker('chuva forte - blu.png');
 
-    chuvaForteOraIcon =
-    await criarIconeMarker('chuva forte - ora.png');
+    chuvaForteOraIcon = await criarIconeMarker('chuva forte - ora.png');
 
-    chuvaForteRedIcon =
-    await criarIconeMarker('chuva forte - red.png');
+    chuvaForteRedIcon = await criarIconeMarker('chuva forte - red.png');
 
-    chuvaForteYelIcon =
-    await criarIconeMarker('chuva forte - yel.png');
+    chuvaForteYelIcon = await criarIconeMarker('chuva forte - yel.png');
 
+    deslizamentoBluIcon = await criarIconeMarker('deslizamento - blu.png');
 
-    deslizamentoBluIcon =
-    await criarIconeMarker('deslizamento - blu.png');
+    deslizamentoOraIcon = await criarIconeMarker('deslizamento - ora.png');
 
-    deslizamentoOraIcon =
-    await criarIconeMarker('deslizamento - ora.png');
+    deslizamentoRedIcon = await criarIconeMarker('deslizamento - red.png');
 
-    deslizamentoRedIcon =
-    await criarIconeMarker('deslizamento - red.png');
+    deslizamentoYelIcon = await criarIconeMarker('deslizamento - yel.png');
 
-    deslizamentoYelIcon =
-    await criarIconeMarker('deslizamento - yel.png');
+    inundacaoBluIcon = await criarIconeMarker('inundação - blu.png');
 
+    inundacaoOraIcon = await criarIconeMarker('inundação - ora.png');
 
-    inundacaoBluIcon =
-    await criarIconeMarker('inundação - blu.png');
+    inundacaoRedIcon = await criarIconeMarker('inundação - red.png');
 
-    inundacaoOraIcon =
-    await criarIconeMarker('inundação - ora.png');
+    inundacaoYelIcon = await criarIconeMarker('inundação - yel.png');
 
-    inundacaoRedIcon =
-    await criarIconeMarker('inundação - red.png');
+    tornadoBluIcon = await criarIconeMarker('tornado - blu.png');
 
-    inundacaoYelIcon =
-    await criarIconeMarker('inundação - yel.png');
+    tornadoOraIcon = await criarIconeMarker('tornado - ora.png');
 
+    tornadoRedIcon = await criarIconeMarker('tornado - red.png');
 
-    tornadoBluIcon =
-    await criarIconeMarker('tornado - blu.png');
+    tornadoYelIcon = await criarIconeMarker('tornado - yel.png');
 
-    tornadoOraIcon =
-    await criarIconeMarker('tornado - ora.png');
+    appleIcon = await criarIconeMarker('apple.png');
 
-    tornadoRedIcon =
-    await criarIconeMarker('tornado - red.png');
+    googleLogoIcon = await criarIconeMarker('google_logo.png');
 
-    tornadoYelIcon =
-    await criarIconeMarker('tornado - yel.png');
+    tipoDeslizamentoIcon = await criarIconeMarker('tipo_deslizamento.png');
 
+    tipoInundacaoIcon = await criarIconeMarker('tipo_inundacao.png');
 
-    appleIcon =
-    await criarIconeMarker('apple.png');
+    tipoTempestadeIcon = await criarIconeMarker('tipo_tempestade.png');
 
-    googleLogoIcon =
-    await criarIconeMarker('google_logo.png');
-
-
-    tipoDeslizamentoIcon =
-    await criarIconeMarker('tipo_deslizamento.png');
-
-    tipoInundacaoIcon =
-    await criarIconeMarker('tipo_inundacao.png');
-
-    tipoTempestadeIcon =
-    await criarIconeMarker('tipo_tempestade.png');
-
-    tipoTornadoIcon =
-    await criarIconeMarker('tipo_tornado.png');
+    tipoTornadoIcon = await criarIconeMarker('tipo_tornado.png');
   }
 
   Future<void> inicializarMapa() async {
@@ -185,8 +167,6 @@ class _MapsAlertas extends State<Maps_alertas> {
     return BitmapDescriptor.bytes(bytes, width: 100);
   }
 
-
-
   Future<void> carregarPins() async {
     final response = await supabase.from('relatos_mapa').select();
 
@@ -196,12 +176,19 @@ class _MapsAlertas extends State<Maps_alertas> {
       if (item['latitude'] == null || item['longitude'] == null) {
         continue;
       }
+      if (item['rel_tipo_desastre'] == 'SOS') {
+        continue;
+      }
 
       novosMarkers.add(
         Marker(
           markerId: MarkerId(
             item['rel_id'].toString(),
           ),
+
+          onTap: () {
+            FunctionAbrirmarker(item['rel_id'].toString());
+          },
 
           position: LatLng(
             item['latitude'],
@@ -212,36 +199,36 @@ class _MapsAlertas extends State<Maps_alertas> {
 
           icon: item['rel_tipo_desastre'] == 'Chuva Forte'
               ? item['rel_descricao'].toString().contains('Normal')
-              ? chuvaForteYelIcon!
-              : item['rel_descricao'].toString().contains('Moderado')
-              ? chuvaForteOraIcon!
-              : item['rel_descricao'].toString().contains('Crítico')
-              ? chuvaForteRedIcon!
-              : chuvaForteBluIcon!
+                    ? chuvaForteYelIcon!
+                    : item['rel_descricao'].toString().contains('Moderado')
+                    ? chuvaForteOraIcon!
+                    : item['rel_descricao'].toString().contains('Crítico')
+                    ? chuvaForteRedIcon!
+                    : chuvaForteBluIcon!
               : item['rel_tipo_desastre'] == 'Enchente'
               ? item['rel_descricao'].toString().contains('Normal')
-              ? inundacaoYelIcon!
-              : item['rel_descricao'].toString().contains('Moderado')
-              ? inundacaoOraIcon!
-              : item['rel_descricao'].toString().contains('Crítico')
-              ? inundacaoRedIcon!
-              : inundacaoBluIcon!
+                    ? inundacaoYelIcon!
+                    : item['rel_descricao'].toString().contains('Moderado')
+                    ? inundacaoOraIcon!
+                    : item['rel_descricao'].toString().contains('Crítico')
+                    ? inundacaoRedIcon!
+                    : inundacaoBluIcon!
               : item['rel_tipo_desastre'] == 'Deslizamento'
               ? item['rel_descricao'].toString().contains('Normal')
-              ? deslizamentoYelIcon!
-              : item['rel_descricao'].toString().contains('Moderado')
-              ? deslizamentoOraIcon!
-              : item['rel_descricao'].toString().contains('Crítico')
-              ? deslizamentoRedIcon!
-              : deslizamentoBluIcon!
+                    ? deslizamentoYelIcon!
+                    : item['rel_descricao'].toString().contains('Moderado')
+                    ? deslizamentoOraIcon!
+                    : item['rel_descricao'].toString().contains('Crítico')
+                    ? deslizamentoRedIcon!
+                    : deslizamentoBluIcon!
               : item['rel_tipo_desastre'] == 'Temporal'
               ? item['rel_descricao'].toString().contains('Normal')
-              ? tornadoYelIcon!
-              : item['rel_descricao'].toString().contains('Moderado')
-              ? tornadoOraIcon!
-              : item['rel_descricao'].toString().contains('Crítico')
-              ? tornadoRedIcon!
-              : tornadoBluIcon!
+                    ? tornadoYelIcon!
+                    : item['rel_descricao'].toString().contains('Moderado')
+                    ? tornadoOraIcon!
+                    : item['rel_descricao'].toString().contains('Crítico')
+                    ? tornadoRedIcon!
+                    : tornadoBluIcon!
               : chuvaForteBluIcon!,
 
           infoWindow: const InfoWindow(
@@ -258,61 +245,62 @@ class _MapsAlertas extends State<Maps_alertas> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Stack(
-        children: [
-          GoogleMap(
-            onMapCreated: (GoogleMapController controller) async {
-              _controller.complete(controller);
+    return Expanded(
+        child: Stack(
+          children: [
+            GoogleMap(
+              onMapCreated: (GoogleMapController controller) async {
+                _controller.complete(controller);
 
-              await carregarPins();
-            },
+                await carregarPins();
+              },
 
-            markers: markers,
+              markers: markers,
 
-            myLocationEnabled: true,
+              myLocationEnabled: true,
 
-            myLocationButtonEnabled: false,
+              myLocationButtonEnabled: false,
 
-            initialCameraPosition: CameraPosition(
-              target: boolStatus && position != null
-                  ? LatLng(
-                      position!.latitude,
-                      position!.longitude,
-                    )
-                  : const LatLng(
-                      -23.014336,
-                      -45.538053,
-                    ),
+              initialCameraPosition: CameraPosition(
+                target: boolStatus && position != null
+                    ? LatLng(
+                        position!.latitude,
+                        position!.longitude,
+                      )
+                    : const LatLng(
+                        -23.014336,
+                        -45.538053,
+                      ),
 
-              zoom: 15,
-            ),
-          ),
-
-          Positioned(
-            bottom: 100,
-
-            right: 16,
-
-            child: FloatingActionButton(
-              heroTag: "btnLocalizacaoMapaUnico",
-
-              backgroundColor: corFundoMenu,
-
-              elevation: 4,
-
-              shape: const CircleBorder(),
-
-              onPressed: _GoToUserLocation,
-
-              child: const Icon(
-                Icons.my_location,
-                color: Colors.white,
+                zoom: 15,
               ),
             ),
-          ),
-        ],
-      ),
-    );
+
+            Positioned(
+              bottom: 100,
+
+              right: 16,
+
+              child: FloatingActionButton(
+                heroTag: "btnLocalizacaoMapaUnico",
+
+                backgroundColor: corFundoMenu,
+
+                elevation: 4,
+
+                shape: const CircleBorder(),
+
+                onPressed: _GoToUserLocation,
+
+                child: const Icon(
+                  Icons.my_location,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            abriuMarker ? PinsVisao(pinID: SelectedMarkerId) : Container(),
+          ],
+        ),
+      );
   }
 }
