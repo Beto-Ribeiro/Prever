@@ -71,32 +71,194 @@ Future<void> Criar_SOS(
   }
 }
 
-
 //Message box para avisar que o relato foi enviado, ficou redundante.
-//void mostrarRelatoEnviado(BuildContext context) {
-//  showDialog(
-//    context: context,
-//    builder: (context) => AlertDialog(
-//      title: const Text('Sucesso'),
-//      content: const Text(
-//        'Ocorrência reportada com sucesso. As autoridades estão a caminho.',
-//      ),
-//      actions: [
-//        TextButton(
-//          onPressed: () {
-//            Navigator.pop(context);
-//          },
-//          child: const Text('OK'),
-//        ),
-//      ],
-//    ),
-//  );
-//}
 
 class _Home_State extends State<Home> {
   bool _sosEnviado = false;
   bool _sosEnviando = false;
 
+  final _SOSvalidateController = TextEditingController();
+
+  final supabase = Supabase.instance.client;
+
+  Future<void> ValidarCPF() async {
+    String cpfDigitado = _SOSvalidateController.text.trim();
+
+    final userId = supabase.auth.currentUser?.id;
+
+    if (userId == null) {
+      return;
+    }
+
+    final data = await supabase
+        .from('Cidadao')
+        .select('cid_cpf')
+        .eq('cid_id', userId).single();
+
+    final String cpfCompleto = data['cid_cpf'].toString();
+
+    final String tresPrimeirosDigitos = cpfCompleto.substring(0, 3);
+
+    if (tresPrimeirosDigitos == cpfDigitado) {
+        setState(() {
+          _sosEnviando = true;
+        });
+
+        Navigator.pop(context);
+
+        Position posicao = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+          ),
+        );
+
+        final String pontoGeografico =
+            'POINT(${posicao.longitude} ${posicao.latitude})';
+
+        await Criar_SOS(
+          context,
+          usuarioId: Supabase.instance.client.auth.currentUser!.id,
+          localizacao: pontoGeografico,
+          data: DateTime.now().toIso8601String(),
+          origem: 'SOS',
+        );
+
+        // Atualiza estado para animar e
+        // desabilitar
+        setState(() {
+          _sosEnviado = true;
+          _sosEnviando = false;
+        });
+    }
+  }
+
+  ValidacaoIdentidade(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black54,
+      barrierDismissible: false,
+      builder: (context) {
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 25),
+              width: 350,
+              height: 300,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  InkWell(
+                    child: Icon(Icons.close),
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                  )
+                    ],
+                  ),
+                  Text.rich(
+                    TextSpan(
+                      style: const TextStyle(
+                        fontSize: 20,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      children: [
+                        const TextSpan(
+                          text: "Insira os ",
+                        ),
+
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.red[900],
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              "TRÊS PRIMEIROS",
+                              style: TextStyle(
+                                fontSize: 20,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const TextSpan(
+                          text: " dígitos do seu CPF",
+                        ),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  Text(
+                    "Precisamos confirmar sua identidade para emitir um alerta SOS",
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.black
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(
+                    height: 25,
+                  ),
+                  SizedBox(
+                    width: 200,
+                    height: 50,
+                    child: TextField(
+                      textAlign: TextAlign.center,
+                      textAlignVertical: TextAlignVertical.center,
+                      controller: _SOSvalidateController,
+                      maxLength: 3,
+                      maxLines: 1,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.zero,
+                        hintText: 'CPF...',
+                      ),
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red[900],
+                        ),
+                        onPressed: () {
+                          try {
+                            ValidarCPF();
+                          } catch (e) {
+                            print('Falha ao enviar SOS');
+                          }
+                        },
+                        child: Text("Enviar", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -161,45 +323,45 @@ class _Home_State extends State<Home> {
                                       ),
                                     ),
                                   )
-                                : _sosEnviando?
-                            Column(
-                              key: const ValueKey('enviando'),
-                              children: [
-                                Container(
-                                  width: double.infinity,
-                                  alignment: Alignment.center,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                  ),
-                                  child: Text(
-                                    "Enviando SOS para" ,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 34,
-                                      fontWeight: FontWeight.bold,
-                                      color: acessibilidade.corPrimaria,
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  width: double.infinity,
-                                  alignment: Alignment.center,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                  ),
-                                  child: Text(
-                                    "as autoridades",
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 34,
-                                      fontWeight: FontWeight.bold,
-                                      color: acessibilidade.corPrimaria,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ):
-                            Column(
+                                : _sosEnviando
+                                ? Column(
+                                    key: const ValueKey('enviando'),
+                                    children: [
+                                      Container(
+                                        width: double.infinity,
+                                        alignment: Alignment.center,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                        ),
+                                        child: Text(
+                                          "Enviando SOS para",
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 34,
+                                            fontWeight: FontWeight.bold,
+                                            color: acessibilidade.corPrimaria,
+                                          ),
+                                        ),
+                                      ),
+                                      Container(
+                                        width: double.infinity,
+                                        alignment: Alignment.center,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                        ),
+                                        child: Text(
+                                          "as autoridades",
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 34,
+                                            fontWeight: FontWeight.bold,
+                                            color: acessibilidade.corPrimaria,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Column(
                                     key: const ValueKey('inicial'),
                                     children: [
                                       Container(
@@ -209,7 +371,7 @@ class _Home_State extends State<Home> {
                                           horizontal: 16,
                                         ),
                                         child: Text(
-                                          "Precisa de ajuda de" ,
+                                          "Precisa de ajuda de",
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
                                             fontSize: 34,
@@ -258,8 +420,8 @@ class _Home_State extends State<Home> {
                                       ),
                                     ),
                                   )
-                                : _sosEnviando?
-                                  Container(
+                                : _sosEnviando
+                                ? Container(
                                     key: const ValueKey('subEnviando'),
                                     width: double.infinity,
                                     alignment: Alignment.center,
@@ -302,44 +464,7 @@ class _Home_State extends State<Home> {
                               borderRadius: BorderRadius.circular(150),
                               onTap: _sosEnviado
                                   ? null
-                                  : () async {
-
-                                      setState(() {
-                                        _sosEnviando = true;
-                                      });
-
-                                      Position posicao =
-                                          await Geolocator.getCurrentPosition(
-                                            locationSettings:
-                                                const LocationSettings(
-                                                  accuracy:
-                                                      LocationAccuracy.high,
-                                                ),
-                                          );
-
-                                      final String pontoGeografico =
-                                          'POINT(${posicao.longitude} ${posicao.latitude})';
-
-                                      await Criar_SOS(
-                                        context,
-                                        usuarioId: Supabase
-                                            .instance
-                                            .client
-                                            .auth
-                                            .currentUser!
-                                            .id,
-                                        localizacao: pontoGeografico,
-                                        data: DateTime.now().toIso8601String(),
-                                        origem: 'SOS',
-                                      );
-
-                                      // Atualiza estado para animar e
-                                      // desabilitar
-                                      setState(() {
-                                        _sosEnviado = true;
-                                        _sosEnviando = false;
-                                      });
-                                    },
+                                  : () => ValidacaoIdentidade(context),
                               child: Stack(
                                 alignment: Alignment.center,
                                 clipBehavior: Clip.none,
@@ -347,37 +472,41 @@ class _Home_State extends State<Home> {
                                   AnimatedPositioned(
                                     duration: Duration(seconds: 2),
                                     curve: ElasticOutCurve(0.6),
-                                      left: _sosEnviado? -25: 100,
-                                      bottom: _sosEnviado? -25: 100,
-                                      child: AnimatedContainer(
-                                        duration: Duration(seconds: 1),
-                                              curve: Curves.easeInOut,
-                                              width: 70,
-                                              height: 70,
-                                        decoration: BoxDecoration(
-                                          image: DecorationImage(image: AssetImage("gfx/png/Image/chamadas.png")),
-                                          color: _sosEnviado
-                                              ? const Color.fromRGBO(
-                                            80,
-                                            80,
-                                            80,
-                                            0.4,
-                                          ) : _sosEnviando?
-                                          Colors.orangeAccent
-                                              : acessibilidade.daltonismo
-                                              ? const Color(
-                                            0xFFF4A261,
-                                          ).withValues(alpha: 0.5)
-                                              : const Color.fromRGBO(
-                                            200,
-                                            0,
-                                            0,
-                                            0.5,
+                                    left: _sosEnviado ? -25 : 100,
+                                    bottom: _sosEnviado ? -25 : 100,
+                                    child: AnimatedContainer(
+                                      duration: Duration(seconds: 1),
+                                      curve: Curves.easeInOut,
+                                      width: 70,
+                                      height: 70,
+                                      decoration: BoxDecoration(
+                                        image: DecorationImage(
+                                          image: AssetImage(
+                                            "gfx/png/Image/chamadas.png",
                                           ),
-                                          shape: BoxShape.circle,
                                         ),
+                                        color: _sosEnviado
+                                            ? const Color.fromRGBO(
+                                                80,
+                                                80,
+                                                80,
+                                                0.4,
+                                              )
+                                            : _sosEnviando
+                                            ? Colors.orangeAccent
+                                            : acessibilidade.daltonismo
+                                            ? const Color(
+                                                0xFFF4A261,
+                                              ).withValues(alpha: 0.5)
+                                            : const Color.fromRGBO(
+                                                200,
+                                                0,
+                                                0,
+                                                0.5,
+                                              ),
+                                        shape: BoxShape.circle,
                                       ),
-
+                                    ),
                                   ),
                                   // Anel externo — vermelho ou laranja (daltonismo)
                                   AnimatedContainer(
@@ -392,8 +521,9 @@ class _Home_State extends State<Home> {
                                               80,
                                               80,
                                               0.4,
-                                            ) : _sosEnviando?
-                                          Colors.orangeAccent
+                                            )
+                                          : _sosEnviando
+                                          ? Colors.orangeAccent
                                           : acessibilidade.daltonismo
                                           ? const Color(
                                               0xFFF4A261,
@@ -420,8 +550,9 @@ class _Home_State extends State<Home> {
                                               100,
                                               100,
                                               1,
-                                            ): _sosEnviando?
-                                      Colors.orange
+                                            )
+                                          : _sosEnviando
+                                          ? Colors.orange
                                           : acessibilidade.daltonismo
                                           ? const Color(0xFFF4A261)
                                           : const Color.fromRGBO(225, 0, 0, 1),
@@ -491,7 +622,6 @@ class _Home_State extends State<Home> {
                 ),
               ],
             ),
-
           ],
         ),
       ),

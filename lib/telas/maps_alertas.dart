@@ -129,10 +129,25 @@ class _MapsAlertas extends State<Maps_alertas> {
     await _GoToUserLocation();
   }
 
+  Timer? _timer;
+
   @override
   void initState() {
     super.initState();
     inicializarMapa();
+
+    _timer = Timer.periodic(
+      const Duration(seconds: 10),
+          (timer) {
+        carregarPins();
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   Future<void> _GoToUserLocation() async {
@@ -289,13 +304,6 @@ class _MapsAlertas extends State<Maps_alertas> {
 
   @override
   Widget build(BuildContext context) {
-    var counter;
-    Timer.periodic(const Duration(seconds: 10), (timer) {
-      counter--;
-      if (counter == 0) {
-        carregarPins();
-      }
-    });
     return Expanded(
         child: Stack(
           children: [
