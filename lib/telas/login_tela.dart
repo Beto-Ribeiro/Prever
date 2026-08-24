@@ -191,7 +191,7 @@ class _sLogin_State extends State<sLogin> {
                                     widget.onChangePage(4);
                                   },
                                   child: const Text(
-                                    "Não tenho uma conta SMDN", style: TextStyle(fontStyle: FontStyle.italic, fontSize: 12),
+                                    "Não tenho uma conta prever", style: TextStyle(fontStyle: FontStyle.italic, fontSize: 12),
                                   ),
                                 )
                               ],
@@ -231,8 +231,8 @@ class _sLogin_State extends State<sLogin> {
                         ),
 
                         child: Image.asset(
-                          "gfx/png/Image/SMDN.png",
-                          height: 60,
+                          "gfx/png/Image/prever.png",
+                          height: 120,
                         ),
                       ),
                     ],
