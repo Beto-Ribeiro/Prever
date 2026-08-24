@@ -1,4 +1,6 @@
+import 'package:branch1/services/severidade_relato.dart';
 import 'dart:async';
+import 'package:branch1/services/relatos_proximos_service.dart';
 
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -10,11 +12,15 @@ import 'exportador_import.dart';
 class Maps_alertas extends StatefulWidget {
   final Function(int) onChangePage;
   final String title;
+  final RelatoProximo? relatoSelecionado;
+  final int solicitacaoRelato;
 
   Maps_alertas({
     super.key,
     required this.title,
     required this.onChangePage,
+    this.relatoSelecionado,
+    this.solicitacaoRelato = 0,
   });
 
   @override
@@ -22,6 +28,48 @@ class Maps_alertas extends StatefulWidget {
 }
 
 class _MapsAlertas extends State<Maps_alertas> {
+  late final Future<void> _iconesProntos;
+
+  @override
+  void didUpdateWidget(covariant Maps_alertas oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.solicitacaoRelato != oldWidget.solicitacaoRelato) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _focarRelato());
+    }
+  }
+
+  Future<void> _focarRelato() async {
+    final relato = widget.relatoSelecionado;
+    final solicitacao = widget.solicitacaoRelato;
+    if (relato?.id == null ||
+        relato?.latitude == null ||
+        relato?.longitude == null) {
+      return;
+    }
+    try {
+      final controller = await _controller.future;
+      if (!mounted || solicitacao != widget.solicitacaoRelato) return;
+      FunctionAbrirmarker(relato!.id!);
+      await controller.animateCamera(
+        CameraUpdate.newLatLngZoom(
+          LatLng(relato.latitude!, relato.longitude!),
+          16,
+        ),
+      );
+      await carregarPins();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Não foi possível centralizar o relato no mapa. Tente novamente.',
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   BitmapDescriptor? chuvaForteBluIcon;
   BitmapDescriptor? chuvaForteOraIcon;
   BitmapDescriptor? chuvaForteRedIcon;
@@ -60,7 +108,7 @@ class _MapsAlertas extends State<Maps_alertas> {
     });
   }
 
-  FunctionFecharmarker(){
+  FunctionFecharmarker() {
     setState(() {
       abriuMarker = false;
     });
@@ -125,8 +173,16 @@ class _MapsAlertas extends State<Maps_alertas> {
   }
 
   Future<void> inicializarMapa() async {
-    await carregarIcones();
-    await _GoToUserLocation();
+    try {
+      await _iconesProntos;
+      if (!mounted) return;
+      await carregarPins();
+      if (widget.relatoSelecionado == null) {
+        await _GoToUserLocation(inicial: true);
+      }
+    } catch (e) {
+      debugPrint('Erro ao inicializar mapa: $e');
+    }
   }
 
   Timer? _timer;
@@ -134,12 +190,18 @@ class _MapsAlertas extends State<Maps_alertas> {
   @override
   void initState() {
     super.initState();
+    _iconesProntos = carregarIcones();
     inicializarMapa();
+    if (widget.relatoSelecionado != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _focarRelato());
+    }
 
     _timer = Timer.periodic(
       const Duration(seconds: 10),
-          (timer) {
-        carregarPins();
+      (timer) {
+        carregarPins().catchError((Object e) {
+          debugPrint('Erro ao atualizar relatos do mapa: $e');
+        });
       },
     );
   }
@@ -150,7 +212,7 @@ class _MapsAlertas extends State<Maps_alertas> {
     super.dispose();
   }
 
-  Future<void> _GoToUserLocation() async {
+  Future<void> _GoToUserLocation({bool inicial = false}) async {
     PermissionStatus status = await Permission.location.request();
 
     if (!status.isGranted) {
@@ -158,12 +220,14 @@ class _MapsAlertas extends State<Maps_alertas> {
     }
 
     position = await Geolocator.getCurrentPosition();
+    if (!mounted) return;
 
     setState(() {
       boolStatus = true;
     });
 
     GoogleMapController controller = await _controller.future;
+    if (!mounted || (inicial && widget.relatoSelecionado != null)) return;
 
     controller.animateCamera(
       CameraUpdate.newLatLngZoom(
@@ -188,7 +252,44 @@ class _MapsAlertas extends State<Maps_alertas> {
     return BitmapDescriptor.bytes(bytes, width: 100);
   }
 
+  BitmapDescriptor _iconeRelato(String? tipo, String? descricao) {
+    final (amarelo, laranja, vermelho, azul) = switch (tipo) {
+      'Alagamento' => (
+        inundacaoYelIcon,
+        inundacaoOraIcon,
+        inundacaoRedIcon,
+        inundacaoBluIcon,
+      ),
+      'Desabamento' => (
+        deslizamentoYelIcon,
+        deslizamentoOraIcon,
+        deslizamentoRedIcon,
+        deslizamentoBluIcon,
+      ),
+      'Tornado' => (
+        tornadoYelIcon,
+        tornadoOraIcon,
+        tornadoRedIcon,
+        tornadoBluIcon,
+      ),
+      _ => (
+        chuvaForteYelIcon,
+        chuvaForteOraIcon,
+        chuvaForteRedIcon,
+        chuvaForteBluIcon,
+      ),
+    };
+    return switch (identificarSeveridade(descricao)) {
+      SeveridadeRelato.leve => amarelo!,
+      SeveridadeRelato.moderada => laranja!,
+      SeveridadeRelato.severa => vermelho!,
+      SeveridadeRelato.desconhecida => azul!,
+    };
+  }
+
   Future<void> carregarPins() async {
+    await _iconesProntos;
+    if (!mounted) return;
 
     final response = await supabase.from('relatos_mapa').select();
 
@@ -219,39 +320,10 @@ class _MapsAlertas extends State<Maps_alertas> {
 
           anchor: const Offset(0.5, 0.5),
 
-          icon: item['rel_tipo_desastre'] == 'Chuva Forte'
-              ? item['rel_descricao'].toString().contains('Leve')
-                    ? chuvaForteYelIcon!
-                    : item['rel_descricao'].toString().contains('Moderado')
-                    ? chuvaForteOraIcon!
-                    : item['rel_descricao'].toString().contains('Crítico')
-                    ? chuvaForteRedIcon!
-                    : chuvaForteBluIcon!
-              : item['rel_tipo_desastre'] == 'Alagamento'
-              ? item['rel_descricao'].toString().contains('Leve')
-                    ? inundacaoYelIcon!
-                    : item['rel_descricao'].toString().contains('Moderado')
-                    ? inundacaoOraIcon!
-                    : item['rel_descricao'].toString().contains('Crítico')
-                    ? inundacaoRedIcon!
-                    : inundacaoBluIcon!
-              : item['rel_tipo_desastre'] == 'Desabamento'
-              ? item['rel_descricao'].toString().contains('Leve')
-                    ? deslizamentoYelIcon!
-                    : item['rel_descricao'].toString().contains('Moderado')
-                    ? deslizamentoOraIcon!
-                    : item['rel_descricao'].toString().contains('Crítico')
-                    ? deslizamentoRedIcon!
-                    : deslizamentoBluIcon!
-              : item['rel_tipo_desastre'] == 'Tornado'
-              ? item['rel_descricao'].toString().contains('Leve')
-                    ? tornadoYelIcon!
-                    : item['rel_descricao'].toString().contains('Moderado')
-                    ? tornadoOraIcon!
-                    : item['rel_descricao'].toString().contains('Crítico')
-                    ? tornadoRedIcon!
-                    : tornadoBluIcon!
-              : chuvaForteBluIcon!,
+          icon: _iconeRelato(
+            item['rel_tipo_desastre']?.toString(),
+            item['rel_descricao']?.toString(),
+          ),
 
           infoWindow: InfoWindow(
             title: item['rel_tipo_desastre'].toString(),
@@ -260,15 +332,13 @@ class _MapsAlertas extends State<Maps_alertas> {
       );
     }
 
+    if (!mounted) return;
     setState(() {
       markers = novosMarkers;
     });
-
-
-
   }
 
-   final estiloMapa = '''
+  final estiloMapa = '''
     [
       {
         "featureType": "poi.business",
@@ -300,73 +370,72 @@ class _MapsAlertas extends State<Maps_alertas> {
     ]
     ''';
 
-
-
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-        child: Stack(
-          children: [
-            GoogleMap(
-              onMapCreated: (GoogleMapController controller) async {
-                _controller.complete(controller);
+    return Stack(
+      children: [
+        GoogleMap(
+          onMapCreated: (GoogleMapController controller) {
+            if (!_controller.isCompleted) _controller.complete(controller);
+          },
+          style: estiloMapa,
 
-                await carregarPins();
-              },
-              style: estiloMapa,
+          markers: markers,
 
-              markers: markers,
+          myLocationEnabled: true,
 
-              myLocationEnabled: true,
+          myLocationButtonEnabled: false,
 
-              myLocationButtonEnabled: false,
+          zoomControlsEnabled: false,
 
-              zoomControlsEnabled: false,
+          compassEnabled: false,
 
-              compassEnabled: false,
+          mapToolbarEnabled: false,
 
-              mapToolbarEnabled: false,
+          initialCameraPosition: CameraPosition(
+            target: boolStatus && position != null
+                ? LatLng(
+                    position!.latitude,
+                    position!.longitude,
+                  )
+                : const LatLng(
+                    -23.014336,
+                    -45.538053,
+                  ),
 
-              initialCameraPosition: CameraPosition(
-                target: boolStatus && position != null
-                    ? LatLng(
-                        position!.latitude,
-                        position!.longitude,
-                      )
-                    : const LatLng(
-                        -23.014336,
-                        -45.538053,
-                      ),
-
-                zoom: 15,
-              ),
-            ),
-
-            Positioned(
-              bottom: 150,
-
-              right: 16,
-
-              child: FloatingActionButton(
-                heroTag: "btnLocalizacaoMapaUnico",
-
-                backgroundColor: corFundoMenu,
-
-                elevation: 4,
-
-                shape: const CircleBorder(),
-
-                onPressed: _GoToUserLocation,
-
-                child: const Icon(
-                  Icons.my_location,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            abriuMarker ? PinsVisao(pinID: SelectedMarkerId, FecharPinVisao: FunctionFecharmarker,) : Container(),
-          ],
+            zoom: 15,
+          ),
         ),
-      );
+
+        Positioned(
+          bottom: 150,
+
+          right: 16,
+
+          child: FloatingActionButton(
+            heroTag: "btnLocalizacaoMapaUnico",
+
+            backgroundColor: corFundoMenu,
+
+            elevation: 4,
+
+            shape: const CircleBorder(),
+
+            onPressed: () => _GoToUserLocation(),
+
+            child: const Icon(
+              Icons.my_location,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        abriuMarker
+            ? PinsVisao(
+                pinID: SelectedMarkerId,
+                FecharPinVisao: FunctionFecharmarker,
+              )
+            : Container(),
+      ],
+    );
   }
 }

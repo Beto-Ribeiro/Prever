@@ -118,6 +118,7 @@ class _PinsVisaoState extends State<PinsVisao> {
           .from('Fotos_Storage')
           .list(path: caminhoPasta);
 
+      if (!mounted || id != widget.pinID) return;
       if (arquivos.isEmpty) {
         setState(() {
           imagemURL = null;
@@ -141,6 +142,7 @@ class _PinsVisaoState extends State<PinsVisao> {
             3600,
           );
 
+      if (!mounted || id != widget.pinID) return;
       setState(() {
         imagemURL = url;
         carregando = false;
@@ -148,6 +150,7 @@ class _PinsVisaoState extends State<PinsVisao> {
     } catch (e) {
       print('Erro ao carregar imagem: $e');
 
+      if (!mounted || id != widget.pinID) return;
       setState(() {
         imagemURL = null;
         carregando = false;
@@ -163,14 +166,14 @@ class _PinsVisaoState extends State<PinsVisao> {
           .eq('rel_id', ID)
           .single();
 
-      if (!mounted) return;
+      if (!mounted || ID != widget.pinID) return;
 
       setState(() {
         TipoDesatrePinVisao = dados['rel_tipo_desastre'];
         MagnitudePinVisao = dados['rel_descricao'];
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || ID != widget.pinID) return;
 
       setState(() {
         TipoDesatrePinVisao = e.toString();

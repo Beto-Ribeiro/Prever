@@ -8,13 +8,19 @@ import 'tela_sobrevivencia.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../controles/controle_acessibilidade.dart';
+import 'package:branch1/telas/widgets/relatos_proximos.dart';
+import 'package:branch1/services/relatos_proximos_service.dart';
 
 class Home extends StatefulWidget {
+  final bool ativa;
+  final ValueChanged<RelatoProximo>? onAbrirRelato;
   final Function(int) onChangePage;
   const Home({
     super.key,
     required this.title,
     required this.onChangePage,
+    this.ativa = true,
+    this.onAbrirRelato,
   });
 
   final String title;
@@ -614,28 +620,10 @@ class _Home_State extends State<Home> {
                           SizedBox(
                             height: 45,
                           ),
-                          Container(
-
-                            width: MediaQuery.widthOf(context) * 0.9,
-
-                            child: Column(
-                              children: [
-                                Row(
-                                  children: [
-                                    Text("Relatos próximos de você"),
-                                  ],
-                                ),
-                                Container(
-                                  width: double.infinity,
-                                  height: MediaQuery.heightOf(context) * 0.2,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey,
-                                    borderRadius: BorderRadius.circular(25)
-                                  )
-                                )
-                              ],
-                            ),
-
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
+                            child: RelatosProximos(ativa: widget.ativa,
+                              onAbrirRelato: widget.onAbrirRelato),
                           ),
 
                         ],

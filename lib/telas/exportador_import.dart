@@ -18,4 +18,5 @@ export 'Relatos.dart';
 export 'changePassword.dart';
 export 'writeChangedPassword.dart';
 export 'dart:typed_data';
+export 'editar_perfil_tela.dart';
 export 'package:flutter/services.dart';

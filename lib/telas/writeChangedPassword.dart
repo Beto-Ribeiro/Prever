@@ -572,9 +572,7 @@ class _writeChangedPasswordState extends State<writeChangedPassword> {
                       80,
                     ),
 
-                    child: Image.asset(
-
-                      "gfx/png/Image/prever.png",
+                    child: SvgPicture.asset("gfx/svg/Image/Prever_logo.svg", semanticsLabel: "Logo Prever",
 
                       height: 120,
 

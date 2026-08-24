@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:branch1/services/relatos_proximos_service.dart';
 
 import 'package:branch1/telas/login_tela.dart';
 import 'package:branch1/services/chatbot_service.dart';
@@ -50,6 +51,19 @@ class _TelaPrincipalState extends State<TelaPrincipal>
   late List<Widget> _telas;
 
   late int _currentIndex;
+  int _solicitacaoRelato = 0;
+
+  void _abrirRelatoNoMapa(RelatoProximo relato) {
+    setState(() {
+      _telas[1] = Maps_alertas(
+        title: 'Mapa de alertas',
+        onChangePage: changePage,
+        relatoSelecionado: relato,
+        solicitacaoRelato: ++_solicitacaoRelato,
+      );
+      _currentIndex = 1;
+    });
+  }
 
 
   // ==========================================================================
@@ -546,6 +560,10 @@ class _TelaPrincipalState extends State<TelaPrincipal>
         onChangePage: changePage,
       ),
 
+      //=======================================================================
+      //12 - EDITAR PERFIL
+
+      EditarPerfilTela(title: 'editar', onChangePage: changePage)
     ];
   }
 
@@ -616,6 +634,15 @@ class _TelaPrincipalState extends State<TelaPrincipal>
     setState(() {
 
       _currentIndex = index;
+
+      // O IndexedStack preserva o estado: recarrega os dados ao abrir o perfil.
+      if (index == 8) {
+        _telas[8] = TelaPerfil(key: UniqueKey(), title: 'Perfil',
+            onChangePage: changePage);
+      } else if (index == 12) {
+        _telas[12] = EditarPerfilTela(key: UniqueKey(), title: 'Editar perfil',
+            onChangePage: changePage);
+      }
 
     });
 
@@ -720,7 +747,12 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
               index: _currentIndex,
 
-              children: _telas,
+              children: [
+                Home(title: 'SOS', onChangePage: changePage,
+                    onAbrirRelato: _abrirRelatoNoMapa,
+                    ativa: _currentIndex == 0),
+                ..._telas.skip(1),
+              ],
 
             ),
 

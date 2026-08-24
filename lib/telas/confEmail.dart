@@ -189,8 +189,7 @@ class _confEmail_state extends State<confEmail> {
                       350,
                     ),
 
-                    child: Image.asset(
-                      "gfx/png/Image/SMDN.png",
+                    child: SvgPicture.asset("gfx/svg/Image/Prever_logo.svg", semanticsLabel: "Logo Prever",
                       height: 60,
                     ),
                   ),

@@ -92,8 +92,7 @@ class _sLogCad_telaState extends State<sLogCad> {
                   ),
                   Expanded(
                     child: Center(
-                      child: Image.asset(
-                        "gfx/png/Image/prever.png",
+                      child: SvgPicture.asset("gfx/svg/Image/Prever_logo.svg", semanticsLabel: "Logo Prever",
                         height: 120,
                       ),
                     ),
