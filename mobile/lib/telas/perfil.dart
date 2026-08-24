@@ -25,8 +25,6 @@ class _TelaPerfilState extends State<TelaPerfil> {
 
   final double alturaCard = 90;
 
-  // Atualizadas a cada build a partir do AccessibilityController,
-  // reagindo a alto contraste / daltonismo em toda a tela.
   Color azul = const Color(0xFF1D3557);
   Color azulClaro = const Color(0xFF8FB3D9);
 
@@ -45,13 +43,10 @@ class _TelaPerfilState extends State<TelaPerfil> {
   }
 
   Future<void> _esperarSessaoECarregar() async {
-    // Se já tem usuário, carrega direto
     if (supabase.auth.currentUser != null) {
       carregarDados();
       return;
     }
-
-    // Aguarda o evento de sessão restaurada
     supabase.auth.onAuthStateChange.listen((data) {
       if (data.session != null && mounted) {
         carregarDados();
@@ -62,16 +57,11 @@ class _TelaPerfilState extends State<TelaPerfil> {
   Future<void> carregarDados() async {
     try {
       final userId = supabase.auth.currentUser?.id;
-      print('=== USER ID: $userId ===');
       if (userId == null) {
-        print('=== USUÁRIO NULO ===');
-        setState(
-          () => carregando = false,
-        ); // <-- não esquece de parar o loading
+        setState(() => carregando = false);
         return;
       }
 
-      // ── PERFIL ────────────────────────────────────────────────────────────
       try {
         final perfil = await supabase
             .from('Perfis')
@@ -79,16 +69,12 @@ class _TelaPerfilState extends State<TelaPerfil> {
             .eq('prf_id', userId)
             .limit(1)
             .single();
-        print('=== PERFIL OK: $perfil ===');
         setState(() {
           nome = perfil['prf_nome'] ?? '';
           tipoUsuario = perfil['prf_tipo'] ?? '';
         });
-      } catch (e) {
-        print('=== ERRO PERFIL: $e ===');
-      }
+      } catch (e) {}
 
-      // ── CIDADAO ───────────────────────────────────────────────────────────
       try {
         final cidadao = await supabase
             .from('Cidadao')
@@ -96,18 +82,11 @@ class _TelaPerfilState extends State<TelaPerfil> {
             .eq('cid_id', userId)
             .limit(1)
             .single();
-        print('=== CIDADAO OK: $cidadao ===');
         setState(() {
           cpf = cidadao['cid_cpf'] ?? '';
         });
-      } catch (e) {
-        print('=== ERRO CIDADAO: $e ===');
-        // Tenta ver todos os registros pra descobrir o nome da coluna FK
-        final todos = await supabase.from('Cidadao').select().limit(3);
-        print('=== CIDADAO COLUNAS: $todos ===');
-      }
+      } catch (e) {}
 
-      // ── HISTORICO ─────────────────────────────────────────────────────────
       try {
         final historico = await supabase
             .from('Historico_Medicacao_Cidadao')
@@ -115,24 +94,15 @@ class _TelaPerfilState extends State<TelaPerfil> {
             .eq('hmc_cid_id', userId)
             .limit(1)
             .single();
-        print('=== HISTORICO OK: $historico ===');
         setState(() {
           tipoSanguineo = historico['hmc_tipo_sanguineo'] ?? '';
           alergias = historico['hmc_alergias'] ?? '';
           observacoes = historico['hmc_doencas_cronicas'] ?? '';
         });
-      } catch (e) {
-        print('=== ERRO HISTORICO: $e ===');
-        final todos = await supabase
-            .from('Historico_Medicacao_Cidadao')
-            .select()
-            .limit(3);
-        print('=== HISTORICO COLUNAS: $todos ===');
-      }
+      } catch (e) {}
 
       setState(() => carregando = false);
     } catch (e) {
-      print('=== ERRO GERAL: $e ===');
       setState(() => carregando = false);
     }
   }
@@ -148,14 +118,12 @@ class _TelaPerfilState extends State<TelaPerfil> {
       body: SafeArea(
         child: Stack(
           children: [
-            // ── Conteúdo original da tela ───────────────────────────
             carregando
                 ? const Center(child: CircularProgressIndicator())
                 : SingleChildScrollView(
                     padding: const EdgeInsets.all(18),
                     child: Column(
                       children: [
-                        // ── Botão voltar ──────────────────────────────────────
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -177,10 +145,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
                             ),
                           ],
                         ),
-
                         const SizedBox(height: 20),
-
-                        // ── Label topo ────────────────────────────────────────
                         Text(
                           "Perfil do usuário",
                           style: TextStyle(
@@ -188,10 +153,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
                             fontStyle: FontStyle.italic,
                           ),
                         ),
-
                         const SizedBox(height: 15),
-
-                        // ── Avatar ────────────────────────────────────────────
                         Container(
                           width: 95,
                           height: 95,
@@ -205,38 +167,28 @@ class _TelaPerfilState extends State<TelaPerfil> {
                             color: Colors.white,
                           ),
                         ),
-
                         const SizedBox(height: 20),
-
-                        // ── Nome, tipo e CPF ──────────────────────────────────
                         campoTexto(nome, 28, true),
                         campoTexto(tipoUsuario, 16, false),
                         campoTexto(cpf, 16, false),
-
                         const SizedBox(height: 20),
-
-                        // ── Tipo sanguíneo ────────────────────────────────────
                         campoTipoSanguineo(),
-
                         const SizedBox(height: 30),
-
-                        // ── Alergias ──────────────────────────────────────────
                         titulo("Alergias"),
                         areaTexto(alergias),
-
                         const SizedBox(height: 30),
-
-                        // ── Doenças ───────────────────────────────────────────
                         titulo("Doenças"),
                         areaTexto(observacoes),
-
                         const SizedBox(height: 30),
                       ],
                     ),
                   ),
 
             // ── Botão de acessibilidade (canto superior direito) ─────
-            const BotaoAcessibilidade(),
+            BotaoAcessibilidade(
+              onEditarPerfil: () => widget.onChangePage(10),
+              onLogout: () => widget.onChangePage(7),
+            ),
           ],
         ),
       ),
