@@ -235,6 +235,8 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
 
   }
 
+  bool pickedDate = false;
+
   void _showDatePicker() {
     showDatePicker(
       context: context,
@@ -245,6 +247,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
       if (value != null) {
         setState(() {
           _dateTime = value;
+          pickedDate = true;
         });
       }
     });
@@ -254,6 +257,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: Colors.blueGrey[600],
 
@@ -420,7 +424,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
 
                                     children: [
                                       Text(
-                                        "${_dateTime.day}/${_dateTime.month}/${_dateTime.year}",
+                                        pickedDate?"${_dateTime.day}/${_dateTime.month}/${_dateTime.year}":"${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}" ,
                                         style: TextStyle(color: Colors.black),
                                       ),
                                     ],
@@ -493,8 +497,8 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
                         ),
 
                         child: Image.asset(
-                          "gfx/png/Image/SMDN.png",
-                          height: 60,
+                          "gfx/png/Image/prever.png",
+                          height: 120,
                         ),
                       ),
                     ],

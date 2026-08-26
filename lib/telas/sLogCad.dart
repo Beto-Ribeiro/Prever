@@ -93,8 +93,8 @@ class _sLogCad_telaState extends State<sLogCad> {
                   Expanded(
                     child: Center(
                       child: Image.asset(
-                        "gfx/png/Image/SMDN.png",
-                        height: 60,
+                        "gfx/png/Image/prever.png",
+                        height: 120,
                       ),
                     ),
                   ),
