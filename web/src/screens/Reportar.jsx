@@ -7,6 +7,7 @@ import { toFriendlyMessage } from '../utils/friendlyMessages.js'
 import {
   countAlertsToday,
   countRecipients,
+  countRecipientsInArea,
   dispatchAlert,
   listAlerts,
   subscribeReportarData,
@@ -191,6 +192,9 @@ export default function Reportar() {
   const [dispatching, setDispatching] = useState(false)
   const [isMapOpen, setIsMapOpen] = useState(false)
   const [autoFilled, setAutoFilled] = useState(false)
+  const [radiusKm, setRadiusKm] = useState(3)
+  const [areaRecipients, setAreaRecipients] = useState(0)
+  const [areaRecipientsLoading, setAreaRecipientsLoading] = useState(false)
 
   const [cityInputValue, setCityInputValue] = useState('')
   const [neighborhoodInputValue, setNeighborhoodInputValue] = useState('')
@@ -231,6 +235,32 @@ export default function Reportar() {
     })
   }, [loadReportarData])
 
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadAreaRecipients() {
+      if (!isModalOpen || !Number.isFinite(Number(form.lat)) || !Number.isFinite(Number(form.lng))) {
+        setAreaRecipients(0)
+        return
+      }
+
+      setAreaRecipientsLoading(true)
+      try {
+        const total = await countRecipientsInArea({ lat: form.lat, lng: form.lng, radiusKm })
+        if (!cancelled) setAreaRecipients(total)
+      } finally {
+        if (!cancelled) setAreaRecipientsLoading(false)
+      }
+    }
+
+    loadAreaRecipients()
+
+    return () => {
+      cancelled = true
+    }
+  }, [form.lat, form.lng, isModalOpen, radiusKm])
+
   useEffect(() => {
     function handleClickOutside(e) {
       if (cityWrapperRef.current && !cityWrapperRef.current.contains(e.target)) {
@@ -249,6 +279,8 @@ export default function Reportar() {
     setCityInputValue('')
     setNeighborhoodInputValue('')
     setTargetLocation(null)
+    setRadiusKm(3)
+    setAreaRecipients(0)
     setAutoFilled(false)
   }
 
@@ -258,13 +290,18 @@ export default function Reportar() {
       return
     }
 
+    if (!Number.isFinite(Number(form.lat)) || !Number.isFinite(Number(form.lng))) {
+      setError('Selecione a área no mapa para garantir o disparo georreferenciado.')
+      return
+    }
+
     setDispatching(true)
     setError('')
 
     try {
-      await dispatchAlert({ form, currentUser: user, recipients })
+      await dispatchAlert({ form, currentUser: user, recipients: areaRecipients, radiusKm })
       setIsModalOpen(false)
-      setSuccessMsg('Alerta disparado com sucesso!')
+      setSuccessMsg(`Alerta georreferenciado registrado para ${areaRecipients.toLocaleString('pt-BR')} destinatário(s) na área selecionada.`)
       resetForm()
       await loadReportarData()
       setTimeout(() => setSuccessMsg(''), 4000)
@@ -286,6 +323,7 @@ export default function Reportar() {
       const neighborhood = data.address?.suburb || data.address?.neighbourhood || data.address?.quarter || ''
 
       setForm((prev) => ({ ...prev, city, neighborhood, lat, lng }))
+      setTargetLocation({ city, neighborhood, lat, lon: lng })
       setCityInputValue(city)
       setNeighborhoodInputValue(neighborhood)
       setAutoFilled(true)
@@ -481,15 +519,28 @@ export default function Reportar() {
             )}
           </div>
 
-          <button className="w-full py-3 bg-[#597891] hover:bg-[#2D5A87] text-white font-semibold rounded-lg transition-colors" onClick={() => setIsMapOpen(true)}>
-            Localizar Área no Mapa
-          </button>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_160px]">
+            <button type="button" className="w-full py-3 bg-[#597891] hover:bg-[#2D5A87] text-white font-semibold rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-text-main" onClick={() => setIsMapOpen(true)}>
+              Localizar Área no Mapa
+            </button>
+
+            <label className="block">
+              <span className="block text-label text-slate-600 mb-1.5">RAIO</span>
+              <select className="select-field" value={radiusKm} onChange={(e) => setRadiusKm(Number(e.target.value))}>
+                <option value={1}>1 km</option>
+                <option value={3}>3 km</option>
+                <option value={5}>5 km</option>
+                <option value={10}>10 km</option>
+                <option value={20}>20 km</option>
+              </select>
+            </label>
+          </div>
 
           <Modal isOpen={isMapOpen} onClose={() => setIsMapOpen(false)} title="Selecionar Área no Mapa" size="xl">
             <div className="h-[65vh] rounded-xl overflow-hidden border border-border-soft">
-              <MapView onMapClick={handleMapClick} targetLocation={targetLocation} />
+              <MapView onMapClick={handleMapClick} targetLocation={targetLocation} selectionRadiusKm={radiusKm} />
             </div>
-            <p className="text-xs text-slate-500 mt-3">Clique no mapa para preencher município e bairro aproximados.</p>
+            <p className="text-xs text-slate-500 mt-3">Clique no mapa para preencher município e bairro aproximados. O raio selecionado define quem receberá o push.</p>
           </Modal>
 
           <div>
@@ -498,10 +549,10 @@ export default function Reportar() {
           </div>
 
           <div className="rounded-xl bg-slate-50 border border-border-soft px-4 py-3 text-sm text-slate-600">
-            Este alerta será registrado para <strong>{recipients.toLocaleString('pt-BR')}</strong> destinatário(s). As notificações mobile serão ligadas depois.
+            Este alerta será direcionado somente para usuários dentro de <strong>{radiusKm} km</strong> da área selecionada. Destinatários estimados: <strong>{areaRecipientsLoading ? 'calculando...' : areaRecipients.toLocaleString('pt-BR')}</strong> de {recipients.toLocaleString('pt-BR')} cadastrados.
           </div>
 
-          <button className="w-full py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-all disabled:opacity-50" onClick={handleDispatch} disabled={dispatching}>
+          <button type="button" className="w-full py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-all disabled:opacity-50" onClick={handleDispatch} disabled={dispatching}>
             {dispatching ? 'Disparando...' : 'Confirmar Disparo'}
           </button>
         </div>

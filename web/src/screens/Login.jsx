@@ -23,8 +23,10 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const isRegisterValid = institution && name && email && role
-  const isLoginValid = email && password
+  const normalizedEmail = email.trim().toLowerCase()
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
+  const isRegisterValid = Boolean(institution.trim() && name.trim() && role.trim() && isValidEmail)
+  const isLoginValid = Boolean(normalizedEmail && password)
 
   const handleSubmit = async () => {
     setError('')
@@ -33,7 +35,7 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
     try {
       if (isRegister) {
         if (!isRegisterValid) return
-        await onRegister?.({ institution, name, email, role })
+        await onRegister?.({ institution: institution.trim(), name: name.trim(), email: normalizedEmail, role: role.trim() })
         setShowSuccess(true)
         setInstitution('')
         setName('')
@@ -43,7 +45,7 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
       }
 
       if (!isLoginValid) return
-      await onLogin({ email, password, rememberMe })
+      await onLogin({ email: normalizedEmail, password, rememberMe })
     } catch (err) {
       setError(toFriendlyMessage(err, 'Não foi possível concluir a ação. Tente novamente.'))
     } finally {
@@ -69,7 +71,7 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
       </div>
       <div
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/src/assets/map-bg.png')", filter: 'blur(px) brightness(0.7)' }}
+        style={{ backgroundImage: "url('/src/assets/map-bg.png')", filter: 'blur(2px) brightness(0.7)' }}
       />
       <div className="absolute inset-0 bg-bg-sidebar/30" />
 
@@ -77,9 +79,9 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
         <div className="flex flex-col md:flex-row w-full max-w-3xl shadow-modal overflow-hidden rounded-2xl" style={{ minHeight: '560px' }}>
           <div className="md:w-1/2 bg-bg-sidebar text-text-on-dark flex flex-col justify-center items-center p-8 space-y-8">
             <div className="flex flex-col items-center text-center">
-              <img src={logo} alt="SMDN Logo" className="w-full max-w-[200px] mb-4" />
+              <img src={logo} alt="PREVER Logo" className="w-full max-w-[200px] mb-4" />
               <p className="text-sm font-medium opacity-80 leading-snug">
-                Sistema de Monitoramento de Desastres Naturais
+                Plataforma de Resiliência e Vigilância de Eventos de Risco
               </p>
             </div>
             <div className="space-y-5 w-full">
@@ -199,7 +201,7 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
                 onClick={() => { setError(''); setView(isRegister ? 'login' : 'cadastro') }}
                 className="text-text-main font-bold cursor-pointer hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-text-main rounded"
               >
-                {isRegister ? 'Já tenho acesso SMDN' : 'Solicitar acesso ao SMDN'}
+                {isRegister ? 'Já tenho acesso PREVER' : 'Solicitar acesso ao PREVER'}
               </span>
             </p>
 

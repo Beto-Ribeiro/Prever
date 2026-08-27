@@ -72,7 +72,7 @@ async function reverseGeocode(lat, lng) {
     geocodeCache.set(cacheKey, result)
     return result
   } catch (error) {
-    console.warn('[SMDN Dashboard] Geocodificação reversa indisponível:', error.message)
+    console.warn('[PREVER Dashboard] Geocodificação reversa indisponível:', error.message)
     geocodeCache.set(cacheKey, null)
     return null
   }
@@ -132,7 +132,7 @@ async function getPhotoUrl(photoPath) {
     .createSignedUrl(photoPath, 60 * 60)
 
   if (error) {
-    console.warn('[SMDN Dashboard] Não foi possível assinar foto do relato:', error.message)
+    console.warn('[PREVER Dashboard] Não foi possível assinar foto do relato:', error.message)
     return ''
   }
 
@@ -156,7 +156,7 @@ function normalizeVictims(victims) {
 }
 
 function formatOccurrenceCode(id) {
-  if (!id) return 'OC-SMDN'
+  if (!id) return 'OC-PREVER'
   return `OC-${String(id).slice(0, 6).toUpperCase()}`
 }
 

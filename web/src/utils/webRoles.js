@@ -53,7 +53,7 @@ export function getRoleLabel(role) {
   return ROLE_LABELS[normalizeRole(role)] || ROLE_LABELS.unknown
 }
 
-// Regra do SMDN:
+// Regra do PREVER:
 // - Sem perfil e Cidadão não acessam o painel web.
 // - Funcionário, Instituição e Administrador acessam o sistema web.
 export function canAccessWeb(role) {

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Login from './screens/Login.jsx'
 import Dashboard from './screens/Dashboard.jsx'
 import Reportar from './screens/Reportar.jsx'
+import Abrigos from './screens/Abrigos.jsx'
 import Ocorrencias from './screens/Ocorrencias.jsx'
 import Relatorios from './screens/Relatorios.jsx'
 import Auditoria from './screens/Auditoria.jsx'
@@ -11,7 +12,6 @@ import UserList from './screens/UserList.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import { useAuth } from './hooks/useAuth.js'
 import { createWebAccessRequest } from './backend/auth/webAccessService.js'
-import { toFriendlyMessage } from './utils/friendlyMessages.js'
 
 function AdminHomeScreen() {
   return <AdminPanel initialTab="all" />
@@ -20,6 +20,7 @@ function AdminHomeScreen() {
 const SCREENS = {
   dashboard: Dashboard,
   reportar: Reportar,
+  abrigos: Abrigos,
   ocorrencias: Ocorrencias,
   relatorios: Relatorios,
   auditoria: Auditoria,
@@ -63,6 +64,7 @@ export default function App() {
     const permissionKeyByScreen = {
       dashboard: 'dashboard',
       reportar: 'reportar',
+      abrigos: 'ocorrencias',
       ocorrencias: 'ocorrencias',
       relatorios: 'relatorios',
       auditoria: 'auditoria',

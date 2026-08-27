@@ -38,7 +38,7 @@ async function validateSupabaseSession(req) {
   }
 
   if (!authorization.startsWith('Bearer ')) {
-    throw new Error('Faça login para usar a IA SMDN.')
+    throw new Error('Faça login para usar o Nimbo.')
   }
 
   const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
@@ -60,14 +60,14 @@ function buildPrompt({ message, currentScreen, screenTitle, screenIntro, history
     ? history
         .slice(-8)
         .map((item) => {
-          const role = item?.role === 'assistant' ? 'IA SMDN' : 'Usuário'
+          const role = item?.role === 'assistant' ? 'Nimbo' : 'Usuário'
           return `${role}: ${sanitizeText(item?.text, 1200)}`
         })
         .join('\n')
     : ''
 
   return [
-    `Tela atual: ${sanitizeText(screenTitle || currentScreen || 'SMDN', 120)}`,
+    `Tela atual: ${sanitizeText(screenTitle || currentScreen || 'PREVER', 120)}`,
     screenIntro ? `Contexto da tela: ${sanitizeText(screenIntro, 500)}` : '',
     recentHistory ? `Histórico recente:\n${recentHistory}` : '',
     `Pergunta do usuário:\n${sanitizeText(message, 2000)}`,
@@ -86,7 +86,7 @@ export default async function handler(req, res) {
 
     if (!apiKey) {
       return sendJson(res, 500, {
-        error: 'A IA ainda não está configurada. Defina GEMINI_API_KEY no ambiente.',
+        error: 'Nimbo ainda não está configurado. Defina GEMINI_API_KEY no ambiente.',
       })
     }
 
@@ -96,7 +96,7 @@ export default async function handler(req, res) {
     const message = sanitizeText(body.message, 2000)
 
     if (!message) {
-      return sendJson(res, 400, { error: 'Digite uma mensagem para a IA.' })
+      return sendJson(res, 400, { error: 'Digite uma mensagem para o Nimbo.' })
     }
 
     const ai = new GoogleGenAI({ apiKey })
@@ -112,27 +112,29 @@ export default async function handler(req, res) {
       }),
       config: {
         systemInstruction: [
-          'Você é a IA SMDN, assistente operacional do Sistema de Monitoramento de Desastres Naturais.',
+          'Você é Nimbo, assistente operacional do Sistema de Monitoramento de Desastres Naturais.',
           'Responda sempre em português do Brasil.',
+          'Nimbo sempre fala de si em terceira pessoa. Use frases como: Nimbo recomenda, Nimbo encontrou, Nimbo acha isso errado.',
+          'Ao se apresentar, chame-se apenas de Nimbo.',
           'Ajude agentes públicos a entender telas, priorizar ocorrências, revisar alertas, interpretar relatórios e consultar auditoria.',
           'Não invente dados do sistema.',
           'Use apenas o contexto recebido na pergunta.',
           'Em emergência real, oriente seguir protocolos oficiais da Defesa Civil, Bombeiros, SAMU ou autoridade competente.',
           'Nunca substitua a decisão técnica da autoridade responsável.',
         ].join(' '),
-        temperature: 0.4,
+        temperature: 0.3,
         topP: 0.9,
         maxOutputTokens: 1600,
       },
     })
 
     return sendJson(res, 200, {
-      text: response.text || 'Não consegui gerar uma resposta agora.',
+      text: response.text || 'Nimbo não conseguiu gerar uma resposta agora.',
       model: GEMINI_MODEL,
     })
   } catch (error) {
     return sendJson(res, 500, {
-      error: error?.message || 'Erro inesperado ao consultar a IA.',
+      error: error?.message || 'Erro inesperado ao consultar o Nimbo.',
     })
   }
 }

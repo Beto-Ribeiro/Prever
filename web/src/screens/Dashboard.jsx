@@ -21,6 +21,7 @@ import {
   updateOcorrenciaStatus,
 } from '../backend/ocorrencias/ocorrenciasService.js'
 import { toFriendlyMessage } from '../utils/friendlyMessages.js'
+import { listShelters, subscribeShelterChanges } from '../backend/abrigos/shelterService.js'
 
 const SEVERITY_CONFIG = {
   critical: { label: 'Crítico', cls: 'badge-critical', dotColor: '#c60202', shape: 'critical', symbol: '◆' },
@@ -98,6 +99,12 @@ function toMapVictims(victims) {
       assistedAt: item.assistedAt,
       assistedBy: item.assistedBy,
     }))
+}
+
+function toMapShelters(shelters) {
+  return (shelters || [])
+    .filter((item) => Number.isFinite(item.lat) && Number.isFinite(item.lng))
+    .map((item) => ({ ...item }))
 }
 
 
@@ -184,6 +191,8 @@ export default function Dashboard() {
   const [error, setError] = useState('')
   const { settings, effectiveTheme } = useSmdnSettings()
   const [mapMode, setMapMode] = useState(normalizeMapMode(settings.defaultMapMode))
+  const [showShelters, setShowShelters] = useState(false)
+  const [shelters, setShelters] = useState([])
   const mapRef = useRef(null)
 
   const mapOccurrences = useMemo(
@@ -196,10 +205,25 @@ export default function Dashboard() {
     [dashboard.victims]
   )
 
+  const mapShelters = useMemo(
+    () => toMapShelters(shelters),
+    [shelters]
+  )
+
   const dashboardSummary = [
     { label: 'No mapa', value: mapOccurrences.length },
     { label: 'Críticos', value: dashboard.stats.criticalSeverity },
   ]
+
+
+  async function loadShelters({ silent = true } = {}) {
+    try {
+      const data = await listShelters()
+      setShelters(data)
+    } catch (err) {
+      if (!silent) setError(toFriendlyMessage(err, 'Não foi possível carregar os abrigos.'))
+    }
+  }
 
   async function loadDashboard({ silent = false } = {}) {
     if (!silent) setLoading(true)
@@ -218,6 +242,11 @@ export default function Dashboard() {
   useEffect(() => {
     loadDashboard()
     return subscribeDashboardChanges(() => loadDashboard({ silent: true }))
+  }, [])
+
+  useEffect(() => {
+    loadShelters()
+    return subscribeShelterChanges(() => loadShelters())
   }, [])
   useEffect(() => {
     setMapMode(normalizeMapMode(settings.defaultMapMode))
@@ -351,7 +380,7 @@ export default function Dashboard() {
         aria-label="Mapa de monitoramento com ocorrências e vítimas localizadas"
       >
         <p className="sr-only" aria-live="polite">
-          Dashboard com {mapOccurrences.length} ocorrência(s) com localização e {mapVictims.length} vítima(s) localizada(s).
+          Dashboard com {mapOccurrences.length} ocorrência(s), {mapVictims.length} vítima(s) e {showShelters ? mapShelters.length : 0} abrigo(s) visível(is).
           Filtro atual do mapa: {MAP_MODES.find((mode) => mode.id === mapMode)?.label}.
         </p>
 
@@ -359,6 +388,7 @@ export default function Dashboard() {
           ref={mapRef}
           ocorrencias={mapOccurrences}
           vitimas={mapVictims}
+          abrigos={showShelters ? mapShelters : []}
           mapMode={mapMode}
           heatmap={mapMode === 'heat'}
           onOccurrenceDetails={handleMapOccurrenceDetails}
@@ -385,6 +415,17 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
+
+
+        <button
+          type="button"
+          onClick={() => setShowShelters((value) => !value)}
+          className={`absolute top-4 left-[360px] z-[500] rounded-xl border px-3 py-2 text-xs font-bold shadow-sm backdrop-blur-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${showShelters ? 'border-text-main bg-text-main text-white' : 'border-border-soft bg-bg-surface/95 text-slate-600 hover:bg-action-hover/20'}`}
+          aria-pressed={showShelters}
+          aria-label="Mostrar ou ocultar abrigos no mapa do dashboard"
+        >
+          Abrigos {mapShelters.length > 0 ? `(${mapShelters.length})` : ''}
+        </button>
       </Card>
 
       <div

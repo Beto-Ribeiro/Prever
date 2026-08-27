@@ -53,7 +53,7 @@ function makeInitialForm(user) {
     phone: formatBrazilPhone(user?.phone || user?.perfil?.prf_telefone || ''),
     avatarUrl: user?.avatar || user?.perfil?.prf_avatar_url || '',
     cpf: '***.***.***-00',
-    institution: user?.instituicao?.ins_numero || 'SMDN',
+    institution: user?.instituicao?.ins_numero || 'PREVER',
     newPassword: '',
     requestPasswordReset: false,
   }
@@ -76,7 +76,7 @@ function ChangePreview({ changes }) {
 }
 
 function initialsFromName(name) {
-  return String(name || 'SMDN')
+  return String(name || 'PREVER')
     .split(' ')
     .filter(Boolean)
     .map((part) => part[0])

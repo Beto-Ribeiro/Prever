@@ -108,7 +108,7 @@ export default function SettingsPanel({ variant = 'row', className = '', panelCl
           ref={panelRef}
           className={`fixed bottom-16 left-[210px] z-[99999] w-[360px] max-h-[calc(100vh-5rem)] overflow-y-auto rounded-3xl border border-border-soft bg-bg-surface p-5 shadow-2xl animate-slide-up ${panelClassName}`}
           role="dialog"
-          aria-label="Configurações do SMDN"
+          aria-label="Configurações do PREVER"
         >
           <div className="flex items-center justify-end border-b border-border-soft pb-3 mb-4">
             <button
@@ -175,6 +175,27 @@ export default function SettingsPanel({ variant = 'row', className = '', panelCl
                 label="Modo daltônico"
                 description="Ajusta cores de severidade para maior distinção."
               />
+              <button
+                type="button"
+                onClick={() => updateSetting('promptRecommendationsDisabled', !settings.promptRecommendationsDisabled)}
+                className={`w-full rounded-xl border px-3 py-2 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-text-main ${
+                  settings.promptRecommendationsDisabled
+                    ? 'border-sky-200 bg-sky-50 text-slate-800 hover:bg-sky-100'
+                    : 'border-border-soft bg-bg-surface text-slate-800 hover:bg-slate-50'
+                }`}
+                aria-pressed={settings.promptRecommendationsDisabled}
+              >
+                <span className="block text-sm font-bold">
+                  {settings.promptRecommendationsDisabled
+                    ? 'Ligar recomendação de prompt'
+                    : 'Desligar recomendação de prompt'}
+                </span>
+                <span className="block text-xs text-slate-500 mt-0.5">
+                  {settings.promptRecommendationsDisabled
+                    ? 'As sugestões rápidas do Nimbo estão ocultas.'
+                    : 'Oculta sugestões prontas do Nimbo, como botões de perguntas rápidas.'}
+                </span>
+              </button>
             </div>
 
             <button

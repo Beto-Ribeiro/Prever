@@ -4,7 +4,7 @@ function isMissingRelationError(error) {
   return error?.code === '42P01' || String(error?.message || '').toLowerCase().includes('does not exist')
 }
 
-function emptyBecauseMissingSchema(error) {
+function emptyBecauseMissingSchema() {
   return {
     data: [],
     missingSchema: true,

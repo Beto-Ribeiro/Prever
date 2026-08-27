@@ -2,6 +2,8 @@ import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import assistantIcon from '../assets/assistant/assistant-icon.svg'
 import { askSmdnAssistant } from '../backend/ai/assistantService.js'
 import { buildSmdnOperationalContext } from '../backend/ai/smdnContextService.js'
+import { useAuth } from '../hooks/useAuth.js'
+import { useSmdnSettings } from '../hooks/useSmdnSettings.js'
 
 const SCREEN_CONTEXT = {
   dashboard: {
@@ -46,6 +48,8 @@ const SCREEN_CONTEXT = {
   },
 }
 
+const CHAT_STORAGE_KEY = 'smdn-nimbo-chat-unico-browser-v1'
+
 function SparkIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -56,13 +60,118 @@ function SparkIcon() {
   )
 }
 
-function buildInitialMessages(context) {
+function buildInitialMessages() {
   return [
     {
       role: 'assistant',
-      text: `Oi! Estou vendo a tela ${context.title}. Posso consultar os dados reais do SMDN e te ajudar com usuários, auditoria, ocorrências e prioridades.`,
+      text: 'Oi, me chamo Nimbo. Como Nimbo pode te ajudar hoje?',
+    },
+    {
+      role: 'assistant',
+      text: 'Posso ver sua tela e irei te guiar sempre que precisar.',
     },
   ]
+}
+
+function safeStorageKey() {
+  return CHAT_STORAGE_KEY
+}
+
+function readStoredMessages(key) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(key) || '[]')
+    if (Array.isArray(saved) && saved.length > 0) {
+      return saved
+        .filter((item) => item?.role && typeof item?.text === 'string')
+        .slice(-24)
+    }
+  } catch {
+    // ignora histórico corrompido
+  }
+
+  return buildInitialMessages()
+}
+
+function writeStoredMessages(key, messages) {
+  try {
+    const safeMessages = (messages || [])
+      .filter((item) => item?.role && typeof item?.text === 'string')
+      .slice(-40)
+
+    localStorage.setItem(key, JSON.stringify(safeMessages))
+  } catch {
+    // ignora storage indisponível
+  }
+}
+
+function getAccountProfile(user, session) {
+  const authUser = user || session?.user || {}
+  const perfil = authUser?.perfil || {}
+
+  const name =
+    authUser?.name ||
+    authUser?.nome ||
+    perfil?.prf_nome ||
+    authUser?.user_metadata?.name ||
+    authUser?.email?.split('@')[0] ||
+    'Usuário'
+
+
+  return {
+    id: authUser?.id || session?.user?.id || 'sem-conta',
+    name,
+    avatar:
+      authUser?.avatar ||
+      authUser?.avatarUrl ||
+      perfil?.prf_avatar_url ||
+      authUser?.user_metadata?.avatar_url ||
+      '',
+    role:
+      authUser?.roleLabel ||
+      authUser?.role ||
+      perfil?.prf_tipo ||
+      'Conta PREVER',
+  }
+}
+
+function initialsFromName(name) {
+  return String(name || 'U')
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+}
+
+function UserAvatar({ account }) {
+  if (!account) return null
+
+  if (account.avatar) {
+    return (
+      <img
+        src={account.avatar}
+        alt=""
+        className="mt-0.5 h-8 w-8 rounded-xl border border-border-soft object-cover flex-shrink-0"
+        aria-hidden="true"
+      />
+    )
+  }
+
+  return (
+    <span
+      className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-border-soft bg-slate-100 text-[10px] font-black text-slate-700"
+      aria-hidden="true"
+    >
+      {initialsFromName(account.name)}
+    </span>
+  )
+}
+
+function clearPendingAiActions() {
+  window.__SMDN_AI_PENDING_USER_ACTION = null
+  window.__SMDN_AI_PENDING_DASHBOARD_ACTION = null
+  window.__SMDN_AI_PENDING_AUDIT_ACTION = null
 }
 
 function renderInlineMarkdown(text) {
@@ -118,7 +227,20 @@ function normalizeAction(action) {
   }
 }
 
-export default function AssistantWidget({ currentScreen, setCurrentScreen, compact = false }) {
+function normalizeDashboardAction(action) {
+  return {
+    id: action.id || action.relatoId || '',
+    relatoId: action.relatoId || action.id || '',
+    query: action.query || action.title || '',
+    mapMode: action.mapMode === 'points' || action.mapMode === 'victims' ? action.mapMode : 'heat',
+    zoom: Number.isFinite(Number(action.zoom)) ? Number(action.zoom) : 16,
+    openPopup: action.openPopup !== false,
+  }
+}
+
+export default function AssistantWidget({ currentScreen, setCurrentScreen, compact = false, dense = false }) {
+  const { user, session } = useAuth()
+  const { settings } = useSmdnSettings()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([])
   const [draft, setDraft] = useState('')
@@ -128,55 +250,123 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
   const panelRef = useRef(null)
   const buttonRef = useRef(null)
   const messagesEndRef = useRef(null)
+  const dragStateRef = useRef(null)
+  const [panelPosition, setPanelPosition] = useState(null)
+
+  const accountProfile = useMemo(() => getAccountProfile(user, session), [user, session])
+  const accountId = accountProfile.id
 
   const context = useMemo(
     () => SCREEN_CONTEXT[currentScreen] || SCREEN_CONTEXT.dashboard,
     [currentScreen]
   )
 
-  useEffect(() => {
-    if (open && messages.length === 0) {
-      setMessages(buildInitialMessages(context))
+  const chatStorageKey = useMemo(() => safeStorageKey(), [])
+
+  function getDefaultPanelPosition() {
+    if (typeof window === 'undefined') {
+      return { x: compact ? 70 : 210, y: 96 }
     }
-  }, [context, messages.length, open])
+
+    const panelHeight = Math.min(760, window.innerHeight - 80)
+    return {
+      x: compact ? 70 : 210,
+      y: Math.max(16, window.innerHeight - panelHeight - 64),
+    }
+  }
+
+  function clampPanelPosition(x, y) {
+    if (typeof window === 'undefined') return { x, y }
+
+    const panelWidth = panelRef.current?.offsetWidth || 420
+    const panelHeight = panelRef.current?.offsetHeight || Math.min(760, window.innerHeight - 80)
+
+    return {
+      x: Math.min(Math.max(8, x), Math.max(8, window.innerWidth - panelWidth - 8)),
+      y: Math.min(Math.max(8, y), Math.max(8, window.innerHeight - panelHeight - 8)),
+    }
+  }
+
+  function startPanelDrag(event) {
+    if (event.button !== 0) return
+    if (event.target.closest('button, textarea, input, select, a')) return
+
+    const currentPosition = panelPosition || getDefaultPanelPosition()
+
+    dragStateRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: currentPosition.x,
+      originY: currentPosition.y,
+    }
+
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+  }
+
+  function movePanelDrag(event) {
+    const drag = dragStateRef.current
+    if (!drag || drag.pointerId !== event.pointerId) return
+
+    const next = clampPanelPosition(
+      drag.originX + event.clientX - drag.startX,
+      drag.originY + event.clientY - drag.startY
+    )
+
+    setPanelPosition(next)
+  }
+
+  function endPanelDrag(event) {
+    if (dragStateRef.current?.pointerId === event.pointerId) {
+      dragStateRef.current = null
+    }
+  }
+
+  useEffect(() => {
+    if (open && !panelPosition) {
+      setPanelPosition(getDefaultPanelPosition())
+    }
+  }, [open, panelPosition])
+
+  useEffect(() => {
+    setMessages(readStoredMessages(chatStorageKey))
+    setDraft('')
+    setError('')
+    setSending(false)
+    clearPendingAiActions()
+  }, [chatStorageKey])
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      writeStoredMessages(chatStorageKey, messages)
+    }
+  }, [chatStorageKey, messages])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
   }, [messages, sending])
 
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (!open) return
-
-      if (
-        panelRef.current &&
-        !panelRef.current.contains(event.target) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(event.target)
-      ) {
-        setOpen(false)
-      }
-    }
-
     function handleEscape(event) {
       if (event.key === 'Escape') {
         setOpen(false)
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
     document.addEventListener('keydown', handleEscape)
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
       document.removeEventListener('keydown', handleEscape)
     }
-  }, [open])
+  }, [])
 
   function restartChat() {
-    setMessages(buildInitialMessages(context))
+    const initialMessages = buildInitialMessages()
+    setMessages(initialMessages)
+    writeStoredMessages(chatStorageKey, initialMessages)
     setDraft('')
     setError('')
+    clearPendingAiActions()
   }
 
   function applyAssistantActions(actions = []) {
@@ -208,10 +398,7 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
       }
 
       if (action.type === 'open_dashboard_occurrence') {
-        const detail = {
-          id: action.id || action.relatoId || '',
-          query: action.query || action.title || '',
-        }
+        const detail = normalizeDashboardAction(action)
         window.__SMDN_AI_PENDING_DASHBOARD_ACTION = detail
         setCurrentScreen('dashboard')
         scheduleUiEvent('smdn-ai-dashboard-open-occurrence', detail)
@@ -239,7 +426,15 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
     setSending(true)
     setDraft('')
 
-    const userMessage = { role: 'user', text: cleanText }
+    const userMessage = {
+      role: 'user',
+      text: cleanText,
+      accountId,
+      account: accountProfile,
+      screen: currentScreen,
+      screenTitle: context.title,
+      sentAt: new Date().toISOString(),
+    }
     const historyBeforeSend = messages
 
     setMessages((current) => [...current, userMessage])
@@ -249,6 +444,12 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
         question: cleanText,
         currentScreen,
       })
+
+      operationalContext.currentAskingAccount = {
+        id: accountProfile.id,
+        name: accountProfile.name,
+        role: accountProfile.role,
+      }
 
       const result = await askSmdnAssistant({
         message: cleanText,
@@ -265,11 +466,16 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
         ...current,
         {
           role: 'assistant',
-          text: result.text || 'Não consegui gerar uma resposta agora.',
+          text: result.text || 'Nimbo não conseguiu gerar uma resposta agora.',
+          accountId,
+          replyToAccount: accountProfile,
+          screen: currentScreen,
+          screenTitle: context.title,
+          sentAt: new Date().toISOString(),
         },
       ])
     } catch (err) {
-      setError(err?.message || 'Não foi possível consultar a IA.')
+      setError(err?.message || 'Não foi possível consultar o Nimbo.')
     } finally {
       setSending(false)
     }
@@ -286,18 +492,18 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
         ref={buttonRef}
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-on-dark hover:bg-white/5 hover:text-white transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${compact ? 'justify-center' : ''}`}
+        className={`w-full flex items-center gap-3 px-3 ${dense ? 'py-2' : 'py-2.5'} rounded-lg text-sm font-medium text-text-on-dark hover:bg-white/5 hover:text-white transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${compact ? 'justify-center' : ''}`}
         aria-expanded={open}
-        aria-label="Abrir IA SMDN"
+        aria-label="Abrir Nimbo"
       >
         <SparkIcon />
-        <span className={compact ? 'sr-only' : undefined}>IA SMDN</span>
+        <span className={compact ? 'sr-only' : undefined}>Nimbo: AI</span>
       </button>
 
       {open && (
         <div
           ref={panelRef}
-          className={`fixed bottom-16 ${compact ? 'left-[70px]' : 'left-[210px]'} z-[99998] overflow-hidden rounded-3xl border border-border-soft bg-bg-surface shadow-2xl animate-slide-up flex flex-col`}
+          className="fixed z-[100050] overflow-hidden rounded-3xl border border-border-soft bg-bg-surface shadow-2xl animate-slide-up flex flex-col"
           style={{
             resize: 'both',
             width: '420px',
@@ -306,11 +512,19 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
             minHeight: '430px',
             maxWidth: 'min(90vw, 760px)',
             maxHeight: 'calc(100vh - 5rem)',
+            left: `${(panelPosition || getDefaultPanelPosition()).x}px`,
+            top: `${(panelPosition || getDefaultPanelPosition()).y}px`,
           }}
           role="dialog"
-          aria-label="Assistente IA SMDN"
+          aria-label="Assistente Nimbo"
         >
-          <div className="flex items-center justify-between gap-3 border-b border-border-soft px-4 py-3 bg-text-main/5">
+          <div
+            className="flex cursor-grab active:cursor-grabbing items-center justify-between gap-3 border-b border-border-soft px-4 py-3 bg-text-main/5 select-none"
+            onPointerDown={startPanelDrag}
+            onPointerMove={movePanelDrag}
+            onPointerUp={endPanelDrag}
+            onPointerCancel={endPanelDrag}
+          >
             <button
               type="button"
               onClick={restartChat}
@@ -319,11 +533,17 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
               Reiniciar chat
             </button>
 
+            <div className="min-w-0 text-center">
+              <span className="block text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+                Arraste para mover
+              </span>
+            </div>
+
             <button
               type="button"
               onClick={() => setOpen(false)}
               className="rounded-lg p-2 text-slate-400 hover:bg-white/60 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-text-main"
-              aria-label="Fechar assistente"
+              aria-label="Fechar Nimbo"
             >
               ×
             </button>
@@ -335,7 +555,7 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
 
               return (
                 <div
-                  key={`${message.role}-${index}`}
+                  key={`${message.role}-${index}-${message.text}`}
                   className={`flex items-start gap-2 ${isAssistant ? 'justify-start' : 'justify-end'}`}
                 >
                   {isAssistant && (
@@ -348,14 +568,16 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
                   )}
 
                   <div
-                    className={`rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
+                    className={`max-w-[78%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
                       isAssistant
                         ? 'bg-slate-100 text-slate-700 mr-3'
-                        : 'bg-text-main text-white ml-8'
+                        : 'bg-text-main text-white'
                     }`}
                   >
                     {renderMessageText(message.text)}
                   </div>
+
+                  {!isAssistant && <UserAvatar account={message.account} />}
                 </div>
               )
             })}
@@ -369,7 +591,7 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
                   aria-hidden="true"
                 />
                 <div className="rounded-2xl bg-slate-100 px-3 py-2 text-sm text-slate-700 mr-3">
-                  Consultando dados reais do SMDN e pensando...
+                  Nimbo está consultando dados reais do PREVER e pensando...
                 </div>
               </div>
             )}
@@ -378,23 +600,25 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
           </div>
 
           <div className="border-t border-border-soft p-4 space-y-2">
-            <div className="grid gap-2">
-              {context.suggestions.map((label) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => sendToGemini(label)}
-                  disabled={sending}
-                  className="w-full rounded-xl border border-border-soft bg-bg-surface px-3 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60"
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            {!settings.promptRecommendationsDisabled && (
+              <div className="grid gap-2">
+                {context.suggestions.map((label) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => sendToGemini(label)}
+                    disabled={sending}
+                    className="w-full rounded-xl border border-border-soft bg-bg-surface px-3 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60"
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-2 pt-2">
               <label htmlFor="smdn-ai-message" className="sr-only">
-                Mensagem para IA SMDN
+                Mensagem para Nimbo
               </label>
 
               <textarea
@@ -421,27 +645,11 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
                 disabled={sending || !draft.trim()}
                 className="w-full rounded-xl bg-text-main px-3 py-2 text-sm font-bold text-white hover:bg-action-hover disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {sending ? 'Consultando IA...' : 'Enviar para IA'}
+                {sending ? 'Consultando Nimbo...' : 'Enviar para Nimbo'}
               </button>
             </form>
 
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => setCurrentScreen('relatorios')}
-                className="rounded-xl bg-text-main/10 px-3 py-2 text-xs font-bold text-text-main hover:bg-text-main/20"
-              >
-                Ver relatórios
-              </button>
 
-              <button
-                type="button"
-                onClick={() => setCurrentScreen('auditoria')}
-                className="rounded-xl bg-text-main/10 px-3 py-2 text-xs font-bold text-text-main hover:bg-text-main/20"
-              >
-                Ver auditoria
-              </button>
-            </div>
           </div>
         </div>
       )}

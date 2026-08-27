@@ -165,7 +165,7 @@ export async function recordLoginActivity(userId) {
   })
 
   if (error) {
-    console.warn('[SMDN Auth] Não foi possível registrar login:', error.message)
+    console.warn('[PREVER Auth] Não foi possível registrar login:', error.message)
     return null
   }
 

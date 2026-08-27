@@ -10,6 +10,7 @@ export const DEFAULT_SETTINGS = {
   colorBlind: false,
   density: 'comfortable',
   defaultMapMode: 'points',
+  promptRecommendationsDisabled: false,
 }
 
 
@@ -30,6 +31,11 @@ function normalizeSettings(settings) {
   if (!['points', 'victims'].includes(next.defaultMapMode)) {
     next.defaultMapMode = DEFAULT_SETTINGS.defaultMapMode
   }
+
+  next.highContrast = Boolean(next.highContrast)
+  next.reducedMotion = Boolean(next.reducedMotion)
+  next.colorBlind = Boolean(next.colorBlind)
+  next.promptRecommendationsDisabled = Boolean(next.promptRecommendationsDisabled)
 
   return next
 }
@@ -73,6 +79,7 @@ export function applySmdnSettings(settings) {
   root.dataset.motion = next.reducedMotion ? 'reduced' : 'normal'
   root.dataset.colorblind = next.colorBlind ? 'true' : 'false'
   root.dataset.density = next.density
+  root.dataset.promptRecommendations = next.promptRecommendationsDisabled ? 'off' : 'on'
 }
 
 export function saveSmdnSettings(settings) {

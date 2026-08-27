@@ -46,14 +46,11 @@ function createOccurrenceIcon(severidade, colorBlind = false) {
   const safeLabel = escapeHtml(style.label)
 
   const common = 'position:relative;display:inline-flex;width:34px;height:34px;align-items:center;justify-content:center;filter:drop-shadow(0 3px 6px rgba(15,23,42,.45));'
-  let glyph = ''
-  if (style.shape === 'critical') {
-    glyph = `<span aria-hidden="true" style="display:block;width:24px;height:24px;background:${style.color};border:4px double #fff;box-shadow:0 0 0 2px rgba(15,23,42,.35);transform:rotate(45deg);"></span>`
-  } else if (style.shape === 'severe') {
-    glyph = `<span aria-hidden="true" style="display:block;width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:26px solid ${style.color};filter:drop-shadow(0 0 1px #fff) drop-shadow(0 2px 3px rgba(15,23,42,.38));"></span>`
-  } else {
-    glyph = `<span aria-hidden="true" style="display:block;width:23px;height:23px;border-radius:999px;background:${style.color};border:3px solid #fff;box-shadow:0 0 0 2px rgba(15,23,42,.35);"></span>`
-  }
+  const glyph = style.shape === 'critical'
+    ? `<span aria-hidden="true" style="display:block;width:24px;height:24px;background:${style.color};border:4px double #fff;box-shadow:0 0 0 2px rgba(15,23,42,.35);transform:rotate(45deg);"></span>`
+    : style.shape === 'severe'
+      ? `<span aria-hidden="true" style="display:block;width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:26px solid ${style.color};filter:drop-shadow(0 0 1px #fff) drop-shadow(0 2px 3px rgba(15,23,42,.38));"></span>`
+      : `<span aria-hidden="true" style="display:block;width:23px;height:23px;border-radius:999px;background:${style.color};border:3px solid #fff;box-shadow:0 0 0 2px rgba(15,23,42,.35);"></span>`
 
   return L.divIcon({
     className: 'smdn-occurrence-div-icon',
@@ -72,6 +69,50 @@ function createVictimIcon(attended = false) {
     iconAnchor: [14, 14],
     popupAnchor: [0, -14],
   })
+}
+
+
+function getShelterMeta(status) {
+  if (status === 'lotado') return { label: 'Lotado', color: '#c60202', text: '#ffffff' }
+  if (status === 'quase_lotado') return { label: 'Quase lotado', color: '#ff6a00', text: '#111827' }
+  if (status === 'inativo') return { label: 'Inativo', color: '#64748b', text: '#ffffff' }
+  return { label: 'Disponível', color: '#00c000', text: '#052e12' }
+}
+
+function createShelterIcon(status = 'disponivel', selected = false) {
+  const meta = getShelterMeta(status)
+  const safeLabel = escapeHtml(`Abrigo ${meta.label}${selected ? ', selecionado' : ''}`)
+
+  return L.divIcon({
+    className: 'smdn-shelter-div-icon',
+    html: `<span class="smdn-shelter-marker${selected ? ' is-selected' : ''}" title="${safeLabel}" style="--shelter-color:${meta.color};--shelter-text:${meta.text};"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></svg><span class="smdn-marker-sr">${safeLabel}</span></span>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
+    popupAnchor: [0, -17],
+  })
+}
+
+function createShelterPopupNode(item) {
+  const wrapper = document.createElement('div')
+  wrapper.className = 'smdn-map-popup smdn-shelter-popup'
+
+  const title = document.createElement('strong')
+  title.textContent = item.name || 'Abrigo'
+  wrapper.appendChild(title)
+
+  const place = document.createElement('div')
+  place.textContent = [item.city, item.location].filter(Boolean).join(' · ') || 'Local não informado'
+  wrapper.appendChild(place)
+
+  const occupancy = document.createElement('div')
+  occupancy.innerHTML = `<b>Lotação:</b> ${Number(item.occupied || 0)}/${Number(item.capacity || 0)}`
+  wrapper.appendChild(occupancy)
+
+  const status = document.createElement('div')
+  status.innerHTML = `<b>Status:</b> ${escapeHtml(getShelterMeta(item.status).label)}`
+  wrapper.appendChild(status)
+
+  return wrapper
 }
 
 function createOccurrencePopupNode(item, onOccurrenceDetails) {
@@ -143,7 +184,7 @@ function createVictimPopupNode(item, onVictimAssistance, savingVictimId) {
 }
 
 const MapView = forwardRef(function MapView(
-  { ocorrencias = [], vitimas = [], onMapClick, onOccurrenceDetails, onVictimAssistance, savingVictimId, targetLocation, heatmap = false, mapMode, colorBlind = false },
+  { ocorrencias = [], vitimas = [], abrigos = [], onMapClick, onOccurrenceDetails, onVictimAssistance, onShelterSelect, savingVictimId, selectedShelterId, targetLocation, heatmap = false, mapMode, colorBlind = false, selectionRadiusKm = 3, showSelectionRadius = true },
   ref
 ) {
   const mapRef = useRef(null)
@@ -151,8 +192,10 @@ const MapView = forwardRef(function MapView(
   const occurrenceLayerRef = useRef(null)
   const heatLayerRef = useRef(null)
   const victimLayerRef = useRef(null)
+  const shelterLayerRef = useRef(null)
   const selectionMarkerRef = useRef(null)
   const selectionRingRef = useRef(null)
+  const selectionPointRef = useRef(null)
 
   const effectiveMode = mapMode || (heatmap ? 'heat' : 'points')
   const showOccurrences = effectiveMode !== 'victims'
@@ -188,6 +231,7 @@ const MapView = forwardRef(function MapView(
     occurrenceLayerRef.current = L.layerGroup().addTo(mapInstanceRef.current)
     heatLayerRef.current = L.layerGroup().addTo(mapInstanceRef.current)
     victimLayerRef.current = L.layerGroup().addTo(mapInstanceRef.current)
+    shelterLayerRef.current = L.layerGroup().addTo(mapInstanceRef.current)
 
     mapInstanceRef.current.on('click', (e) => {
       const { lat, lng } = e.latlng
@@ -297,7 +341,8 @@ const MapView = forwardRef(function MapView(
         }
 
         .smdn-occurrence-div-icon,
-        .smdn-victim-div-icon {
+        .smdn-victim-div-icon,
+        .smdn-shelter-div-icon {
           display: block !important;
           width: 34px !important;
           height: 34px !important;
@@ -309,6 +354,49 @@ const MapView = forwardRef(function MapView(
         .smdn-victim-div-icon {
           width: 28px !important;
           height: 28px !important;
+        }
+
+        .smdn-shelter-div-icon {
+          width: 34px !important;
+          height: 34px !important;
+        }
+
+        .smdn-shelter-marker {
+          display: inline-flex;
+          width: 34px;
+          height: 34px;
+          align-items: center;
+          justify-content: center;
+          border-radius: 12px;
+          background: var(--shelter-color);
+          color: var(--shelter-text);
+          border: 2px solid #fff;
+          box-shadow: 0 0 0 2px rgba(15,23,42,.25), 0 5px 12px rgba(15,23,42,.38);
+          filter: saturate(1.05);
+        }
+
+        .smdn-shelter-marker svg {
+          width: 21px;
+          height: 21px;
+          fill: none;
+          stroke: currentColor;
+          stroke-width: 2.2;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
+
+        .smdn-shelter-marker.is-selected {
+          transform: scale(1.18);
+          box-shadow:
+            0 0 0 3px rgba(255,255,255,.96),
+            0 0 0 7px rgba(14,165,233,.48),
+            0 10px 20px rgba(15,23,42,.48);
+          animation: smdnShelterSelected 1.5s ease-in-out infinite;
+        }
+
+        @keyframes smdnShelterSelected {
+          0%, 100% { box-shadow: 0 0 0 3px rgba(255,255,255,.96), 0 0 0 7px rgba(14,165,233,.34), 0 10px 20px rgba(15,23,42,.48); }
+          50% { box-shadow: 0 0 0 3px rgba(255,255,255,.96), 0 0 0 11px rgba(14,165,233,.12), 0 10px 22px rgba(15,23,42,.52); }
         }
 
         .smdn-marker-sr {
@@ -448,14 +536,16 @@ const MapView = forwardRef(function MapView(
 
   useEffect(() => {
     const map = mapInstanceRef.current
-    if (!map || !occurrenceLayerRef.current || !heatLayerRef.current || !victimLayerRef.current) return
+    if (!map || !occurrenceLayerRef.current || !heatLayerRef.current || !victimLayerRef.current || !shelterLayerRef.current) return
 
     occurrenceLayerRef.current.clearLayers()
     heatLayerRef.current.clearLayers()
     victimLayerRef.current.clearLayers()
+    shelterLayerRef.current.clearLayers()
 
     const validOccurrences = ocorrencias.filter((item) => isValidCoord(item.lat) && isValidCoord(item.lng))
     const validVictims = vitimas.filter((item) => isValidCoord(item.lat) && isValidCoord(item.lng))
+    const validShelters = abrigos.filter((item) => isValidCoord(item.lat) && isValidCoord(item.lng))
 
     if (showOccurrences) {
       validOccurrences.forEach((item) => {
@@ -498,15 +588,35 @@ const MapView = forwardRef(function MapView(
         .addTo(victimLayerRef.current)
     })
 
-    const visiblePoints = effectiveMode === 'victims'
-      ? validVictims
-      : [...validOccurrences, ...validVictims]
+    let selectedShelterMarker = null
+    const selectedShelter = validShelters.find((item) => item.id === selectedShelterId) || null
 
-    if (visiblePoints.length > 0) {
+    validShelters.forEach((item) => {
+      const isSelected = item.id === selectedShelterId
+      const marker = L.marker([item.lat, item.lng], {
+        icon: createShelterIcon(item.status, isSelected),
+        keyboard: true,
+        zIndexOffset: isSelected ? 1100 : 700,
+      })
+        .bindPopup(createShelterPopupNode(item))
+        .addTo(shelterLayerRef.current)
+
+      marker.on('click', () => onShelterSelect?.(item))
+      if (isSelected) selectedShelterMarker = marker
+    })
+
+    const visiblePoints = effectiveMode === 'victims'
+      ? [...validVictims, ...validShelters]
+      : [...validOccurrences, ...validVictims, ...validShelters]
+
+    if (selectedShelter) {
+      map.flyTo([selectedShelter.lat, selectedShelter.lng], 16, { duration: 0.9 })
+      selectedShelterMarker?.openPopup()
+    } else if (visiblePoints.length > 0) {
       const bounds = L.latLngBounds(visiblePoints.map((item) => [item.lat, item.lng]))
       map.fitBounds(bounds.pad(0.25), { maxZoom: 12, animate: true })
     }
-  }, [ocorrencias, vitimas, effectiveMode, showOccurrences, showHeat, onOccurrenceDetails, onVictimAssistance, savingVictimId, colorBlind])
+  }, [ocorrencias, vitimas, abrigos, effectiveMode, showOccurrences, showHeat, onOccurrenceDetails, onVictimAssistance, onShelterSelect, savingVictimId, selectedShelterId, colorBlind])
 
   useEffect(() => {
     if (!targetLocation || !mapInstanceRef.current) return
@@ -534,7 +644,7 @@ const MapView = forwardRef(function MapView(
         mapInstanceRef.current?.flyTo([lat, lon], zoom, { duration: 1.2 })
       })
       .catch(() => {})
-  }, [targetLocation])
+  }, [targetLocation, selectionRadiusKm, showSelectionRadius])
 
   function placeSelectionMarker(lat, lng) {
     const map = mapInstanceRef.current
@@ -542,14 +652,20 @@ const MapView = forwardRef(function MapView(
 
     selectionMarkerRef.current?.remove()
     selectionRingRef.current?.remove()
+    selectionPointRef.current?.remove()
 
-    selectionRingRef.current = L.circleMarker([lat, lng], {
-      radius: 22,
-      fillColor: '#44769b',
-      color: '#44769b',
-      weight: 2,
-      fillOpacity: 0.15,
-    }).addTo(map)
+    const radiusMeters = Math.max(0.5, Number(selectionRadiusKm) || 3) * 1000
+
+    if (showSelectionRadius) {
+      selectionRingRef.current = L.circle([lat, lng], {
+        radius: radiusMeters,
+        fillColor: '#44769b',
+        color: '#44769b',
+        weight: 2,
+        fillOpacity: 0.12,
+        opacity: 0.72,
+      }).addTo(map)
+    }
 
     selectionMarkerRef.current = L.circleMarker([lat, lng], {
       radius: 10,
@@ -560,7 +676,11 @@ const MapView = forwardRef(function MapView(
       className: 'selection-dot'
     }).addTo(map)
 
-    selectionMarkerRef.current.bindPopup('<b>Área selecionada</b>').openPopup()
+    const popupText = showSelectionRadius
+      ? `<b>Área selecionada</b><br><span>${(Math.max(0.5, Number(selectionRadiusKm) || 3)).toLocaleString('pt-BR')} km de raio</span>`
+      : '<b>Local selecionado</b>'
+
+    selectionMarkerRef.current.bindPopup(popupText).openPopup()
 
   }
 

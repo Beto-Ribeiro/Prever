@@ -21,7 +21,7 @@ function formatDate(iso) {
 }
 
 function initials(name) {
-  return String(name || 'SMDN')
+  return String(name || 'PREVER')
     .split(' ')
     .filter(Boolean)
     .map((part) => part[0])
