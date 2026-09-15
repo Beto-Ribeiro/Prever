@@ -5,10 +5,10 @@ async function result(query) {
   if (error) throw error
   return data
 }
-async function allRows(table, shelterId) {
+async function allRows(table, shelterId, columns = '*') {
   const rows = []
   for (let start = 0; ; start += 500) {
-    const page = await result(supabase.from(table).select('*').eq('shelter_id', shelterId).order('created_at').order('id').range(start, start + 499))
+    const page = await result(supabase.from(table).select(columns).eq('shelter_id', shelterId).order('created_at').order('id').range(start, start + 499))
     rows.push(...page)
     if (page.length < 500) return rows
   }
@@ -25,10 +25,10 @@ export async function loadManagerData(userId) {
   return { shelter, residents, inventory, requests, donations, activity }
 }
 const fields = {
-  shelter_residents: ['name', 'age', 'category', 'contact', 'entered_on', 'active'],
+  shelter_residents: ['name', 'age', 'category', 'responsible_name', 'responsible_contact', 'entered_on', 'active'],
   shelter_inventory: ['name', 'category', 'quantity', 'target', 'unit'],
   shelter_requests: ['inventory_id', 'target', 'priority'],
-  shelter_donations: ['request_id', 'donor', 'quantity'],
+  shelter_donations: ['request_id', 'donor', 'donor_contact', 'quantity'],
 }
 export async function saveManagerRecord(table, shelterId, values, id) {
   if (!fields[table]) throw new Error('Ação inválida.')
@@ -39,5 +39,10 @@ export async function saveManagerRecord(table, shelterId, values, id) {
   return result(query.select('*').single())
 }
 export async function saveShelter(shelterId, form) {
-  return result(supabase.rpc('manager_update_shelter', { s: shelterId, n: form.name, address: form.address, phone: form.phone, capacity: Number(form.capacity) }))
+  return result(supabase.rpc('manager_update_shelter_contacts', { s: shelterId, n: form.name, address: form.address, phone: form.phone, capacity: Number(form.capacity), coordinator_name: form.coordinator || '', coordinator_contact: form.coordinatorContact || '' }))
+}
+
+// Same authorized records as the portal, including the displayed personal details.
+export async function loadManagerAssistantData(userId) {
+  return loadManagerData(userId)
 }

@@ -3,10 +3,10 @@ export function buildReport(data, start, end, type) {
   const within = value => String(value || '').slice(0, 10) >= start && String(value || '').slice(0, 10) <= end
   const stockName = id => data.inventory.find(i => i.id === id)?.name || 'Recurso'
   const sheets = {
-    Ocupantes: data.residents.filter(r => within(r.entered_on)).map(r => ({ Nome: r.name, Idade: r.age, Categoria: r.category, Contato: r.contact, Entrada: r.entered_on, Situação: r.active ? 'No abrigo' : 'Saída registrada' })),
+    Ocupantes: data.residents.filter(r => within(r.entered_on)).map(r => ({ Nome: r.name, Idade: r.age, Categoria: r.category, Responsável: r.responsible_name || '', 'Contato do responsável': r.responsible_contact || '', 'Registro anterior de responsável/contato': r.contact || '', Entrada: r.entered_on, Situação: r.active ? 'No abrigo' : 'Saída registrada' })),
     Estoque: data.inventory.map(i => ({ Recurso: i.name, Categoria: i.category, Quantidade: i.quantity, Meta: i.target, Unidade: i.unit })),
     Pedidos: data.requests.filter(r => within(r.created_at)).map(r => ({ Recurso: stockName(r.inventory_id), Prioridade: r.priority, Meta: r.target, Recebido: r.received, Criação: r.created_at.slice(0, 10) })),
-    Doações: data.donations.filter(r => within(r.created_at)).map(r => ({ Doador: r.donor, Quantidade: r.quantity, Recurso: stockName(data.requests.find(q => q.id === r.request_id)?.inventory_id), Data: r.created_at.slice(0, 10) })),
+    Doações: data.donations.filter(r => within(r.created_at)).map(r => ({ Doador: r.donor, Contato: r.donor_contact || '', Quantidade: r.quantity, Recurso: stockName(data.requests.find(q => q.id === r.request_id)?.inventory_id), Data: r.created_at.slice(0, 10) })),
     Atividades: data.activity.filter(r => within(r.created_at)).map(r => ({ Atividade: r.detail, Data: new Date(r.created_at).toLocaleString('pt-BR') })),
   }
   return type === 'Completo' ? sheets : { [type]: sheets[type] || [] }
