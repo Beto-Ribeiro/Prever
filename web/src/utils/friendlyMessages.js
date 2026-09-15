@@ -12,6 +12,7 @@ export function toFriendlyMessage(error, fallback = DEFAULT_MESSAGE) {
   const text = raw.toLowerCase()
 
   if (!raw.trim()) return fallback
+  if (/^(42(?!501)|XX|PGRST)/i.test(String(error?.code || '')) || /supabase|schema|postgres|database|banco de dados|não está disponível|nao esta disponivel|configuração|política pública/i.test(raw)) return 'Erro interno no banco de dados.'
 
   if (
     text.includes('invalid login credentials') ||
@@ -98,7 +99,7 @@ export function toFriendlyMessage(error, fallback = DEFAULT_MESSAGE) {
     text.includes('database') ||
     text.includes('function')
   ) {
-    return 'Esta parte do sistema ainda não está disponível. Avise o responsável pelo painel.'
+    return 'Erro interno no banco de dados.'
   }
 
   if (text.includes('invalid') || text.includes('inválid') || text.includes('invalido')) {
@@ -107,7 +108,7 @@ export function toFriendlyMessage(error, fallback = DEFAULT_MESSAGE) {
 
   if (raw.length > 180 || /[{}[\]_;]/.test(raw)) return fallback
 
-  return raw
+  return /^[A-ZÀ-Ú]/.test(raw) && /[ãõáéíóúçêôà]|^(Informe|Selecione|Preencha|Esta |Este |Seu |Sua |Nenhum|Nenhuma|A |O )/.test(raw) ? raw : fallback
 }
 
 export function supportMessage(context = 'esta ação') {

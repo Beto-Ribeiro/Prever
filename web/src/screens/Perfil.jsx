@@ -16,6 +16,9 @@ import {
 } from '../backend/perfil/profileChangeService.js'
 
 const PERMISSIONS = [
+  { key: 'ocupantes', label: 'Ocupantes', granted: true },
+  { key: 'estoque', label: 'Estoque', granted: true },
+  { key: 'pedidos', label: 'Pedidos de ajuda', granted: true },
   { key: 'dashboard', label: 'Dashboard', granted: true },
   { key: 'reportar', label: 'Reportar / Disparar Alertas', granted: true },
   { key: 'ocorrencias', label: 'Gerenciar Ocorrências', granted: true },
@@ -40,10 +43,7 @@ function maskPhone(value) {
   return `${digits.slice(0, 2)}#######${digits.slice(-2)}`
 }
 
-const FALLBACK_ACTIVITY = [
-  { action: 'Login', target: 'Acesso autorizado', at: 'Agora' },
-  { action: 'Perfil', target: 'Dados sincronizados', at: 'Hoje' },
-]
+
 
 function makeInitialForm(user) {
   return {
@@ -205,7 +205,7 @@ function ActivityDetailsDialog({ details, onClose }) {
 }
 
 function ActivityList({ activities, currentUser }) {
-  const items = activities.length > 0 ? activities : FALLBACK_ACTIVITY
+  const items = activities
   const [hoverDetails, setHoverDetails] = useState(null)
   const [hoverPosition, setHoverPosition] = useState(null)
   const [openedDetails, setOpenedDetails] = useState(null)
@@ -224,6 +224,7 @@ function ActivityList({ activities, currentUser }) {
   return (
     <>
       <div className="space-y-2.5">
+        {!items.length && <p className="text-sm text-slate-500">Nenhuma atividade registrada.</p>}
         {items.map((activity, index) => {
           const isDatabaseActivity = Boolean(activity.atu_id)
           const action = isDatabaseActivity ? activity.atu_action : activity.action

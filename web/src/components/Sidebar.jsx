@@ -222,7 +222,8 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
       : null)
 
   const permissions = displayUser?.permissions || {}
-  const visibleNavItems = NAV_ITEMS.filter((item) => {
+  const managerItems = [['dashboard', 'Visão geral', 'home'], ['ocupantes', 'Ocupantes', 'users'], ['estoque', 'Estoque', 'home'], ['pedidos', 'Pedidos de ajuda', 'flag'], ['relatorios', 'Relatórios', 'pie-chart'], ['perfil', 'Perfil', 'user']].map(([id, label, icon]) => ({ id, label, icon: <FeatherIcon name={icon} />, iconWhite: <FeatherIcon name={icon} /> }))
+  const visibleNavItems = user?.role === 'shelter_manager' ? managerItems : NAV_ITEMS.filter((item) => {
     if (item.id === 'perfil') return true
     return Boolean(permissions[item.permissionKey || item.id]) || devBypassAuth
   })

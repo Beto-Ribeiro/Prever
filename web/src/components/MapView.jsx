@@ -251,12 +251,13 @@ const MapView = forwardRef(function MapView(
         .smdn-map-root .leaflet-container {
           width: 100%;
           height: 100%;
-          background: #dbe6ed;
+          background: #101b2b;
           outline: none;
         }
 
-        html[data-theme='dark'] .smdn-map-root .leaflet-tile-pane {
-          filter: brightness(0.72) invert(1) hue-rotate(180deg) saturate(0.72) contrast(0.95);
+        .smdn-map-root .leaflet-tile-pane {
+          /* Darken only base tiles: markers and severity colors remain unchanged. */
+          filter: invert(1) hue-rotate(180deg) saturate(0.55) brightness(0.72) contrast(1.1);
         }
 
         html[data-theme='dark'] .smdn-map-root .leaflet-overlay-pane,
@@ -266,7 +267,7 @@ const MapView = forwardRef(function MapView(
           filter: none;
         }
 
-        html[data-theme='dark'] .smdn-map-root .leaflet-container {
+        .smdn-map-root.leaflet-container {
           background: #0f172a;
         }
 

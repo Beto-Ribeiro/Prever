@@ -1,3 +1,4 @@
+import { listShelters } from '../backend/abrigos/shelterService.js'
 import { useEffect, useMemo, useState } from 'react'
 import Modal from '../components/Modal.jsx'
 import { supabase } from '../backend/supabase/client.js'
@@ -104,6 +105,10 @@ function ChangeList({ changes, currentProfile, status }) {
 }
 
 export default function AdminPanel({ initialTab = 'all' }) {
+  const [approval, setApproval] = useState(null)
+  const [approvalRole, setApprovalRole] = useState('funcionario')
+  const [approvalShelter, setApprovalShelter] = useState('')
+  const [shelters, setShelters] = useState([])
   const [activeTab, setActiveTab] = useState(initialTab)
   const [requests, setRequests] = useState([])
   const [profileRequests, setProfileRequests] = useState([])
@@ -217,14 +222,24 @@ export default function AdminPanel({ initialTab = 'all' }) {
   }, [requests, profileRequests, profileMap])
 
   async function handleApproveAccess(request) {
+    setError('')
+    try {
+      setShelters(await listShelters())
+      setApproval(request); setApprovalRole(/gerente/i.test(request.saw_cargo || '') ? 'gerente_abrigo' : 'funcionario'); setApprovalShelter('')
+    } catch (e) { setError(toFriendlyMessage(e)) }
+  }
+
+  async function confirmAccessApproval() {
+    const request = approval
     setActionLoading(request.saw_id)
     setError('')
     setMessage('')
 
     try {
-      await approveAccessRequest(request.saw_id)
-      setMessage('Solicitação de acesso aprovada.')
-      await loadAdminData()
+      const result = await approveAccessRequest(request.saw_id, { profileType: approvalRole, shelterId: approvalShelter })
+      setApproval(null)
+      await loadAdminData({ preserveScroll: true })
+      setMessage(result.message || 'Solicitação de acesso aprovada.')
     } catch (err) {
       setError(toFriendlyMessage(err, 'Não foi possível aprovar a solicitação. Tente novamente.'))
     } finally {
@@ -328,6 +343,13 @@ export default function AdminPanel({ initialTab = 'all' }) {
         </div>
       )}
 
+      <Modal isOpen={Boolean(approval)} onClose={() => !actionLoading && setApproval(null)} title="Aprovar acesso">
+        <p className="mb-4">{approval?.saw_nome} · {approval?.saw_email}</p>
+        <label className="block mb-4">Perfil de acesso<select className="input-field mt-2" value={approvalRole} onChange={e => setApprovalRole(e.target.value)}><option value="funcionario">Funcionário</option><option value="instituicao">Instituição</option><option value="gerente_abrigo">Gerente de Abrigo</option></select></label>
+        {approvalRole === 'gerente_abrigo' && <label className="block mb-4">Abrigo responsável<select className="input-field mt-2" value={approvalShelter} onChange={e => setApprovalShelter(e.target.value)}><option value="">Selecione um abrigo</option>{shelters.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select>{!shelters.length && <p>Cadastre um abrigo na tela Abrigos antes de aprovar este perfil.</p>}</label>}
+        {error && <p role="alert" className="mb-3 text-red-700">{error}</p>}
+        <button className="btn-primary" disabled={Boolean(actionLoading) || (approvalRole === 'gerente_abrigo' && !approvalShelter)} onClick={confirmAccessApproval}>{actionLoading ? 'Aprovando…' : 'Confirmar aprovação'}</button>
+      </Modal>
       {error && (
         <div role="alert" className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-700 leading-relaxed">
           {error}

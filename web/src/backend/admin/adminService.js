@@ -192,15 +192,18 @@ export async function rejectAccessRequest(requestId, observation = '') {
   return data
 }
 
-export async function approveAccessRequest(requestId) {
+export async function approveAccessRequest(requestId, options = {}) {
   const { data, error } = await supabase.functions.invoke('approve-web-access-request', {
-    body: { requestId },
+    body: { requestId, profileType: options.profileType, shelterId: options.shelterId || null },
   })
 
   if (error) {
-    throw new Error('A aprovação automática ainda não está disponível. Avise o responsável pelo painel.')
+    let details
+    try { details = await error.context?.json() } catch { /* Response may have no JSON body. */ }
+    throw new Error(details?.message || 'Erro interno no banco de dados.')
   }
 
+  if (!data?.ok) throw new Error(data?.message || 'Não foi possível confirmar a aprovação.')
   return data
 }
 
