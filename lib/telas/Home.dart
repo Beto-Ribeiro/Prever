@@ -269,6 +269,7 @@ class _Home_State extends State<Home> {
       body: SafeArea(
         child: Stack(
           children: [
+
             Column(
               mainAxisSize: MainAxisSize.max,
               children: [
@@ -610,11 +611,33 @@ class _Home_State extends State<Home> {
                               ),
                             ),
                           ),
-
-                          const SizedBox(
-                            height: 90,
-                            width: double.infinity,
+                          SizedBox(
+                            height: 45,
                           ),
+                          Container(
+
+                            width: MediaQuery.widthOf(context) * 0.9,
+
+                            child: Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Text("Relatos próximos de você"),
+                                  ],
+                                ),
+                                Container(
+                                  width: double.infinity,
+                                  height: MediaQuery.heightOf(context) * 0.2,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey,
+                                    borderRadius: BorderRadius.circular(25)
+                                  )
+                                )
+                              ],
+                            ),
+
+                          ),
+
                         ],
                       ),
                     ),
