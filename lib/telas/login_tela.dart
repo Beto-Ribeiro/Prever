@@ -180,7 +180,7 @@ class _sLogin_State extends State<sLogin> {
                               children: [
                                 GestureDetector(
                                   onTap: () {
-
+                                    widget.onChangePage(10);
                                   },
                                   child: const Text(
                                     "Esqueci a senha", style: TextStyle(fontStyle: FontStyle.italic, fontSize: 12),

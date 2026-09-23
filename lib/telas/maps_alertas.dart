@@ -220,31 +220,31 @@ class _MapsAlertas extends State<Maps_alertas> {
           anchor: const Offset(0.5, 0.5),
 
           icon: item['rel_tipo_desastre'] == 'Chuva Forte'
-              ? item['rel_descricao'].toString().contains('Normal')
+              ? item['rel_descricao'].toString().contains('Leve')
                     ? chuvaForteYelIcon!
                     : item['rel_descricao'].toString().contains('Moderado')
                     ? chuvaForteOraIcon!
                     : item['rel_descricao'].toString().contains('Crítico')
                     ? chuvaForteRedIcon!
                     : chuvaForteBluIcon!
-              : item['rel_tipo_desastre'] == 'Enchente'
-              ? item['rel_descricao'].toString().contains('Normal')
+              : item['rel_tipo_desastre'] == 'Alagamento'
+              ? item['rel_descricao'].toString().contains('Leve')
                     ? inundacaoYelIcon!
                     : item['rel_descricao'].toString().contains('Moderado')
                     ? inundacaoOraIcon!
                     : item['rel_descricao'].toString().contains('Crítico')
                     ? inundacaoRedIcon!
                     : inundacaoBluIcon!
-              : item['rel_tipo_desastre'] == 'Deslizamento'
-              ? item['rel_descricao'].toString().contains('Normal')
+              : item['rel_tipo_desastre'] == 'Desabamento'
+              ? item['rel_descricao'].toString().contains('Leve')
                     ? deslizamentoYelIcon!
                     : item['rel_descricao'].toString().contains('Moderado')
                     ? deslizamentoOraIcon!
                     : item['rel_descricao'].toString().contains('Crítico')
                     ? deslizamentoRedIcon!
                     : deslizamentoBluIcon!
-              : item['rel_tipo_desastre'] == 'Temporal'
-              ? item['rel_descricao'].toString().contains('Normal')
+              : item['rel_tipo_desastre'] == 'Tornado'
+              ? item['rel_descricao'].toString().contains('Leve')
                     ? tornadoYelIcon!
                     : item['rel_descricao'].toString().contains('Moderado')
                     ? tornadoOraIcon!
