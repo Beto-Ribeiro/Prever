@@ -38,7 +38,8 @@ function actionLabel(action = '') {
     admin_reset_user_profile: 'Perfil Removido',
     profile_change_approved: 'Perfil Aprovado',
     profile_change_rejected: 'Perfil Recusado',
-    access_request_rejected: 'Acesso Recusado',
+    access_request_rejected: 'Acesso recusado',
+    access_request_approved: 'Acesso aprovado',
     occurrence_status_updated: 'Ocorrência Atualizada',
     ALERTA_DISPARADO: 'Alerta Disparado',
   }
@@ -54,6 +55,8 @@ function roleLabel(value) {
     instituicao: 'Instituição',
     cidadao: 'Cidadão',
     pendente: 'Sem perfil',
+    gerente_abrigo: 'Gerente de Abrigo',
+    shelter_manager: 'Gerente de Abrigo',
   }
   return labels[role] || value || 'Sistema'
 }
@@ -331,7 +334,11 @@ export async function listAuditEvents() {
           email: request.saw_email,
           type: 'Solicitação de acesso web',
         }
-        detail = `${actionLabel(log.action)}: ${target.name}${target.email ? ` (${target.email})` : ''}.`
+        detail = log.action === 'access_request_approved'
+          ? `A solicitação de ${target.name} foi aprovada. O acesso ao painel foi liberado.`
+          : log.action === 'access_request_rejected'
+            ? `A solicitação de acesso de ${target.name} foi recusada.`
+            : `${actionLabel(log.action)}: ${target.name}.`
         extraSections.push({
           title: 'Solicitação de acesso',
           rows: [
@@ -381,7 +388,7 @@ export async function listAuditEvents() {
       actor,
       target,
       user: actor.name,
-      role: log.entity_type || 'Sistema',
+      role: ({ Solicitacao_Acesso_Web: 'Solicitação de acesso', Solicitacao_Alteracao_Perfil: 'Alteração de perfil', Perfis: 'Perfil', Abrigo: 'Abrigo' })[log.entity_type] || 'Registro do sistema',
       detail,
       at: log.created_at,
       ip: 'web',

@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
+import './accessibility.css'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { applySmdnSettings, readSmdnSettings } from './hooks/useSmdnSettings.js'
 

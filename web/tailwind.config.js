@@ -26,11 +26,11 @@ export default {
         'sidebar-active': 'rgb(var(--sidebar-active) / <alpha-value>)',
       },
       fontSize: {
-        'title-large': ['32px', { fontWeight: '700', lineHeight: '1.2' }],
-        'title-medium': ['24px', { fontWeight: '700', lineHeight: '1.3' }],
-        'card-title': ['18px', { fontWeight: '600', lineHeight: '1.4' }],
-        body: ['14px', { fontWeight: '400', lineHeight: '1.6' }],
-        label: ['12px', { fontWeight: '700', lineHeight: '1.4', letterSpacing: '0.05em' }],
+        'title-large': ['2rem', { fontWeight: '700', lineHeight: '1.2' }],
+        'title-medium': ['1.5rem', { fontWeight: '700', lineHeight: '1.3' }],
+        'card-title': ['1.125rem', { fontWeight: '600', lineHeight: '1.4' }],
+        body: ['0.875rem', { fontWeight: '400', lineHeight: '1.6' }],
+        label: ['0.75rem', { fontWeight: '700', lineHeight: '1.4', letterSpacing: '0.05em' }],
       },
       boxShadow: {
         card: '0 2px 12px 0 rgba(9,22,46,0.07)',

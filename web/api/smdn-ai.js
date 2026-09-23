@@ -1,3 +1,4 @@
+import { assistantError } from '../src/backend/ai/assistantPolicy.js'
 import { GoogleGenAI } from '@google/genai'
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash'
@@ -34,7 +35,7 @@ async function validateSupabaseSession(req) {
   const authorization = req.headers.authorization || ''
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Servidor sem configuração do Supabase.')
+    throw new Error('Erro interno no banco de dados.')
   }
 
   if (!authorization.startsWith('Bearer ')) {
@@ -86,7 +87,7 @@ export default async function handler(req, res) {
 
     if (!apiKey) {
       return sendJson(res, 500, {
-        error: 'Nimbo ainda não está configurado. Defina GEMINI_API_KEY no ambiente.',
+        error: 'O Nimbo está indisponível no momento. Tente novamente em instantes.',
       })
     }
 
@@ -134,7 +135,7 @@ export default async function handler(req, res) {
     })
   } catch (error) {
     return sendJson(res, 500, {
-      error: error?.message || 'Erro inesperado ao consultar o Nimbo.',
+      error: assistantError(error),
     })
   }
 }

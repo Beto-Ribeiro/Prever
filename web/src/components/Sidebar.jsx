@@ -198,7 +198,7 @@ function NavButton({ item, currentScreen, setCurrentScreen, badge, collapsed = f
       <span className="transition-transform duration-200 ease-out group-hover:scale-105">{active ? item.iconWhite : item.icon}</span>
       <span className={collapsed ? 'sr-only' : 'truncate'}>{item.label}</span>
       {badge && (
-        <span className={`notification-badge inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-black leading-none ${collapsed ? 'absolute -right-1 -top-1' : 'ml-auto'}`}>
+        <span className={`notification-badge inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[0.625rem] font-black leading-none ${collapsed ? 'absolute -right-1 -top-1' : 'ml-auto'}`}>
           {badge}
         </span>
       )}
@@ -222,7 +222,8 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
       : null)
 
   const permissions = displayUser?.permissions || {}
-  const visibleNavItems = NAV_ITEMS.filter((item) => {
+  const managerItems = [['dashboard', 'Visão geral', 'home'], ['ocupantes', 'Ocupantes', 'users'], ['estoque', 'Estoque', 'home'], ['pedidos', 'Pedidos de ajuda', 'flag'], ['relatorios', 'Relatórios', 'pie-chart'], ['perfil', 'Perfil', 'user']].map(([id, label, icon]) => ({ id, label, icon: <FeatherIcon name={icon} />, iconWhite: <FeatherIcon name={icon} /> }))
+  const visibleNavItems = user?.role === 'shelter_manager' ? managerItems : NAV_ITEMS.filter((item) => {
     if (item.id === 'perfil') return true
     return Boolean(permissions[item.permissionKey || item.id]) || devBypassAuth
   })
@@ -401,7 +402,7 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
 
           {showAdmin && (
             <div className={collapsed ? 'mt-2 border-t border-white/10 pt-2' : 'pt-2 mt-2 border-t border-white/10'}>
-              <p className={`px-3 pb-1 text-[10px] uppercase tracking-[0.18em] text-text-on-dark/50 font-bold ${collapsed ? 'sr-only' : ''}`}>
+              <p className={`px-3 pb-1 text-[0.625rem] uppercase tracking-[0.18em] text-text-on-dark/50 font-bold ${collapsed ? 'sr-only' : ''}`}>
                 Administração
               </p>
 
@@ -443,7 +444,7 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
                   <p className="text-text-on-dark text-xs font-semibold truncate">
                     {displayUser.name}
                   </p>
-                  <p className="text-text-on-dark text-[10px] opacity-60 truncate">
+                  <p className="text-text-on-dark text-[0.625rem] opacity-60 truncate">
                     {displayUser.roleLabel || displayUser.role}
                   </p>
                 </div>
@@ -500,18 +501,18 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
 
                     <div className="mt-4 w-full border-t border-border-soft pt-3">
                       <div className="mb-2 flex items-center justify-between gap-2">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Contas</p>
+                        <p className="text-[0.625rem] font-bold uppercase tracking-[0.16em] text-slate-400">Contas</p>
                         <button
                           type="button"
                           onClick={handleAddAccount}
-                          className="rounded-lg border border-border-soft px-2 py-1 text-[11px] font-bold text-text-main hover:bg-text-main/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-text-main"
+                          className="rounded-lg border border-border-soft px-2 py-1 text-[0.6875rem] font-bold text-text-main hover:bg-text-main/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-text-main"
                         >
                           + Adicionar
                         </button>
                       </div>
 
                       {accountSwitchError && (
-                        <p className="mb-2 rounded-lg border border-yellow-200 bg-yellow-50 px-2 py-1.5 text-left text-[11px] font-semibold text-yellow-800">
+                        <p className="mb-2 rounded-lg border border-yellow-200 bg-yellow-50 px-2 py-1.5 text-left text-[0.6875rem] font-semibold text-yellow-800">
                           {accountSwitchError}
                         </p>
                       )}
@@ -538,7 +539,7 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
                         })}
                       </div>
 
-                      <p className="mt-2 text-left text-[10px] leading-snug text-slate-400">
+                      <p className="mt-2 text-left text-[0.625rem] leading-snug text-slate-400">
                         48h sem acesso pede login novamente.
                       </p>
                     </div>

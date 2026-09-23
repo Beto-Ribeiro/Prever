@@ -126,7 +126,7 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
             {isRegister && (
               <>
                 <select
-                  value={institution}
+                  aria-label="Instituição" value={institution}
                   onChange={(e) => setInstitution(e.target.value)}
                   onKeyDown={handleKeyDown}
                   className="w-full px-4 py-3 border border-border-soft rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-text-main/40 bg-bg-main/80"
@@ -138,10 +138,11 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
                   <option value="Defesa Civil">Defesa Civil</option>
                   <option value="Secretaria de Saúde">Secretaria de Saúde</option>
                   <option value="Segurança Pública">Segurança Pública</option>
+                  <option value="Abrigo">Abrigo</option>
                 </select>
                 <input
                   type="text"
-                  placeholder="Seu nome"
+                  aria-label="Seu nome" placeholder="Seu nome"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -152,7 +153,7 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
 
             <input
               type="email"
-              placeholder="Digite seu email"
+              aria-label="E-mail" placeholder="Digite seu email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -162,7 +163,7 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
             {!isRegister && (
               <input
                 type="password"
-                placeholder="Digite sua senha"
+                aria-label="Senha" placeholder="Digite sua senha"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -173,8 +174,8 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
             {isRegister && (
               <input
                 type="text"
-                placeholder="Sua função. Ex: Agente de saúde, bombeiro, SAMU"
-                value={role}
+                placeholder="Sua função. Ex: Gerente de Abrigo, bombeiro"
+                aria-label="Função solicitada" value={role}
                 onChange={(e) => setRole(e.target.value)}
                 onKeyDown={handleKeyDown}
                 className="w-full px-4 py-3 border border-border-soft rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-text-main/40 bg-bg-main/80"

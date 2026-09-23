@@ -206,7 +206,7 @@ export async function createWebAccessRequest({ institution, name, email, role, a
 
     const message = String(error.message || '').toLowerCase()
     if (message.includes('row level security') || message.includes('policy')) {
-      throw new Error('Não foi possível enviar a solicitação porque a política pública de cadastro está bloqueando o envio.')
+      throw new Error('Erro interno no banco de dados.')
     }
 
     throw error

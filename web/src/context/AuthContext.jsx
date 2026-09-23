@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [accessError, setAccessError] = useState('')
-  const [recoveryMode, setRecoveryMode] = useState(false)
+  const [recoveryMode, setRecoveryMode] = useState(() => new URLSearchParams(window.location.hash.slice(1)).get('type') === 'invite')
   const [savedAccounts, setSavedAccounts] = useState(() => readSavedAccounts())
 
   async function applySession(nextSession, { signOutWhenUnauthorized = true } = {}) {

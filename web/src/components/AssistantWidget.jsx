@@ -1,3 +1,5 @@
+import { captureScreenContext } from '../backend/ai/screenContextService.js'
+import { assistantError, allowedScreens, chatKey, LEGACY_CHAT_KEY, permittedActions } from '../backend/ai/assistantPolicy.js'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import assistantIcon from '../assets/assistant/assistant-icon.svg'
 import { askSmdnAssistant } from '../backend/ai/assistantService.js'
@@ -48,7 +50,14 @@ const SCREEN_CONTEXT = {
   },
 }
 
-const CHAT_STORAGE_KEY = 'smdn-nimbo-chat-unico-browser-v1'
+const MANAGER_CONTEXT = {
+  dashboard: { title: 'Visão geral do abrigo', intro: 'Resumo do abrigo vinculado: vagas, estoque, pedidos e doações.', suggestions: ['Quantas vagas temos?', 'O que está acabando no estoque?'] },
+  ocupantes: { title: 'Ocupantes', intro: 'Nomes, idades, categorias, responsáveis e contatos dos ocupantes, conforme a tela e o abrigo vinculado.', suggestions: ['Quem é o ocupante mais novo?', 'Resuma os ocupantes desta tela'] },
+  estoque: { title: 'Estoque', intro: 'Quantidades, unidades e metas do estoque do abrigo.', suggestions: ['Quais itens estão em nível crítico?', 'Resuma o estoque do abrigo'] },
+  pedidos: { title: 'Pedidos de ajuda', intro: 'Pedidos, prioridades, quantidades recebidas e pendências do abrigo.', suggestions: ['Quais pedidos estão pendentes?', 'Quais pedidos são urgentes?'] },
+  relatorios: { title: 'Relatórios do abrigo', intro: 'Resumo atual; relatórios por período são gerados na tela Relatórios.', suggestions: ['Resuma os indicadores atuais do abrigo', 'Como exportar um relatório?'] },
+  perfil: SCREEN_CONTEXT.perfil,
+}
 
 function SparkIcon() {
   return (
@@ -64,22 +73,20 @@ function buildInitialMessages() {
   return [
     {
       role: 'assistant',
-      text: 'Oi, me chamo Nimbo. Como Nimbo pode te ajudar hoje?',
+      text: 'Olá! Sou o Nimbo. Como posso ajudar?',
     },
     {
       role: 'assistant',
-      text: 'Posso ver sua tela e irei te guiar sempre que precisar.',
+      text: 'Consulto os dados e o conteúdo da tela do PREVER, incluindo formulários abertos, conforme suas permissões. Essas informações são processadas pela IA do Google para ajudar você.',
     },
   ]
 }
 
-function safeStorageKey() {
-  return CHAT_STORAGE_KEY
-}
-
 function readStoredMessages(key) {
+  if (!key) return buildInitialMessages()
   try {
-    const saved = JSON.parse(localStorage.getItem(key) || '[]')
+    localStorage.removeItem(LEGACY_CHAT_KEY)
+    const saved = JSON.parse(sessionStorage.getItem(key) || '[]')
     if (Array.isArray(saved) && saved.length > 0) {
       return saved
         .filter((item) => item?.role && typeof item?.text === 'string')
@@ -93,12 +100,13 @@ function readStoredMessages(key) {
 }
 
 function writeStoredMessages(key, messages) {
+  if (!key) return
   try {
     const safeMessages = (messages || [])
       .filter((item) => item?.role && typeof item?.text === 'string')
       .slice(-40)
 
-    localStorage.setItem(key, JSON.stringify(safeMessages))
+    sessionStorage.setItem(key, JSON.stringify(safeMessages))
   } catch {
     // ignora storage indisponível
   }
@@ -160,7 +168,7 @@ function UserAvatar({ account }) {
 
   return (
     <span
-      className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-border-soft bg-slate-100 text-[10px] font-black text-slate-700"
+      className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-border-soft bg-slate-100 text-[0.625rem] font-black text-slate-700"
       aria-hidden="true"
     >
       {initialsFromName(account.name)}
@@ -213,12 +221,6 @@ function renderMessageText(text) {
   })
 }
 
-function scheduleUiEvent(name, detail, delay = 180) {
-  window.setTimeout(() => {
-    window.dispatchEvent(new CustomEvent(name, { detail }))
-  }, delay)
-}
-
 function normalizeAction(action) {
   if (!action || typeof action !== 'object') return null
   return {
@@ -238,11 +240,17 @@ function normalizeDashboardAction(action) {
   }
 }
 
-export default function AssistantWidget({ currentScreen, setCurrentScreen, compact = false, dense = false }) {
+export default function AssistantWidget(props) {
+  const { user } = useAuth()
+  return <AssistantWidgetSession key={chatKey(user) || 'no-session'} {...props} />
+}
+function AssistantWidgetSession({ currentScreen, setCurrentScreen, compact = false, dense = false }) {
   const { user, session } = useAuth()
   const { settings } = useSmdnSettings()
   const [open, setOpen] = useState(false)
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState(() => readStoredMessages(chatKey(user)))
+  const requestRef = useRef(0)
+  const timersRef = useRef(new Set())
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
@@ -257,11 +265,11 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
   const accountId = accountProfile.id
 
   const context = useMemo(
-    () => SCREEN_CONTEXT[currentScreen] || SCREEN_CONTEXT.dashboard,
-    [currentScreen]
+    () => user?.role === 'shelter_manager' ? (MANAGER_CONTEXT[currentScreen] || MANAGER_CONTEXT.dashboard) : (SCREEN_CONTEXT[currentScreen] || SCREEN_CONTEXT.dashboard),
+    [currentScreen, user?.role]
   )
 
-  const chatStorageKey = useMemo(() => safeStorageKey(), [])
+  const chatStorageKey = chatKey(user)
 
   function getDefaultPanelPosition() {
     if (typeof window === 'undefined') {
@@ -329,12 +337,20 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
   }, [open, panelPosition])
 
   useEffect(() => {
-    setMessages(readStoredMessages(chatStorageKey))
-    setDraft('')
-    setError('')
-    setSending(false)
-    clearPendingAiActions()
-  }, [chatStorageKey])
+    const timers = timersRef.current
+    return () => {
+      requestRef.current += 1
+      timers.forEach(clearTimeout)
+      clearPendingAiActions()
+    }
+  }, [])
+  function scheduleUiEvent(name, detail, requestId) {
+    const timer = window.setTimeout(() => {
+      timersRef.current.delete(timer)
+      if (requestRef.current === requestId) window.dispatchEvent(new CustomEvent(name, { detail }))
+    }, 180)
+    timersRef.current.add(timer)
+  }
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -343,8 +359,8 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
   }, [chatStorageKey, messages])
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-  }, [messages, sending])
+    messagesEndRef.current?.scrollIntoView({ behavior: settings.reducedMotion || document.documentElement.dataset.motion === 'reduced' ? 'auto' : 'smooth', block: 'end' })
+  }, [messages, sending, settings.reducedMotion])
 
   useEffect(() => {
     function handleEscape(event) {
@@ -361,6 +377,10 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
   }, [])
 
   function restartChat() {
+    requestRef.current += 1
+    setSending(false)
+    timersRef.current.forEach(clearTimeout)
+    timersRef.current.clear()
     const initialMessages = buildInitialMessages()
     setMessages(initialMessages)
     writeStoredMessages(chatStorageKey, initialMessages)
@@ -369,11 +389,11 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
     clearPendingAiActions()
   }
 
-  function applyAssistantActions(actions = []) {
+  function applyAssistantActions(actions = [], requestId) {
     const normalizedActions = actions.map(normalizeAction).filter(Boolean)
 
     for (const action of normalizedActions) {
-      if (action.type === 'navigate' && SCREEN_CONTEXT[action.screen]) {
+      if (action.type === 'navigate') {
         setCurrentScreen(action.screen)
       }
 
@@ -384,7 +404,7 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
         }
         window.__SMDN_AI_PENDING_USER_ACTION = detail
         setCurrentScreen('users')
-        scheduleUiEvent('smdn-ai-users-action', detail)
+        scheduleUiEvent('smdn-ai-users-action', detail, requestId)
       }
 
       if (action.type === 'filter_users') {
@@ -394,14 +414,14 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
         }
         window.__SMDN_AI_PENDING_USER_ACTION = detail
         setCurrentScreen('users')
-        scheduleUiEvent('smdn-ai-users-action', detail)
+        scheduleUiEvent('smdn-ai-users-action', detail, requestId)
       }
 
       if (action.type === 'open_dashboard_occurrence') {
         const detail = normalizeDashboardAction(action)
         window.__SMDN_AI_PENDING_DASHBOARD_ACTION = detail
         setCurrentScreen('dashboard')
-        scheduleUiEvent('smdn-ai-dashboard-open-occurrence', detail)
+        scheduleUiEvent('smdn-ai-dashboard-open-occurrence', detail, requestId)
       }
 
       if (action.type === 'filter_audit') {
@@ -412,7 +432,7 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
         }
         window.__SMDN_AI_PENDING_AUDIT_ACTION = detail
         setCurrentScreen('auditoria')
-        scheduleUiEvent('smdn-ai-audit-action', detail)
+        scheduleUiEvent('smdn-ai-audit-action', detail, requestId)
       }
     }
   }
@@ -420,7 +440,8 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
   async function sendToGemini(text) {
     const cleanText = String(text || '').trim()
 
-    if (!cleanText || sending) return
+    if (!cleanText || sending || !user?.id) return
+    const requestId = ++requestRef.current
 
     setError('')
     setSending(true)
@@ -443,12 +464,15 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
       const operationalContext = await buildSmdnOperationalContext({
         question: cleanText,
         currentScreen,
+        accountId,
+        screenContext: captureScreenContext({ currentScreen, accountId }),
       })
 
-      operationalContext.currentAskingAccount = {
-        id: accountProfile.id,
-        name: accountProfile.name,
-        role: accountProfile.role,
+      if (requestId !== requestRef.current) return
+      if (operationalContext.currentAskingAccount.role !== user.role || operationalContext.allowedScreens.join(',') !== allowedScreens(user).join(',')) {
+        restartChat()
+        setError('Suas permissões mudaram. Recarregue a página para continuar com o acesso atualizado.')
+        return
       }
 
       const result = await askSmdnAssistant({
@@ -460,13 +484,23 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
         operationalContext,
       })
 
-      applyAssistantActions(result.actions)
+      if (requestId !== requestRef.current) return
+      const freshUser = { ...user, role: operationalContext.currentAskingAccount.role }
+      const requestedNavigation = /\b(abr[aei]|abrir|naveg\w*|filtr\w*|v[aá] para|ir para|mostr\w* no mapa)\b/i.test(cleanText)
+      const actions = permittedActions(requestedNavigation ? result.actions : [], freshUser).filter(action => {
+        const target = action.type === 'navigate' ? action.screen : ({ open_user: 'users', filter_users: 'users', filter_audit: 'auditoria', open_dashboard_occurrence: 'dashboard' })[action.type]
+        return operationalContext.allowedScreens.includes(target)
+      })
+      applyAssistantActions(actions, requestId)
+      const failed = Object.values(operationalContext.sources).filter(source => source.status === 'error').map(source => source.label)
+      const sourceNote = failed.length ? `Não foi possível consultar: ${failed.join(', ')}. Erro interno no banco de dados.` : ''
 
       setMessages((current) => [
         ...current,
         {
           role: 'assistant',
           text: result.text || 'Nimbo não conseguiu gerar uma resposta agora.',
+          sourceNote,
           accountId,
           replyToAccount: accountProfile,
           screen: currentScreen,
@@ -475,9 +509,9 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
         },
       ])
     } catch (err) {
-      setError(err?.message || 'Não foi possível consultar o Nimbo.')
+      if (requestId === requestRef.current) setError(assistantError(err))
     } finally {
-      setSending(false)
+      if (requestId === requestRef.current) setSending(false)
     }
   }
 
@@ -487,7 +521,7 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
   }
 
   return (
-    <div className="relative">
+    <div className="relative" data-nimbo-widget>
       <button
         ref={buttonRef}
         type="button"
@@ -534,7 +568,7 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
             </button>
 
             <div className="min-w-0 text-center">
-              <span className="block text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+              <span className="block text-[0.625rem] font-black uppercase tracking-[0.22em] text-slate-400">
                 Arraste para mover
               </span>
             </div>
@@ -575,6 +609,7 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
                     }`}
                   >
                     {renderMessageText(message.text)}
+                    {message.sourceNote && <small className="block mt-2 font-semibold">{message.sourceNote}</small>}
                   </div>
 
                   {!isAssistant && <UserAvatar account={message.account} />}
@@ -591,7 +626,7 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
                   aria-hidden="true"
                 />
                 <div className="rounded-2xl bg-slate-100 px-3 py-2 text-sm text-slate-700 mr-3">
-                  Nimbo está consultando dados reais do PREVER e pensando...
+                  Consultando os dados disponíveis para sua conta…
                 </div>
               </div>
             )}
@@ -627,6 +662,7 @@ export default function AssistantWidget({ currentScreen, setCurrentScreen, compa
                 onChange={(event) => setDraft(event.target.value)}
                 placeholder="Pergunte algo sobre esta tela..."
                 rows={3}
+                maxLength={2500}
                 disabled={sending}
                 className="w-full resize-none rounded-xl border border-border-soft bg-bg-surface px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-text-main disabled:opacity-60"
               />

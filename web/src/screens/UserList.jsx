@@ -415,7 +415,7 @@ export default function UserList() {
                   <div className="mt-1 flex flex-wrap items-center gap-2">
                     <p className="text-xs text-slate-400 truncate">{roleLabel(user.prf_tipo)}</p>
                     {userAccessSummary(user) && (
-                      <span className="rounded-full border border-status-success/30 bg-status-success-bg px-2 py-0.5 text-[10px] font-bold text-status-success">
+                      <span className="rounded-full border border-status-success/30 bg-status-success-bg px-2 py-0.5 text-[0.625rem] font-bold text-status-success">
                         {userAccessSummary(user)}
                       </span>
                     )}

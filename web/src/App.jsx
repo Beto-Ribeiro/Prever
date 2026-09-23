@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import ManagerPortal from './screens/manager/ManagerPortal.jsx'
 import Login from './screens/Login.jsx'
 import Dashboard from './screens/Dashboard.jsx'
 import Reportar from './screens/Reportar.jsx'
@@ -54,9 +55,11 @@ export default function App() {
   const { devBypassAuth, devBypassAdmin } = getDevBypassFlags()
   const canRenderApp = isAuthenticated || devBypassAuth
   const canOpenAdmin = isAdmin || devBypassAdmin
+  const isManager = user?.role === 'shelter_manager'
   const permissions = user?.permissions || {}
 
   function canOpenScreen(screenId) {
+    if (isManager) return ['dashboard', 'ocupantes', 'estoque', 'pedidos', 'relatorios', 'perfil'].includes(screenId)
     if (screenId === 'perfil') return true
     if (['admin', 'users'].includes(screenId)) return canOpenAdmin
     if (devBypassAuth) return true
@@ -83,7 +86,7 @@ export default function App() {
     if (!canOpenScreen(currentScreen)) {
       setCurrentScreen(canOpenScreen('dashboard') ? 'dashboard' : 'perfil')
     }
-  }, [currentScreen, canOpenAdmin, devBypassAuth, recoveryMode, permissions.dashboard, permissions.reportar, permissions.ocorrencias, permissions.relatorios, permissions.auditoria])
+  }, [currentScreen, isManager, canOpenAdmin, devBypassAuth, recoveryMode, permissions.dashboard, permissions.reportar, permissions.ocorrencias, permissions.relatorios, permissions.auditoria])
 
   const handleLogin = async ({ email, password }) => {
     await signIn({ email, password })
@@ -128,9 +131,10 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-bg-main overflow-hidden">
+      <a href="#main-content" className="skip-link">Ir para o conteúdo</a>
       <Sidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} onLogout={handleLogout} />
-      <main className="flex-1 overflow-y-auto">
-        <ActiveScreen />
+      <main id="main-content" tabIndex={-1} data-nimbo-account={user?.id} data-nimbo-screen={currentScreen} className="flex-1 min-w-0 h-full overflow-y-auto">
+        {isManager ? <ManagerPortal key={user.id} screen={canOpenScreen(currentScreen) ? currentScreen : 'dashboard'} /> : <ActiveScreen />}
       </main>
     </div>
   )

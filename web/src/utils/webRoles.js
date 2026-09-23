@@ -1,4 +1,5 @@
 const ROLE_LABELS = {
+  shelter_manager: 'Gerente de Abrigo',
   admin: 'Administrador',
   employee: 'Funcionário',
   institution: 'Instituição',
@@ -14,6 +15,8 @@ export function normalizeRole(value) {
     .replace(/[\u0300-\u036f]/g, '')
 
   if (!role) return 'unknown'
+  if (['shelter_manager', 'gerente_abrigo', 'gerente de abrigo'].includes(role)) return 'shelter_manager'
+  if (['employee', 'institution', 'citizen'].includes(role)) return role
 
   if (['admin', 'adm', 'administrador', 'administradora', 'gestor', 'gestora'].includes(role)) {
     return 'admin'
@@ -55,9 +58,9 @@ export function getRoleLabel(role) {
 
 // Regra do PREVER:
 // - Sem perfil e Cidadão não acessam o painel web.
-// - Funcionário, Instituição e Administrador acessam o sistema web.
+// - Funcionário, Instituição, Gerente de Abrigo e Administrador acessam o sistema web.
 export function canAccessWeb(role) {
-  return ['admin', 'employee', 'institution'].includes(normalizeRole(role))
+  return ['admin', 'employee', 'institution', 'shelter_manager'].includes(normalizeRole(role))
 }
 
 // Só Administrador abre Administração/Painel do Admin/Lista de Usuários.

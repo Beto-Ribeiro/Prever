@@ -16,6 +16,9 @@ import {
 } from '../backend/perfil/profileChangeService.js'
 
 const PERMISSIONS = [
+  { key: 'ocupantes', label: 'Ocupantes', granted: true },
+  { key: 'estoque', label: 'Estoque', granted: true },
+  { key: 'pedidos', label: 'Pedidos de ajuda', granted: true },
   { key: 'dashboard', label: 'Dashboard', granted: true },
   { key: 'reportar', label: 'Reportar / Disparar Alertas', granted: true },
   { key: 'ocorrencias', label: 'Gerenciar Ocorrências', granted: true },
@@ -143,7 +146,7 @@ function ActivityHoverSummary({ details, position }) {
         ))}
       </div>
 
-      <p className="mt-3 text-[11px] font-semibold text-text-main">Clique na atividade para ver todos os detalhes.</p>
+      <p className="mt-3 text-[0.6875rem] font-semibold text-text-main">Clique na atividade para ver todos os detalhes.</p>
     </div>
   )
 }
@@ -187,7 +190,7 @@ function ActivityDetailsDialog({ details, onClose }) {
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-5 space-y-4">
           {details.sections.map((section) => (
             <div key={section.title} className="profile-activity-details-section rounded-2xl border border-border-soft bg-slate-50/70 p-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400 mb-2">{section.title}</p>
+              <p className="text-[0.625rem] font-bold uppercase tracking-[0.16em] text-slate-400 mb-2">{section.title}</p>
               <div className="space-y-2">
                 {section.rows.map((row) => (
                   <div key={`${section.title}-${row.label}`} className="grid min-w-0 grid-cols-[120px_minmax(0,1fr)] gap-3 text-sm">

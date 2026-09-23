@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export const SETTINGS_STORAGE_KEY = 'smdn:settings:v1'
 
@@ -19,6 +19,9 @@ function normalizeSettings(settings) {
     ...DEFAULT_SETTINGS,
     ...(settings || {}),
   }
+
+  if (!['system', 'light', 'dark'].includes(next.theme)) next.theme = DEFAULT_SETTINGS.theme
+  if (!['comfortable', 'compact'].includes(next.density)) next.density = DEFAULT_SETTINGS.density
 
   if (!['small', 'normal', 'large', 'xlarge'].includes(next.fontScale)) {
     next.fontScale = DEFAULT_SETTINGS.fontScale
@@ -51,8 +54,8 @@ function safeJsonParse(value) {
 export function readSmdnSettings() {
   if (typeof window === 'undefined') return DEFAULT_SETTINGS
 
-  const stored = safeJsonParse(window.localStorage.getItem(SETTINGS_STORAGE_KEY))
-  return normalizeSettings(stored)
+  try { return normalizeSettings(safeJsonParse(window.localStorage.getItem(SETTINGS_STORAGE_KEY))) }
+  catch { return { ...DEFAULT_SETTINGS } }
 }
 
 export function getEffectiveTheme(theme) {
@@ -76,7 +79,7 @@ export function applySmdnSettings(settings) {
   root.dataset.themeMode = next.theme
   root.dataset.fontScale = next.fontScale
   root.dataset.contrast = next.highContrast ? 'high' : 'normal'
-  root.dataset.motion = next.reducedMotion ? 'reduced' : 'normal'
+  root.dataset.motion = (next.reducedMotion || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) ? 'reduced' : 'normal'
   root.dataset.colorblind = next.colorBlind ? 'true' : 'false'
   root.dataset.density = next.density
   root.dataset.promptRecommendations = next.promptRecommendationsDisabled ? 'off' : 'on'
@@ -86,7 +89,7 @@ export function saveSmdnSettings(settings) {
   const next = normalizeSettings(settings)
 
   if (typeof window !== 'undefined') {
-    window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(next))
+    try { window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(next)) } catch { /* Still apply settings for this session. */ }
     window.dispatchEvent(new CustomEvent('smdn-settings-change', { detail: next }))
   }
 
@@ -95,6 +98,7 @@ export function saveSmdnSettings(settings) {
 }
 
 export function useSmdnSettings() {
+  const [, setSystemRevision] = useState(0)
   const [settings, setSettings] = useState(() => readSmdnSettings())
 
   useEffect(() => {
@@ -113,23 +117,27 @@ export function useSmdnSettings() {
     }
 
     const media = window.matchMedia?.('(prefers-color-scheme: light)')
-    const handleMediaChange = () => applySmdnSettings(readSmdnSettings())
+    const motionMedia = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+    const handleMediaChange = () => { applySmdnSettings(readSmdnSettings()); setSystemRevision(value => value + 1) }
 
     window.addEventListener('smdn-settings-change', handleExternalChange)
     window.addEventListener('storage', handleStorage)
     media?.addEventListener?.('change', handleMediaChange)
+    motionMedia?.addEventListener?.('change', handleMediaChange)
 
     return () => {
       window.removeEventListener('smdn-settings-change', handleExternalChange)
       window.removeEventListener('storage', handleStorage)
       media?.removeEventListener?.('change', handleMediaChange)
+      motionMedia?.removeEventListener?.('change', handleMediaChange)
     }
   }, [])
 
-  const effectiveTheme = useMemo(() => getEffectiveTheme(settings.theme), [settings.theme])
+  const effectiveTheme = getEffectiveTheme(settings.theme)
 
   function updateSetting(key, value) {
-    setSettings((current) => saveSmdnSettings({ ...current, [key]: value }))
+    const next = { ...settings, [key]: value }
+    setSettings(saveSmdnSettings(next))
   }
 
   function resetSettings() {

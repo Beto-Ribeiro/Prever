@@ -203,7 +203,7 @@ const MapView = forwardRef(function MapView(
 
   useImperativeHandle(ref, () => ({
     flyTo(lat, lng, zoom = 15) {
-      mapInstanceRef.current?.flyTo([lat, lng], zoom, { duration: 1.2 })
+      mapInstanceRef.current?.flyTo([lat, lng], zoom, { duration: 1.2, animate: document.documentElement.dataset.motion !== 'reduced' })
     }
   }))
 
@@ -278,7 +278,7 @@ const MapView = forwardRef(function MapView(
           backdrop-filter: blur(8px);
           padding: 2px 7px;
           color: #64748b;
-          font-size: 9px;
+          font-size: 0.5625rem;
           line-height: 1.25;
           box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
           opacity: 0.62;
@@ -490,7 +490,7 @@ const MapView = forwardRef(function MapView(
 
         .smdn-victim-status {
           margin-top: 5px;
-          font-size: 12px;
+          font-size: 0.75rem;
         }
 
         .smdn-victim-status-ok {
@@ -610,11 +610,11 @@ const MapView = forwardRef(function MapView(
       : [...validOccurrences, ...validVictims, ...validShelters]
 
     if (selectedShelter) {
-      map.flyTo([selectedShelter.lat, selectedShelter.lng], 16, { duration: 0.9 })
+      map.flyTo([selectedShelter.lat, selectedShelter.lng], 16, { duration: 0.9, animate: document.documentElement.dataset.motion !== 'reduced' })
       selectedShelterMarker?.openPopup()
     } else if (visiblePoints.length > 0) {
       const bounds = L.latLngBounds(visiblePoints.map((item) => [item.lat, item.lng]))
-      map.fitBounds(bounds.pad(0.25), { maxZoom: 12, animate: true })
+      map.fitBounds(bounds.pad(0.25), { maxZoom: 12, animate: document.documentElement.dataset.motion !== 'reduced' })
     }
   }, [ocorrencias, vitimas, abrigos, effectiveMode, showOccurrences, showHeat, onOccurrenceDetails, onVictimAssistance, onShelterSelect, savingVictimId, selectedShelterId, colorBlind])
 
@@ -624,7 +624,7 @@ const MapView = forwardRef(function MapView(
     if (isValidCoord(targetLocation.lat) && isValidCoord(targetLocation.lon)) {
       const zoom = targetLocation.neighborhood ? 14 : 12
       placeSelectionMarker(targetLocation.lat, targetLocation.lon)
-      mapInstanceRef.current?.flyTo([targetLocation.lat, targetLocation.lon], zoom, { duration: 1.2 })
+      mapInstanceRef.current?.flyTo([targetLocation.lat, targetLocation.lon], zoom, { duration: 1.2, animate: document.documentElement.dataset.motion !== 'reduced' })
       return
     }
 
@@ -641,7 +641,7 @@ const MapView = forwardRef(function MapView(
         const { lat, lon } = results[0]
         const zoom = targetLocation.neighborhood ? 14 : 12
         placeSelectionMarker(parseFloat(lat), parseFloat(lon))
-        mapInstanceRef.current?.flyTo([lat, lon], zoom, { duration: 1.2 })
+        mapInstanceRef.current?.flyTo([lat, lon], zoom, { duration: 1.2, animate: document.documentElement.dataset.motion !== 'reduced' })
       })
       .catch(() => {})
   }, [targetLocation, selectionRadiusKm, showSelectionRadius])

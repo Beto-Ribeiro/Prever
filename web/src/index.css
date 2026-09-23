@@ -626,3 +626,26 @@ html[data-theme='dark'] .admin-avatar-change-card .text-slate-600,
 html[data-theme='dark'] .admin-avatar-change-card .text-slate-700 {
   color: rgb(203 213 225) !important;
 }
+
+/* Opaque map controls keep text readable over roads, tiles and markers. */
+.dashboard-map-panel {
+  background: #ffffff !important;
+  color: #1e293b;
+  border-color: #94a3b8 !important;
+  box-shadow: 0 8px 24px rgb(2 6 23 / 30%);
+  backdrop-filter: none;
+}
+html[data-theme='dark'] .dashboard-map-panel {
+  background: #1e293b !important;
+  color: #f1f5f9;
+  border-color: #64748b !important;
+  color-scheme: dark;
+}
+html[data-theme='dark'] .dashboard-map-panel .text-slate-400 {
+  color: #cbd5e1 !important;
+}
+html[data-theme='dark'] .dashboard-map-panel .text-status-critical { color: #ff8088; }
+html[data-theme='dark'] .dashboard-map-panel .text-status-severe { color: #ffb86b; }
+html[data-theme='dark'] .dashboard-map-panel .text-status-success { color: #69e6b2; }
+html[data-theme='dark'][data-colorblind='true'] .dashboard-map-panel .text-status-critical { color: #72c1ff; }
+html[data-theme='dark'][data-colorblind='true'] .dashboard-map-panel .text-status-severe { color: #ffb86b; }

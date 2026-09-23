@@ -2,6 +2,9 @@ import { supabase } from '../supabase/client.js'
 import { formatBrazilPhone } from '../../utils/phone.js'
 
 export const DEFAULT_PERMISSIONS = {
+  ocupantes: false,
+  estoque: false,
+  pedidos: false,
   dashboard: true,
   reportar: true,
   ocorrencias: true,
@@ -11,6 +14,9 @@ export const DEFAULT_PERMISSIONS = {
 }
 
 export const PERMISSION_LABELS = {
+  ocupantes: 'Ocupantes do abrigo',
+  estoque: 'Estoque do abrigo',
+  pedidos: 'Pedidos de ajuda do abrigo',
   dashboard: 'Dashboard',
   reportar: 'Reportar / Disparar Alertas',
   ocorrencias: 'Gerenciar Ocorrências',
@@ -77,6 +83,7 @@ function permissionsWithDefaults(value) {
 }
 
 function permissionsForRole(value, profileType) {
+  if (['gerente_abrigo', 'shelter_manager'].includes(normalizeProfileType(profileType))) return { dashboard: true, ocupantes: true, estoque: true, pedidos: true, relatorios: true, reportar: false, ocorrencias: false, auditoria: false, admin: false }
   const permissions = permissionsWithDefaults(value)
 
   if (isBlockedWebType(profileType)) {

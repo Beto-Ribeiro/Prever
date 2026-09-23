@@ -30,6 +30,7 @@ const INITIAL_FORM = {
   accessibility: '',
   acceptsPets: '',
   coordinator: '',
+  coordinatorContact: '',
   phone: '',
   phone2: '',
   details: '',
@@ -74,6 +75,7 @@ function formFromShelter(shelter) {
     accessibility: shelter.accessibility || '',
     acceptsPets: shelter.acceptsPets || '',
     coordinator: shelter.coordinator || '',
+    coordinatorContact: shelter.coordinatorContact || '',
     phone: shelter.phone || '',
     phone2: shelter.phone2 || '',
     details: shelter.details || '',
@@ -319,7 +321,7 @@ export default function Abrigos() {
                   <path d="M5.5 10.5V20h13v-9.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M9.5 20v-6h5v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span className="text-center text-[11px] font-bold leading-tight">Cadastrar<br />abrigo</span>
+                <span className="text-center text-[0.6875rem] font-bold leading-tight">Cadastrar<br />abrigo</span>
               </button>
 
               <Card className="flex min-w-[142px] flex-col justify-center px-4 py-3 text-center">
@@ -524,7 +526,7 @@ export default function Abrigos() {
                 <div className="space-y-2 rounded-xl border border-border-soft p-3">
                   <div>
                     <p className="text-label text-slate-500">COORDENAÇÃO</p>
-                    <p className="mt-1 text-sm font-semibold text-slate-700">{selectedShelter.coordinator || 'Não informada'}</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-700">{selectedShelter.coordinator || 'Não informada'}</p><p className="mt-2 text-label text-slate-500">CONTATO DO RESPONSÁVEL</p><p className="mt-1 text-sm text-slate-700">{selectedShelter.coordinatorContact || 'Não informado'}</p>
                   </div>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
                     <div>
@@ -672,6 +674,7 @@ export default function Abrigos() {
             />
           </div>
 
+          <div><label className="mb-1.5 block text-label text-slate-600" htmlFor="shelter-coordinator-contact">CONTATO DO RESPONSÁVEL</label><input id="shelter-coordinator-contact" className="input-field" value={form.coordinatorContact} onChange={event => setForm(current => ({ ...current, coordinatorContact: event.target.value }))} placeholder="Telefone ou e-mail" maxLength={120} /></div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-label text-slate-600" htmlFor="shelter-phone">TELEFONE PRINCIPAL</label>
