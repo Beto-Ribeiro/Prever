@@ -650,7 +650,7 @@ export default function Relatorios() {
             <div className="flex items-end gap-3 h-48">
               {data.monthly.map((m) => (
                 <div key={m.month} className="flex-1 flex flex-col items-center gap-1.5">
-                  <span className="text-[10px] text-slate-400 font-bold">{m.total}</span>
+                  <span className="text-[0.625rem] text-slate-400 font-bold">{m.total}</span>
                   <div className="w-full flex flex-col justify-end" style={{ height: '160px' }}>
                     <div
                       className="w-full rounded-t bg-text-main/20 relative overflow-hidden flex flex-col justify-end"
@@ -662,7 +662,7 @@ export default function Relatorios() {
                       />
                     </div>
                   </div>
-                  <span className="text-[11px] text-slate-500 font-medium">{m.month}</span>
+                  <span className="text-[0.6875rem] text-slate-500 font-medium">{m.month}</span>
                 </div>
               ))}
             </div>
@@ -728,7 +728,7 @@ export default function Relatorios() {
               {data.bySeverity.map((s) => (
                 <div key={s.label} className="text-center">
                   <p className={`text-lg font-bold ${s.text}`}>{s.pct}%</p>
-                  <p className="text-[10px] text-slate-400 font-semibold">{s.label}</p>
+                  <p className="text-[0.625rem] text-slate-400 font-semibold">{s.label}</p>
                 </div>
               ))}
             </div>
@@ -758,7 +758,7 @@ export default function Relatorios() {
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-2xl font-bold text-slate-800">{data.kpis.total}</span>
-                  <span className="text-[10px] text-slate-400 font-semibold">total</span>
+                  <span className="text-[0.625rem] text-slate-400 font-semibold">total</span>
                 </div>
               </div>
               <div className="flex-1 space-y-4">
@@ -800,7 +800,7 @@ export default function Relatorios() {
                     className="h-full bg-gradient-to-r from-text-main to-action-hover flex items-center justify-end pr-2 rounded transition-all duration-700"
                     style={{ width: `${(c.count / maxCity) * 100}%` }}
                   >
-                    <span className="text-white text-[11px] font-bold">{c.count}</span>
+                    <span className="text-white text-[0.6875rem] font-bold">{c.count}</span>
                   </div>
                 </div>
               </div>

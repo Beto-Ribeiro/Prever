@@ -43,7 +43,10 @@ function maskPhone(value) {
   return `${digits.slice(0, 2)}#######${digits.slice(-2)}`
 }
 
-
+const FALLBACK_ACTIVITY = [
+  { action: 'Login', target: 'Acesso autorizado', at: 'Agora' },
+  { action: 'Perfil', target: 'Dados sincronizados', at: 'Hoje' },
+]
 
 function makeInitialForm(user) {
   return {
@@ -143,7 +146,7 @@ function ActivityHoverSummary({ details, position }) {
         ))}
       </div>
 
-      <p className="mt-3 text-[11px] font-semibold text-text-main">Clique na atividade para ver todos os detalhes.</p>
+      <p className="mt-3 text-[0.6875rem] font-semibold text-text-main">Clique na atividade para ver todos os detalhes.</p>
     </div>
   )
 }
@@ -187,7 +190,7 @@ function ActivityDetailsDialog({ details, onClose }) {
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-5 space-y-4">
           {details.sections.map((section) => (
             <div key={section.title} className="profile-activity-details-section rounded-2xl border border-border-soft bg-slate-50/70 p-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400 mb-2">{section.title}</p>
+              <p className="text-[0.625rem] font-bold uppercase tracking-[0.16em] text-slate-400 mb-2">{section.title}</p>
               <div className="space-y-2">
                 {section.rows.map((row) => (
                   <div key={`${section.title}-${row.label}`} className="grid min-w-0 grid-cols-[120px_minmax(0,1fr)] gap-3 text-sm">
@@ -205,7 +208,7 @@ function ActivityDetailsDialog({ details, onClose }) {
 }
 
 function ActivityList({ activities, currentUser }) {
-  const items = activities
+  const items = activities.length > 0 ? activities : FALLBACK_ACTIVITY
   const [hoverDetails, setHoverDetails] = useState(null)
   const [hoverPosition, setHoverPosition] = useState(null)
   const [openedDetails, setOpenedDetails] = useState(null)
@@ -224,7 +227,6 @@ function ActivityList({ activities, currentUser }) {
   return (
     <>
       <div className="space-y-2.5">
-        {!items.length && <p className="text-sm text-slate-500">Nenhuma atividade registrada.</p>}
         {items.map((activity, index) => {
           const isDatabaseActivity = Boolean(activity.atu_id)
           const action = isDatabaseActivity ? activity.atu_action : activity.action

@@ -37,8 +37,6 @@ function initials(name) {
 function roleLabel(role) {
   const normalized = String(role || '').toLowerCase()
   const labels = {
-    gerente_abrigo: 'Gerente de Abrigo',
-    shelter_manager: 'Gerente de Abrigo',
     administrador: 'Administrador',
     admin: 'Administrador',
     funcionario: 'Funcionário',
@@ -85,7 +83,6 @@ function allPermissions(value) {
 }
 
 function permissionsForType(permissions, type) {
-  if (['gerente_abrigo', 'shelter_manager'].includes(normalizeProfileType(type))) return { dashboard: true, ocupantes: true, estoque: true, pedidos: true, relatorios: true, reportar: false, ocorrencias: false, auditoria: false, admin: false }
   const base = { ...DEFAULT_PERMISSIONS, ...(permissions || {}) }
 
   if (isBlockedWebType(type)) {
@@ -418,7 +415,7 @@ export default function UserList() {
                   <div className="mt-1 flex flex-wrap items-center gap-2">
                     <p className="text-xs text-slate-400 truncate">{roleLabel(user.prf_tipo)}</p>
                     {userAccessSummary(user) && (
-                      <span className="rounded-full border border-status-success/30 bg-status-success-bg px-2 py-0.5 text-[10px] font-bold text-status-success">
+                      <span className="rounded-full border border-status-success/30 bg-status-success-bg px-2 py-0.5 text-[0.625rem] font-bold text-status-success">
                         {userAccessSummary(user)}
                       </span>
                     )}
@@ -450,7 +447,7 @@ export default function UserList() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2"><label className="block text-label text-slate-600 mb-1.5">NOME COMPLETO</label><input className="input-field" value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} /></div>
-            <div><label className="block text-label text-slate-600 mb-1.5">TIPO DE PERFIL</label><select className="input-field" value={form.type} onChange={(event) => handleTypeChange(event.target.value)}><option value="pendente">Sem perfil</option><option value="funcionario">Funcionário</option><option value="instituicao">Instituição</option><option value="cidadao">Cidadão</option><option value="administrador">Administrador</option>{['gerente_abrigo', 'shelter_manager'].includes(selectedUser?.prf_tipo) && <option value={selectedUser.prf_tipo}>Gerente de Abrigo</option>}</select></div>
+            <div><label className="block text-label text-slate-600 mb-1.5">TIPO DE PERFIL</label><select className="input-field" value={form.type} onChange={(event) => handleTypeChange(event.target.value)}><option value="pendente">Sem perfil</option><option value="funcionario">Funcionário</option><option value="instituicao">Instituição</option><option value="cidadao">Cidadão</option><option value="administrador">Administrador</option></select></div>
             <div><label className="block text-label text-slate-600 mb-1.5">E-MAIL DE LOGIN / CONTATO</label><input type="email" className="input-field" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} /></div>
             <div><label className="block text-label text-slate-600 mb-1.5">TELEFONE</label><input className="input-field" inputMode="numeric" maxLength={15} value={form.phone} placeholder="(12) 98703-7110" onChange={(event) => setForm((current) => ({ ...current, phone: formatBrazilPhone(event.target.value) }))} /></div>
             <div><label className="block text-label text-slate-600 mb-1.5">FOTO DO PERFIL</label><label className="input-field flex items-center justify-between cursor-pointer text-slate-500"><span className="truncate">{uploadingAvatar ? 'Enviando foto...' : form.avatarUrl ? 'Trocar foto' : 'Enviar foto'}</span><input type="file" accept="image/*" className="hidden" disabled={uploadingAvatar} onChange={handleAvatarFileChange} /></label></div>

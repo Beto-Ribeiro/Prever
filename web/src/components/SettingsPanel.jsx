@@ -1,3 +1,4 @@
+import { useDialogFocus } from '../hooks/useDialogFocus.js'
 import { useEffect, useRef, useState } from 'react'
 import { useSmdnSettings } from '../hooks/useSmdnSettings.js'
 
@@ -32,7 +33,7 @@ function Toggle({ checked, onChange, label, description }) {
 function OptionGroup({ label, value, options, onChange }) {
   return (
     <div>
-      <p className="text-[11px] uppercase tracking-[0.18em] font-black text-slate-400 mb-2">{label}</p>
+      <p className="text-[0.6875rem] uppercase tracking-[0.18em] font-black text-slate-400 mb-2">{label}</p>
       <div className="grid gap-2">
         {options.map((option) => (
           <button
@@ -78,6 +79,8 @@ export default function SettingsPanel({ variant = 'row', className = '', panelCl
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [open])
 
+  useDialogFocus(open, panelRef, () => setOpen(false), false)
+
   const isIcon = variant === 'icon'
   const isAction = variant === 'action'
   const buttonLabel = label || (isAction ? 'Config.' : 'Configurações')
@@ -106,7 +109,7 @@ export default function SettingsPanel({ variant = 'row', className = '', panelCl
       {open && (
         <div
           ref={panelRef}
-          className={`fixed bottom-16 left-[210px] z-[99999] w-[360px] max-h-[calc(100vh-5rem)] overflow-y-auto rounded-3xl border border-border-soft bg-bg-surface p-5 shadow-2xl animate-slide-up ${panelClassName}`}
+          className={`settings-panel fixed bottom-16 left-[210px] z-[99999] w-[360px] max-h-[calc(100vh-5rem)] overflow-y-auto rounded-3xl border border-border-soft bg-bg-surface p-5 shadow-2xl animate-slide-up ${panelClassName}`}
           role="dialog"
           aria-label="Configurações do PREVER"
         >

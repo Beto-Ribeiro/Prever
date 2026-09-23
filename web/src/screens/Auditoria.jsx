@@ -64,12 +64,12 @@ function PersonBadge({ person, label }) {
       {person?.avatar ? (
         <img src={person.avatar} alt={person.name || label} className="h-7 w-7 rounded-full object-cover border border-white/70 bg-white" />
       ) : (
-        <div className="h-7 w-7 rounded-full bg-white/80 border border-border-soft flex items-center justify-center text-[10px] font-bold text-slate-500">
+        <div className="h-7 w-7 rounded-full bg-white/80 border border-border-soft flex items-center justify-center text-[0.625rem] font-bold text-slate-500">
           {initials(person?.name)}
         </div>
       )}
       <div className="min-w-0">
-        <p className="text-[10px] uppercase tracking-[0.12em] text-slate-400 font-bold leading-none">{label}</p>
+        <p className="text-[0.625rem] uppercase tracking-[0.12em] text-slate-400 font-bold leading-none">{label}</p>
         <p className="text-xs text-slate-700 font-bold truncate">{person?.name || '—'}</p>
       </div>
     </div>
@@ -98,7 +98,7 @@ function AuditDetails({ entry }) {
 
       {(entry.details || []).map((section) => (
         <div key={section.title} className="rounded-2xl border border-border-soft p-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400 mb-3">{section.title}</p>
+          <p className="text-[0.625rem] font-bold uppercase tracking-[0.16em] text-slate-400 mb-3">{section.title}</p>
           <div className="space-y-2">
             {section.rows.map((row) => (
               <div key={`${section.title}-${row.label}`} className="grid grid-cols-[140px_1fr] gap-3 text-sm">
@@ -265,14 +265,14 @@ export default function Auditoria() {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className={`text-xs font-bold ${cfg.text}`}>{entry.actionLabel || entry.action}</span>
-                              <span className="text-[10px] text-slate-400 bg-white border border-border-soft rounded px-1.5 py-0.5">{entry.role}</span>
+                              <span className="text-[0.625rem] text-slate-400 bg-white border border-border-soft rounded px-1.5 py-0.5">{entry.role}</span>
                             </div>
                             <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
                               <PersonBadge person={entry.actor} label="Responsável" />
                               <PersonBadge person={entry.target} label="Afetado / alvo" />
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                          <div className="flex items-center gap-2 text-[0.6875rem] text-slate-400">
                             <span>{formatDate(entry.at)}</span>
                             <span className="font-mono bg-white border border-border-soft rounded px-1.5 py-0.5">{entry.ip}</span>
                           </div>

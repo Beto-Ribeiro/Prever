@@ -93,7 +93,7 @@ function ChangeList({ changes, currentProfile, status }) {
             <span>→</span>{' '}
             <span className="font-semibold text-slate-700">{change.new || '—'}</span>
             {change.manualOnly && (
-              <span className="ml-2 rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-bold text-orange-700 border border-orange-100">
+              <span className="ml-2 rounded-full bg-orange-50 px-2 py-0.5 text-[0.625rem] font-bold text-orange-700 border border-orange-100">
                 manual
               </span>
             )}

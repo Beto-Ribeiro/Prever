@@ -168,7 +168,7 @@ function UserAvatar({ account }) {
 
   return (
     <span
-      className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-border-soft bg-slate-100 text-[10px] font-black text-slate-700"
+      className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-border-soft bg-slate-100 text-[0.625rem] font-black text-slate-700"
       aria-hidden="true"
     >
       {initialsFromName(account.name)}
@@ -359,8 +359,8 @@ function AssistantWidgetSession({ currentScreen, setCurrentScreen, compact = fal
   }, [chatStorageKey, messages])
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-  }, [messages, sending])
+    messagesEndRef.current?.scrollIntoView({ behavior: settings.reducedMotion || document.documentElement.dataset.motion === 'reduced' ? 'auto' : 'smooth', block: 'end' })
+  }, [messages, sending, settings.reducedMotion])
 
   useEffect(() => {
     function handleEscape(event) {
@@ -568,7 +568,7 @@ function AssistantWidgetSession({ currentScreen, setCurrentScreen, compact = fal
             </button>
 
             <div className="min-w-0 text-center">
-              <span className="block text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+              <span className="block text-[0.625rem] font-black uppercase tracking-[0.22em] text-slate-400">
                 Arraste para mover
               </span>
             </div>

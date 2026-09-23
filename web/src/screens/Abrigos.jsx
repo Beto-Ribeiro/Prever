@@ -321,7 +321,7 @@ export default function Abrigos() {
                   <path d="M5.5 10.5V20h13v-9.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M9.5 20v-6h5v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span className="text-center text-[11px] font-bold leading-tight">Cadastrar<br />abrigo</span>
+                <span className="text-center text-[0.6875rem] font-bold leading-tight">Cadastrar<br />abrigo</span>
               </button>
 
               <Card className="flex min-w-[142px] flex-col justify-center px-4 py-3 text-center">

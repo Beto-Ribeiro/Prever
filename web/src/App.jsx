@@ -131,8 +131,9 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-bg-main overflow-hidden">
+      <a href="#main-content" className="skip-link">Ir para o conteúdo</a>
       <Sidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} onLogout={handleLogout} />
-      <main data-nimbo-account={user?.id} data-nimbo-screen={currentScreen} className="flex-1 overflow-y-auto">
+      <main id="main-content" tabIndex={-1} data-nimbo-account={user?.id} data-nimbo-screen={currentScreen} className="flex-1 min-w-0 h-full overflow-y-auto">
         {isManager ? <ManagerPortal key={user.id} screen={canOpenScreen(currentScreen) ? currentScreen : 'dashboard'} /> : <ActiveScreen />}
       </main>
     </div>

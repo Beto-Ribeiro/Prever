@@ -398,7 +398,7 @@ export default function Dashboard() {
         />
 
         <div
-          className="absolute top-4 left-16 z-[500] flex rounded-xl dashboard-map-panel  border border-border-soft shadow-sm overflow-hidden"
+          className="absolute top-4 left-16 z-[500] flex rounded-xl bg-bg-surface/95 backdrop-blur-sm border border-border-soft shadow-sm overflow-hidden"
           role="group"
           aria-label="Filtro de visualização do mapa"
         >
@@ -420,7 +420,7 @@ export default function Dashboard() {
         <button
           type="button"
           onClick={() => setShowShelters((value) => !value)}
-          className={`absolute top-4 left-[360px] z-[500] rounded-xl border px-3 py-2 text-xs font-bold shadow-sm  transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${showShelters ? 'border-text-main bg-text-main text-white' : 'border-border-soft dashboard-map-panel text-slate-600 hover:bg-action-hover/20'}`}
+          className={`absolute top-4 left-[360px] z-[500] rounded-xl border px-3 py-2 text-xs font-bold shadow-sm backdrop-blur-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${showShelters ? 'border-text-main bg-text-main text-white' : 'border-border-soft bg-bg-surface/95 text-slate-600 hover:bg-action-hover/20'}`}
           aria-pressed={showShelters}
           aria-label="Mostrar ou ocultar abrigos no mapa do dashboard"
         >
@@ -435,16 +435,16 @@ export default function Dashboard() {
         {recentMinimized ? (
           <div className="flex items-center gap-2 self-end">
             {mapVictims.length > 0 && (
-              <Card className="!rounded-xl border border-border-soft dashboard-map-panel px-3 py-2 shadow-lg ">
+              <Card className="!rounded-xl border border-border-soft bg-bg-surface/95 px-3 py-2 shadow-lg backdrop-blur-sm">
                 <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-black align-middle ring-2 ring-white" />
-                <span className="text-[11px] font-bold text-slate-700">
+                <span className="text-[0.6875rem] font-bold text-slate-700">
                   {mapMode === 'victims' ? `${mapVictims.length} vítima(s)` : `${mapVictims.length} vítima(s) · ${dashboard.stats.assistedVictims || 0} atendida(s)`}
                 </span>
               </Card>
             )}
 
             <Card
-              className="h-12 w-12 shadow-xl border border-border-soft dashboard-map-panel  !p-0 overflow-hidden flex items-center justify-center transition-all duration-200"
+              className="h-12 w-12 shadow-xl border border-border-soft bg-bg-surface/95 backdrop-blur-sm !p-0 overflow-hidden flex items-center justify-center transition-all duration-200"
               role="region"
               aria-label="Ocorrências recentes minimizadas"
             >
@@ -461,7 +461,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <Card
-            className="w-full max-h-[360px] shadow-xl border border-border-soft dashboard-map-panel  p-0 overflow-hidden flex flex-col transition-all duration-200"
+            className="w-full max-h-[360px] shadow-xl border border-border-soft bg-bg-surface/95 backdrop-blur-sm p-0 overflow-hidden flex flex-col transition-all duration-200"
             role="region"
             aria-label="Ocorrências recentes"
           >
@@ -473,7 +473,7 @@ export default function Dashboard() {
                     {dashboardSummary.map((item) => (
                       <span
                         key={item.label}
-                        className="rounded-full border border-border-soft bg-action-hover/10 px-2 py-0.5 text-[10px] font-bold text-slate-600"
+                        className="rounded-full border border-border-soft bg-action-hover/10 px-2 py-0.5 text-[0.625rem] font-bold text-slate-600"
                       >
                         {item.label}: {item.value}
                       </span>
@@ -482,11 +482,11 @@ export default function Dashboard() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {loading && <span className="text-[11px] text-slate-400">Carregando...</span>}
+                  {loading && <span className="text-[0.6875rem] text-slate-400">Carregando...</span>}
                   <button
                     type="button"
                     onClick={() => loadDashboard()}
-                    className="hidden sm:inline-flex h-8 items-center justify-center rounded-lg border border-border-soft bg-bg-surface px-2.5 text-[11px] font-bold text-slate-600 hover:bg-action-hover/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
+                    className="hidden sm:inline-flex h-8 items-center justify-center rounded-lg border border-border-soft bg-bg-surface px-2.5 text-[0.6875rem] font-bold text-slate-600 hover:bg-action-hover/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
                     aria-label="Atualizar ocorrências recentes"
                     title="Atualizar ocorrências"
                   >
@@ -530,14 +530,14 @@ export default function Dashboard() {
                       <SeverityShape severity={occ.severity} colorBlind={settings.colorBlind} className="mt-1 flex-shrink-0" />
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold text-xs text-slate-800 truncate">{occ.title}</p>
-                        <p className="text-[11px] text-slate-500 mt-0.5">
+                        <p className="text-[0.6875rem] text-slate-500 mt-0.5">
                           {occ.city} · {occ.time}
                         </p>
-                        <p className="text-[10px] text-slate-400 mt-0.5 truncate">
+                        <p className="text-[0.625rem] text-slate-400 mt-0.5 truncate">
                           por {occ.citizenName}
                         </p>
                       </div>
-                      <span className={`${cfg.cls} text-[10px] px-1.5 py-0.5 rounded`}>
+                      <span className={`${cfg.cls} text-[0.625rem] px-1.5 py-0.5 rounded`}>
                         {cfg.label}
                       </span>
                     </button>
@@ -549,9 +549,9 @@ export default function Dashboard() {
         )}
 
         {!recentMinimized && mapVictims.length > 0 && (
-          <Card className="self-start !rounded-xl border border-border-soft dashboard-map-panel px-3 py-2 shadow-lg ">
+          <Card className="self-start !rounded-xl border border-border-soft bg-bg-surface/95 px-3 py-2 shadow-lg backdrop-blur-sm">
             <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-black align-middle ring-2 ring-white" />
-            <span className="text-[11px] font-bold text-slate-700">
+            <span className="text-[0.6875rem] font-bold text-slate-700">
               {mapMode === 'victims' ? `${mapVictims.length} vítima(s) no mapa` : `${mapVictims.length} vítima(s) · ${dashboard.stats.assistedVictims || 0} atendida(s)`}
             </span>
           </Card>
@@ -562,7 +562,7 @@ export default function Dashboard() {
         <button
           type="button"
           onClick={() => setStatsMinimized(false)}
-          className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 rounded-2xl border border-border-soft dashboard-map-panel px-4 py-3 text-xs font-bold text-slate-700 shadow-lg  hover:bg-action-hover/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
+          className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 rounded-2xl border border-border-soft bg-bg-surface/95 px-4 py-3 text-xs font-bold text-slate-700 shadow-lg backdrop-blur-sm hover:bg-action-hover/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
           aria-label="Expandir indicadores do dashboard"
         >
           Mostrar indicadores · {dashboard.stats.activeOccurrences} ativas · {dashboard.stats.activeAlerts} alertas · {dashboard.stats.criticalSeverity} críticas
@@ -580,7 +580,7 @@ export default function Dashboard() {
           <button
             type="button"
             onClick={() => setStatsMinimized(true)}
-            className="absolute -top-10 right-0 pointer-events-auto rounded-xl border border-border-soft dashboard-map-panel px-3 py-2 text-[11px] font-bold text-slate-600 shadow-sm  hover:bg-action-hover/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
+            className="absolute -top-10 right-0 pointer-events-auto rounded-xl border border-border-soft bg-bg-surface/95 px-3 py-2 text-[0.6875rem] font-bold text-slate-600 shadow-sm backdrop-blur-sm hover:bg-action-hover/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
             aria-label="Minimizar indicadores do dashboard"
           >
             Minimizar cards
@@ -591,7 +591,7 @@ export default function Dashboard() {
               key={card.label}
               role="listitem"
               aria-label={`${card.label}: ${card.value}`}
-              className="pointer-events-auto flex min-h-[64px] items-center gap-3 px-3 py-2.5 dashboard-map-panel  shadow-lg border border-border-soft w-full max-w-full"
+              className="pointer-events-auto flex min-h-[64px] items-center gap-3 px-3 py-2.5 bg-bg-surface/95 backdrop-blur-sm shadow-lg border border-border-soft w-full max-w-full"
             >
               <div className="w-8 h-8 rounded-xl bg-action-hover/15 flex items-center justify-center flex-shrink-0">
                 <img src={card.icon} alt={card.label} className="w-[80%] h-[80%] object-contain" />
