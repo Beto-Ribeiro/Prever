@@ -15,5 +15,7 @@ export 'perfil.dart';
 export 'clima_tela.dart';
 export 'chatbot_tela.dart';
 export 'Relatos.dart';
+export 'changePassword.dart';
+export 'writeChangedPassword.dart';
 export 'dart:typed_data';
 export 'package:flutter/services.dart';
