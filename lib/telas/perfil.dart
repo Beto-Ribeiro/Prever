@@ -82,7 +82,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
           nome = perfil['prf_nome'] ?? '';
           tipoUsuario = perfil['prf_tipo'] ?? '';
         });
-      } catch (e) {}
+      } catch (e) { debugPrint('Erro silencioso: $e'); }
 
       try {
         final cidadao = await supabase
@@ -95,7 +95,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
         setState(() {
           cpf = cidadao['cid_cpf'] ?? '';
         });
-      } catch (e) {}
+      } catch (e) { debugPrint('Erro silencioso: $e'); }
 
       try {
         final historico = await supabase
@@ -110,7 +110,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
           alergias = historico['hmc_alergias'] ?? '';
           observacoes = historico['hmc_doencas_cronicas'] ?? '';
         });
-      } catch (e) {}
+      } catch (e) { debugPrint('Erro silencioso: $e'); }
 
       if (mounted) setState(() => carregando = false);
     } catch (e) {

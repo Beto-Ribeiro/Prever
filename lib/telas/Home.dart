@@ -1,4 +1,4 @@
-import 'package:branch1/telas/cadastro_tela.dart';
+import 'package:prever/telas/cadastro_tela.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -8,8 +8,8 @@ import 'tela_sobrevivencia.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../controles/controle_acessibilidade.dart';
-import 'package:branch1/telas/widgets/relatos_proximos.dart';
-import 'package:branch1/services/relatos_proximos_service.dart';
+import 'package:prever/telas/widgets/relatos_proximos.dart';
+import 'package:prever/services/relatos_proximos_service.dart';
 
 class Home extends StatefulWidget {
   final bool ativa;
@@ -29,15 +29,7 @@ class Home extends StatefulWidget {
   State<Home> createState() => _Home_State();
 }
 
-Future<void> _Ask_for_permission() async {
-  PermissionStatus status = await Permission.location.request();
 
-  if (status.isGranted) {
-    Position position = await Geolocator.getCurrentPosition();
-  } else if (status.isDenied || status.isPermanentlyDenied) {
-    debugPrint('Permissão de localização negada pelo usuário.');
-  }
-}
 
 Future<void> Criar_SOS(
   BuildContext context, {
@@ -48,7 +40,7 @@ Future<void> Criar_SOS(
 }) async {
   final supabase = Supabase.instance.client;
 
-  await _Ask_for_permission();
+  
 
   Position posicao = await Geolocator.getCurrentPosition(
     locationSettings: const LocationSettings(
@@ -103,9 +95,8 @@ class _Home_State extends State<Home> {
 
     final String cpfCompleto = data['cid_cpf'].toString();
 
-    final String tresPrimeirosDigitos = cpfCompleto.substring(0, 3);
-
-    if (tresPrimeirosDigitos == cpfDigitado) {
+    final String cpfLimpo = cpfCompleto.replaceAll(RegExp(r'[^0-9]'), '');
+    if (cpfLimpo == cpfDigitado) {
         setState(() {
           _sosEnviando = true;
         });
@@ -205,7 +196,7 @@ class _Home_State extends State<Home> {
                         ),
 
                         const TextSpan(
-                          text: " dígitos do seu CPF",
+                          text: " seu CPF",
                         ),
                       ],
                     ),
@@ -229,7 +220,7 @@ class _Home_State extends State<Home> {
                       textAlign: TextAlign.center,
                       textAlignVertical: TextAlignVertical.center,
                       controller: _SOSvalidateController,
-                      maxLength: 3,
+                      maxLength: 14,
                       maxLines: 1,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
@@ -246,9 +237,9 @@ class _Home_State extends State<Home> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red[900],
                         ),
-                        onPressed: () {
+                        onPressed: () async {
                           try {
-                            ValidarCPF();
+                            await ValidarCPF();
                           } catch (e) {
                             print('Falha ao enviar SOS');
                           }
@@ -588,7 +579,7 @@ class _Home_State extends State<Home> {
                             child: SizedBox(
                               width: double.infinity,
                               child: TextButton(
-                                onPressed: () {
+                                onPressed: () async {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(

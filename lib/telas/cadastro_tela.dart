@@ -1,9 +1,8 @@
-import 'package:branch1/telas/cadastro_tela.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'exportador_import.dart';
-import 'package:branch1/main.dart';
+import 'package:prever/main.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class Cadastro_tela extends StatefulWidget {
@@ -52,30 +51,30 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
     });
 
     try {
-      String Nome = _NomeController.text.trim();
+      String nome = _NomeController.text.trim();
 
-      String CPF = _CPFController.text.trim().replaceAll(RegExp(r'[^0-9]'), '');
+      String cpf = _CPFController.text.trim().replaceAll(RegExp(r'[^0-9]'), '');
 
-      String RG = _RgController.text.trim().replaceAll(RegExp(r'[^0-9]'), '');
+      String rg = _RgController.text.trim().replaceAll(RegExp(r'[^0-9]'), '');
 
-      String Tel = _TelController.text.trim().replaceAll(RegExp(r'[^0-9]'), '');
+      String tel = _TelController.text.trim().replaceAll(RegExp(r'[^0-9]'), '');
 
-      String Email = _EmailController.text.trim();
+      String email = _EmailController.text.trim();
 
-      String Data = _dateTime.toString();
+      String data = _dateTime.toString();
 
-      String Senha = _SenhaController.text.trim();
+      String senha = _SenhaController.text.trim();
 
       String confSenha = _ConSenhaController.text.trim();
 
-      if (Nome.isEmpty ||
-          CPF.isEmpty ||
-          RG.isEmpty ||
-          Tel.isEmpty ||
-          Email.isEmpty ||
-          Data.isEmpty ||
-          Senha.isEmpty ||
-          confSenha.isEmpty) {
+      if (nome.isEmpty ||
+          cpf.isEmpty ||
+          rg.isEmpty ||
+          tel.isEmpty ||
+          email.isEmpty ||
+          !pickedDate ||
+          senha.isEmpty ||
+          confsenha.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -91,7 +90,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
         return;
       }
 
-      if (!validarCPF(CPF)) {
+      if (!validarCPF(cpf)) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -107,7 +106,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
         return;
       }
 
-      if (!validarTel(Tel)){
+      if (!validarTel(tel)){
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -123,7 +122,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
         return;
       }
 
-      if (!validarRG(RG)){
+      if (!validarRG(rg)){
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -139,7 +138,13 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
         return;
       }
 
-      if (Senha != confSenha) {
+      if (senha.length < 6) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('A senha deve ter pelo menos 6 caracteres.')));
+        setState(() { _estaCarregando = false; });
+        return;
+      }
+
+      if (senha != confSenha) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -156,29 +161,26 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
       }
 
       final authResponse = await Supabase.instance.client.auth.signUp(
-        email: Email,
-        password: Senha,
+        email: email,
+        password: senha,
 
         data: {
           'prf_tipo': 'cidadao',
-          'prf_nome': Nome,
-          'cpf': CPF,
-          'rg': RG,
-          'data_nascimento': Data,
+          'prf_nome': nome,
+          'cpf': cpf,
+          'rg': rg,
+          'data_nascimento': data,
         },
       );
 
-      final user = authResponse.user;
-
+      
       if (authResponse.session != null) {
         widget.onChangePage(0);
       } else if (authResponse.user != null) {
-        widget.onCadastroPendente(Email, Senha);
+        widget.onCadastroPendente(email, senha);
       }
 
-      print("USER: ${authResponse.user}");
-      print("SESSION: ${authResponse.session}");
-      print("CURRENT: ${Supabase.instance.client.auth.currentUser}");
+      debugPrint('=== CADASTRO: signUp concluído ===');
 
       //if (user == null) {
       //  ScaffoldMessenger.of(context).showSnackBar(
@@ -218,15 +220,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
       );
 
     } catch (e) {
-      print(e);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            e.toString(),
-          ),
-        ),
-      );
+      debugPrint('Erro: $e'); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro no cadastro.')));
     }
 
     setState(() {
@@ -253,7 +247,11 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
     });
   }
 
-  DateTime _dateTime = DateTime(0);
+  DateTime _dateTime = DateTime.now();
+  bool _validarEmail(String email) {
+    final regexEmail = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    return regexEmail.hasMatch(email);
+  }
 
   @override
   Widget build(BuildContext context) {

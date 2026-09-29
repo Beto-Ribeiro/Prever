@@ -1,10 +1,10 @@
 import 'dart:typed_data';
-import 'package:branch1/telas/exportador_import.dart';
+import 'package:prever/telas/exportador_import.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart';
+import 'package:geolocator/geolocator.dart';\nimport 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../controles/controle_acessibilidade.dart';
@@ -32,7 +32,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
 
   // Variáveis para o Mapa e Localização
   GoogleMapController? mapController;
-  Location location = Location();
+  
   LatLng? localizacaoSelecionada;
   Set<Marker> markers = {};
   bool _isLoadingMap = true;
@@ -55,38 +55,19 @@ class _Relatos_telaState extends State<Relatos_tela> {
 
   // Verifica permissões de localização
   Future<void> _checkLocationPermission() async {
-    bool _serviceEnabled;
-    PermissionStatus _permissionGranted;
-
-    _serviceEnabled = await location.serviceEnabled();
-    if (!_serviceEnabled) {
-      _serviceEnabled = await location.requestService();
-      if (!_serviceEnabled) {
-        setState(() => _isLoadingMap = false);
-        return;
-      }
+    var status = await Permission.location.request();
+    if (status.isGranted) {
+      _getCurrentLocation();
+    } else {
+      setState(() => _isLoadingMap = false);
     }
-
-    _permissionGranted = await location.hasPermission();
-    if (_permissionGranted == PermissionStatus.denied) {
-      _permissionGranted = await location.requestPermission();
-      if (_permissionGranted != PermissionStatus.granted) {
-        setState(() => _isLoadingMap = false);
-        return;
-      }
-    }
-
-    _getCurrentLocation();
   }
 
   // Pega a localização atual do celular
   Future<void> _getCurrentLocation() async {
     try {
-      LocationData _locationData = await location.getLocation();
-      LatLng posicaoAtual = LatLng(
-        _locationData.latitude!,
-        _locationData.longitude!,
-      );
+      Position _locationData = await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(accuracy: LocationAccuracy.high));
+      LatLng posicaoAtual = LatLng(_locationData.latitude, _locationData.longitude);
 
       setState(() {
         localizacaoSelecionada = posicaoAtual;

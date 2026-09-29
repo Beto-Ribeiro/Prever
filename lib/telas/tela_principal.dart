@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'package:branch1/services/relatos_proximos_service.dart';
+import 'package:prever/services/relatos_proximos_service.dart';
 
-import 'package:branch1/telas/login_tela.dart';
-import 'package:branch1/services/chatbot_service.dart';
+import 'package:prever/telas/login_tela.dart';
+import 'package:prever/services/chatbot_service.dart';
 import 'package:flutter/material.dart';
 import 'exportador_import.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -151,7 +151,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
     // PEDE PERMISSÃO DE LOCALIZAÇÃO
     // ------------------------------------------------------------------------
 
-    _Ask_for_permission();
+    _pedirPermissao();
   }
 
 
@@ -209,7 +209,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
                 // ---------------------------------------------------------------
                 // ÍNDICE 11:
-                // writeChangedPassword
+                // WriteChangedPassword
                 // ---------------------------------------------------------------
 
                 _currentIndex = 11;
@@ -461,7 +461,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
             // que acabaram de chegar.
             // ---------------------------------------------------------------
 
-            _telas[6] = confEmail(
+            _telas[6] = ConfEmail(
 
               title: "Confirmação",
 
@@ -484,7 +484,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
       // 5 - LANDING PAGE LOGIN/CADASTRO
       // ======================================================================
 
-      sLogCad(
+      SLogCad(
         title: "Landing Page",
         onChangePage: changePage,
       ),
@@ -494,7 +494,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
       // 6 - CONFIRMAÇÃO DE E-MAIL
       // ======================================================================
 
-      confEmail(
+      ConfEmail(
 
         title: "Confirmação",
 
@@ -511,7 +511,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
       // 7 - LOGIN
       // ======================================================================
 
-      sLogin(
+      SLogin(
         title: "Login",
         onChangePage: changePage,
       ),
@@ -543,7 +543,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
       // Aqui o usuário digita o e-mail.
       // ======================================================================
 
-      changePassword(
+      ChangePassword(
         title: 'Change Password',
         onChangePage: changePage,
       ),
@@ -556,7 +556,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
       // clica no link recebido no e-mail.
       // ======================================================================
 
-      writeChangedPassword(
+      WriteChangedPassword(
         onChangePage: changePage,
       ),
 
@@ -572,7 +572,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
   // PERMISSÃO DE LOCALIZAÇÃO
   // ==========================================================================
 
-  Future<void> _Ask_for_permission() async {
+  Future<void> _pedirPermissao() async {
 
     PermissionStatus status =
     await Permission.location.request();
@@ -1228,8 +1228,7 @@ class CustomAnimatedBottomBar
                     child:
                     Icon(
 
-                      icones[
-                      currentIndex],
+                      icones[currentIndex < icones.length ? currentIndex : 0],
 
                       color:
                       Colors.white,

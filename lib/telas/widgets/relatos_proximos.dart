@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controles/controle_acessibilidade.dart';
-import 'package:branch1/services/relatos_proximos_service.dart';
+import 'package:prever/services/relatos_proximos_service.dart';
 
 class RelatosProximos extends StatefulWidget {
   final bool ativa;

@@ -207,7 +207,7 @@ class _EditarPerfilTelaState extends State<EditarPerfilTela> {
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        initialValue: _tipoSanguineoSelecionado,
+                        value: _tipoSanguineoSelecionado,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),

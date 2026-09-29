@@ -1,6 +1,6 @@
-import 'package:branch1/services/severidade_relato.dart';
+import 'package:prever/services/severidade_relato.dart';
 import 'dart:async';
-import 'package:branch1/services/relatos_proximos_service.dart';
+import 'package:prever/services/relatos_proximos_service.dart';
 
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -99,12 +99,12 @@ class _MapsAlertas extends State<Maps_alertas> {
   BitmapDescriptor? tipoTornadoIcon;
 
   bool abriuMarker = false;
-  String SelectedMarkerId = '';
+  String _selectedMarkerId = '';
 
   FunctionAbrirmarker(String ID) {
     setState(() {
       abriuMarker = true;
-      SelectedMarkerId = ID;
+      _selectedMarkerId = ID;
     });
   }
 
@@ -197,7 +197,7 @@ class _MapsAlertas extends State<Maps_alertas> {
     }
 
     _timer = Timer.periodic(
-      const Duration(seconds: 10),
+      const Duration(minutes: 1),
       (timer) {
         carregarPins().catchError((Object e) {
           debugPrint('Erro ao atualizar relatos do mapa: $e');
@@ -431,7 +431,7 @@ class _MapsAlertas extends State<Maps_alertas> {
         ),
         abriuMarker
             ? PinsVisao(
-                pinID: SelectedMarkerId,
+                pinID: _selectedMarkerId,
                 FecharPinVisao: FunctionFecharmarker,
               )
             : Container(),

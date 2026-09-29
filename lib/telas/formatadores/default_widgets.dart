@@ -88,9 +88,9 @@ class ContainerPerfilSuperior extends StatelessWidget {
 }
 
 class PinsVisao extends StatefulWidget {
-  Function() FecharPinVisao;
-  String pinID;
-  PinsVisao({
+  final Function() FecharPinVisao;
+  final String pinID;
+  const PinsVisao({super.key,
     required this.pinID,
     required this.FecharPinVisao,
   });

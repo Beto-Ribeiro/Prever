@@ -1,12 +1,12 @@
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:branch1/telas/formatadores/background_abs_code.dart';
+import 'package:prever/telas/formatadores/background_abs_code.dart';
 
-class sLogin extends StatefulWidget {
+class SLogin extends StatefulWidget {
   final Function(int) onChangePage;
 
-  const sLogin({
+  const SLogin({
     super.key,
     required this.title,
     required this.onChangePage,
@@ -15,10 +15,10 @@ class sLogin extends StatefulWidget {
   final String title;
 
   @override
-  State<sLogin> createState() => _sLogin_State();
+  State<SLogin> createState() => _SLoginState();
 }
 
-class _sLogin_State extends State<sLogin> {
+class _SLoginState extends State<SLogin> {
   bool _estaCarregando = false;
 
   final _EmailController = TextEditingController();
@@ -37,6 +37,8 @@ class _sLogin_State extends State<sLogin> {
     setState(() => _estaCarregando = true);
     try {
       final email = _EmailController.text.trim();
+      final regexEmail = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+      if (!regexEmail.hasMatch(email)) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('E-mail inválido.'))); return; }
       final senha = _SenhaController.text;
       if (email.isEmpty || senha.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -256,7 +258,7 @@ class _sLogin_State extends State<sLogin> {
                     color: Color.fromRGBO(228, 232, 235, 1),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color.fromRGBO(228, 232, 235, 0.2),
+                    backgroundColor: Color.fromRGBO(24, 57, 92, 1),
                   ),
                 ),
               ],

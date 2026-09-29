@@ -2,21 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'exportador_import.dart';
 
-class changePassword extends StatefulWidget {
+class ChangePassword extends StatefulWidget {
   final String title;
   final Function(int) onChangePage;
 
-  const changePassword({
+  const ChangePassword({
     super.key,
     required this.onChangePage,
     required this.title,
   });
 
   @override
-  State<changePassword> createState() => _changePassword_State();
+  State<ChangePassword> createState() => _changePassword_State();
 }
 
-class _changePassword_State extends State<changePassword> {
+class _changePassword_State extends State<ChangePassword> {
 
   // Controller do campo de e-mail
   final emailController = TextEditingController();

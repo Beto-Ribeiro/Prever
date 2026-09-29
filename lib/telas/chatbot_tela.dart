@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:branch1/services/chatbot_service.dart';
-import 'package:branch1/controles/controle_acessibilidade.dart';
+import 'package:prever/services/chatbot_service.dart';
+import 'package:prever/controles/controle_acessibilidade.dart';
 
 // ════════════════════════════════════════════════════════════════════════════
 // MODELO DE DADOS
@@ -308,7 +308,7 @@ class _WelcomeView extends StatelessWidget {
             'gfx/png/Image/nimbo_icon.png',
             height: 260,
             semanticLabel: 'Mascote Nimbo',
-            errorBuilder: (_, _, _) => _NimboFallback(navyDark: navyDark),
+            errorBuilder: (context, error, stackTrace) => _NimboFallback(navyDark: navyDark),
           ),
         ),
         const Spacer(flex: 2),
@@ -500,7 +500,7 @@ class _TypingIndicator extends StatelessWidget {
             children: List.generate(3, (i) {
               return AnimatedBuilder(
                 animation: anim,
-                builder: (_, _) {
+                builder: (context, child) {
                   final phase = (anim.value + i * 0.25) % 1.0;
                   final scale =
                       0.6 + 0.4 * (phase < 0.5 ? phase * 2 : (1.0 - phase) * 2);

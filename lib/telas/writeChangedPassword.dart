@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'exportador_import.dart';
 
-class writeChangedPassword extends StatefulWidget {
+class WriteChangedPassword extends StatefulWidget {
   final Function(int) onChangePage;
-  const writeChangedPassword({
+  const WriteChangedPassword({
     required this.onChangePage,
     super.key,
   });
 
   @override
-  State<writeChangedPassword> createState() =>
-      _writeChangedPasswordState();
+  State<WriteChangedPassword> createState() =>
+      _WriteChangedPasswordState();
 }
 
-class _writeChangedPasswordState extends State<writeChangedPassword> {
+class _WriteChangedPasswordState extends State<WriteChangedPassword> {
 
   final supabase = Supabase.instance.client;
 
