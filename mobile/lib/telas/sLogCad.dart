@@ -1,14 +1,14 @@
-import 'package:branch1/telas/cadastro_tela.dart';
+import 'package:prever/telas/cadastro_tela.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'exportador_import.dart';
-import 'package:branch1/main.dart';
+import 'package:prever/main.dart';
 
-class sLogCad extends StatefulWidget {
+class SLogCad extends StatefulWidget {
   final Function(int) onChangePage;
 
-  const sLogCad({
+  const SLogCad({
     super.key,
     required this.title,
     required this.onChangePage,
@@ -17,10 +17,10 @@ class sLogCad extends StatefulWidget {
   final String title;
 
   @override
-  State<sLogCad> createState() => _sLogCad_telaState();
+  State<SLogCad> createState() => _sLogCad_telaState();
 }
 
-class _sLogCad_telaState extends State<sLogCad> {
+class _sLogCad_telaState extends State<SLogCad> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,9 +92,8 @@ class _sLogCad_telaState extends State<sLogCad> {
                   ),
                   Expanded(
                     child: Center(
-                      child: Image.asset(
-                        "gfx/png/Image/SMDN.png",
-                        height: 60,
+                      child: SvgPicture.asset("gfx/svg/Image/Prever_logo.svg", semanticsLabel: "Logo Prever",
+                        height: 120,
                       ),
                     ),
                   ),

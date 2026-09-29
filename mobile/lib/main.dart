@@ -1,4 +1,4 @@
-import 'package:branch1/telas/discarded/discarded_home.dart';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -18,8 +18,8 @@ Future<void> main() async {
   );
 
   await Supabase.initialize(
-    url: 'https://robfgvtnoooivihlnomr.supabase.co',
-    anonKey: 'sb_publishable_eVCeoqzfhoAgkpBnJxzs7w_-PGO0TO9',
+    url: dotenv.env['SUPABASE_URL'] ?? 'https://robfgvtnoooivihlnomr.supabase.co',
+    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? 'sb_publishable_eVCeoqzfhoAgkpBnJxzs7w_-PGO0TO9',
   );
 
   await dotenv.load(fileName: ".env");

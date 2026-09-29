@@ -1,17 +1,17 @@
-import 'package:branch1/telas/cadastro_tela.dart';
+import 'package:prever/telas/cadastro_tela.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'exportador_import.dart';
-import 'package:branch1/main.dart';
+import 'package:prever/main.dart';
 
-class confEmail extends StatefulWidget {
+class ConfEmail extends StatefulWidget {
   final Function(int) onChangePage;
   final String? email;
   final String? senha;
 
 
-  const confEmail({
+  const ConfEmail({
     super.key,
     required this.title,
     required this.email,
@@ -22,10 +22,10 @@ class confEmail extends StatefulWidget {
   final String title;
 
   @override
-  State<confEmail> createState() => _confEmail_state();
+  State<ConfEmail> createState() => _confEmail_state();
 }
 
-class _confEmail_state extends State<confEmail> {
+class _confEmail_state extends State<ConfEmail> {
   bool _verificando = false;
 
   Future<void> verificarConfirmacao() async {
@@ -189,8 +189,7 @@ class _confEmail_state extends State<confEmail> {
                       350,
                     ),
 
-                    child: Image.asset(
-                      "gfx/png/Image/SMDN.png",
+                    child: SvgPicture.asset("gfx/svg/Image/Prever_logo.svg", semanticsLabel: "Logo Prever",
                       height: 60,
                     ),
                   ),

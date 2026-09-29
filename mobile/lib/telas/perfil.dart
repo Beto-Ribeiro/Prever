@@ -1,7 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
-import 'exportador_import.dart';
 import '../controles/botao_acessibilidade.dart';
 import '../controles/controle_acessibilidade.dart';
 
@@ -21,6 +21,14 @@ class TelaPerfil extends StatefulWidget {
 }
 
 class _TelaPerfilState extends State<TelaPerfil> {
+  StreamSubscription<AuthState>? _authSubscription;
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
+  }
+
   final supabase = Supabase.instance.client;
 
   final double alturaCard = 90;
@@ -47,7 +55,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
       carregarDados();
       return;
     }
-    supabase.auth.onAuthStateChange.listen((data) {
+    _authSubscription = supabase.auth.onAuthStateChange.listen((data) {
       if (data.session != null && mounted) {
         carregarDados();
       }
@@ -58,7 +66,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
     try {
       final userId = supabase.auth.currentUser?.id;
       if (userId == null) {
-        setState(() => carregando = false);
+        if (mounted) setState(() => carregando = false);
         return;
       }
 
@@ -69,11 +77,12 @@ class _TelaPerfilState extends State<TelaPerfil> {
             .eq('prf_id', userId)
             .limit(1)
             .single();
+        if (!mounted) return;
         setState(() {
           nome = perfil['prf_nome'] ?? '';
           tipoUsuario = perfil['prf_tipo'] ?? '';
         });
-      } catch (e) {}
+      } catch (e) { debugPrint('Erro silencioso: $e'); }
 
       try {
         final cidadao = await supabase
@@ -82,10 +91,11 @@ class _TelaPerfilState extends State<TelaPerfil> {
             .eq('cid_id', userId)
             .limit(1)
             .single();
+        if (!mounted) return;
         setState(() {
           cpf = cidadao['cid_cpf'] ?? '';
         });
-      } catch (e) {}
+      } catch (e) { debugPrint('Erro silencioso: $e'); }
 
       try {
         final historico = await supabase
@@ -94,16 +104,17 @@ class _TelaPerfilState extends State<TelaPerfil> {
             .eq('hmc_cid_id', userId)
             .limit(1)
             .single();
+        if (!mounted) return;
         setState(() {
           tipoSanguineo = historico['hmc_tipo_sanguineo'] ?? '';
           alergias = historico['hmc_alergias'] ?? '';
           observacoes = historico['hmc_doencas_cronicas'] ?? '';
         });
-      } catch (e) {}
+      } catch (e) { debugPrint('Erro silencioso: $e'); }
 
-      setState(() => carregando = false);
+      if (mounted) setState(() => carregando = false);
     } catch (e) {
-      setState(() => carregando = false);
+      if (mounted) setState(() => carregando = false);
     }
   }
 
@@ -186,7 +197,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
 
             // ── Botão de acessibilidade (canto superior direito) ─────
             BotaoAcessibilidade(
-              onEditarPerfil: () => widget.onChangePage(10),
+              onEditarPerfil: () => widget.onChangePage(12),
               onLogout: () => widget.onChangePage(7),
             ),
           ],

@@ -1,5 +1,7 @@
 ﻿import 'package:flutter/material.dart';
-import 'package:branch1/services/chatbot_service.dart';
+import 'package:provider/provider.dart';
+import 'package:prever/services/chatbot_service.dart';
+import 'package:prever/controles/controle_acessibilidade.dart';
 
 // ════════════════════════════════════════════════════════════════════════════
 // MODELO DE DADOS
@@ -63,13 +65,6 @@ class _ChatbotTelaState extends State<ChatbotTela>
   bool _hasUserMessages = false;
   String? _errorMessage;
 
-  // ── Paleta (extraída do Figma) ────────────────────────────────────────────
-  static const Color _bgColor = Color(0xFFE2E8F0);
-  static const Color _navyDark = Color(0xFF0B1426);
-  static const Color _navyMid = Color(0xFF1A2B4A);
-  static const Color _textSecondary = Color(0xFF8BA4C4);
-  static const Color _sendBtnColor = Color(0xFF3B7DD8);
-
   // ── Ciclo de vida ─────────────────────────────────────────────────────────
   @override
   void initState() {
@@ -98,7 +93,8 @@ class _ChatbotTelaState extends State<ChatbotTela>
 
     setState(() {
       _messages.add(
-          ChatMessage(text: text, isUser: true, timestamp: DateTime.now()));
+        ChatMessage(text: text, isUser: true, timestamp: DateTime.now()),
+      );
       _isLoading = true;
       _errorMessage = null;
       _hasUserMessages = true;
@@ -110,13 +106,13 @@ class _ChatbotTelaState extends State<ChatbotTela>
       if (!mounted) return;
       setState(() {
         _messages.add(
-            ChatMessage(text: reply, isUser: false, timestamp: DateTime.now()));
+          ChatMessage(text: reply, isUser: false, timestamp: DateTime.now()),
+        );
         _isLoading = false;
       });
       _scrollToBottom();
     } catch (e) {
       if (!mounted) return;
-      // Mostra o erro real para diagnóstico — simplificar após resolução
       final msg = e.toString().length > 120
           ? '${e.toString().substring(0, 120)}…'
           : e.toString();
@@ -144,8 +140,25 @@ class _ChatbotTelaState extends State<ChatbotTela>
   // ════════════════════════════════════════════════════════════════════════
   @override
   Widget build(BuildContext context) {
+    final acessibilidade = context.watch<AccessibilityController>();
+
+    // ── Cores dinâmicas via AccessibilityController ───────────────────────
+    final bgColor = acessibilidade.fundo;
+    final navyDark = acessibilidade.corPrimaria;
+    final navyMid = acessibilidade.altoContraste
+        ? Colors.grey.shade900
+        : acessibilidade.daltonismo
+        ? const Color(0xFF3D2B6B)
+        : const Color(0xFF1A2B4A);
+    final sendBtnColor = acessibilidade.altoContraste
+        ? Colors.yellow
+        : acessibilidade.daltonismo
+        ? const Color(0xFFF4A261)
+        : const Color(0xFF3B7DD8);
+    final textSecondary = acessibilidade.corSecundaria;
+
     return Scaffold(
-      backgroundColor: _bgColor,
+      backgroundColor: bgColor,
       resizeToAvoidBottomInset: true,
       body: Column(
         children: [
@@ -157,6 +170,7 @@ class _ChatbotTelaState extends State<ChatbotTela>
                 widget.onChangePage?.call(0);
               }
             },
+            navyDark: navyDark,
           ),
 
           // ── Área de mensagens ──────────────────────────────────────────
@@ -167,11 +181,11 @@ class _ChatbotTelaState extends State<ChatbotTela>
                     isLoading: _isLoading,
                     scrollController: _scrollController,
                     typingAnim: _typingAnim,
-                    navyDark: _navyDark,
+                    navyDark: navyDark,
                   )
                 : _WelcomeView(
                     greeting: _messages.first.text,
-                    navyDark: _navyDark,
+                    navyDark: navyDark,
                   ),
           ),
 
@@ -186,10 +200,10 @@ class _ChatbotTelaState extends State<ChatbotTela>
           _InputBar(
             controller: _textController,
             isLoading: _isLoading,
-            navyDark: _navyDark,
-            navyMid: _navyMid,
-            textSecondary: _textSecondary,
-            sendBtnColor: _sendBtnColor,
+            navyDark: navyDark,
+            navyMid: navyMid,
+            textSecondary: textSecondary,
+            sendBtnColor: sendBtnColor,
             onSend: _sendMessage,
           ),
         ],
@@ -204,8 +218,9 @@ class _ChatbotTelaState extends State<ChatbotTela>
 
 class _AppBar extends StatelessWidget {
   final VoidCallback onBack;
+  final Color navyDark;
 
-  const _AppBar({required this.onBack});
+  const _AppBar({required this.onBack, required this.navyDark});
 
   @override
   Widget build(BuildContext context) {
@@ -243,12 +258,15 @@ class _AppBar extends StatelessWidget {
               child: Container(
                 width: 46,
                 height: 46,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF0B1426),
+                decoration: BoxDecoration(
+                  color: navyDark,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.person_rounded,
-                    color: Colors.white, size: 24),
+                child: const Icon(
+                  Icons.person_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
               ),
             ),
           ],
@@ -290,7 +308,7 @@ class _WelcomeView extends StatelessWidget {
             'gfx/png/Image/nimbo_icon.png',
             height: 260,
             semanticLabel: 'Mascote Nimbo',
-            errorBuilder: (_, _, _) => _NimboFallback(navyDark: navyDark),
+            errorBuilder: (context, error, stackTrace) => _NimboFallback(navyDark: navyDark),
           ),
         ),
         const Spacer(flex: 2),
@@ -314,8 +332,7 @@ class _NimboFallback extends StatelessWidget {
         color: navyDark.withValues(alpha: 0.1),
         shape: BoxShape.circle,
       ),
-      child: Icon(Icons.smart_toy_rounded,
-          size: 90, color: const Color(0xFF3B7DD8)),
+      child: Icon(Icons.smart_toy_rounded, size: 90, color: navyDark),
     );
   }
 }
@@ -357,8 +374,9 @@ class _MessageListView extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Align(
-            alignment:
-                msg.isUser ? Alignment.centerRight : Alignment.centerLeft,
+            alignment: msg.isUser
+                ? Alignment.centerRight
+                : Alignment.centerLeft,
             child: msg.isUser
                 ? _UserBubble(text: msg.text, navyDark: navyDark)
                 : _BotBubble(text: msg.text, navyDark: navyDark),
@@ -385,9 +403,9 @@ class _BotBubble extends StatelessWidget {
       label: 'Nimbo: $text',
       child: Container(
         constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.75),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
           color: navyDark,
           borderRadius: const BorderRadius.only(
@@ -400,7 +418,10 @@ class _BotBubble extends StatelessWidget {
         child: Text(
           text,
           style: const TextStyle(
-              color: Colors.white, fontSize: 15, height: 1.45),
+            color: Colors.white,
+            fontSize: 15,
+            height: 1.45,
+          ),
         ),
       ),
     );
@@ -419,9 +440,9 @@ class _UserBubble extends StatelessWidget {
       label: 'Você: $text',
       child: Container(
         constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.75),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: const BorderRadius.only(
@@ -440,8 +461,7 @@ class _UserBubble extends StatelessWidget {
         ),
         child: Text(
           text,
-          style: TextStyle(
-              color: navyDark, fontSize: 15, height: 1.45),
+          style: TextStyle(color: navyDark, fontSize: 15, height: 1.45),
         ),
       ),
     );
@@ -480,12 +500,10 @@ class _TypingIndicator extends StatelessWidget {
             children: List.generate(3, (i) {
               return AnimatedBuilder(
                 animation: anim,
-                builder: (_, _) {
-                  // Cada ponto começa com fase deslocada para efeito de onda
+                builder: (context, child) {
                   final phase = (anim.value + i * 0.25) % 1.0;
-                  final scale = 0.6 + 0.4 * (phase < 0.5
-                      ? phase * 2
-                      : (1.0 - phase) * 2);
+                  final scale =
+                      0.6 + 0.4 * (phase < 0.5 ? phase * 2 : (1.0 - phase) * 2);
                   return Container(
                     margin: const EdgeInsets.symmetric(horizontal: 3),
                     width: 8 * scale,
@@ -526,18 +544,25 @@ class _ErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded,
-              color: Colors.white, size: 18),
+          const Icon(
+            Icons.error_outline_rounded,
+            color: Colors.white,
+            size: 18,
+          ),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(message,
-                style:
-                    const TextStyle(color: Colors.white, fontSize: 13)),
+            child: Text(
+              message,
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+            ),
           ),
           GestureDetector(
             onTap: onDismiss,
-            child: const Icon(Icons.close_rounded,
-                color: Colors.white, size: 18),
+            child: const Icon(
+              Icons.close_rounded,
+              color: Colors.white,
+              size: 18,
+            ),
           ),
         ],
       ),
@@ -594,7 +619,9 @@ class _InputBar extends StatelessWidget {
                 child: Container(
                   constraints: const BoxConstraints(maxHeight: 120),
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 4),
+                    horizontal: 20,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: navyMid,
                     borderRadius: BorderRadius.circular(30),
@@ -606,14 +633,17 @@ class _InputBar extends StatelessWidget {
                         child: TextField(
                           controller: controller,
                           style: const TextStyle(
-                              color: Colors.white, fontSize: 16),
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
                           decoration: InputDecoration(
                             hintText: 'Mensagem',
                             hintStyle: TextStyle(color: textSecondary),
                             border: InputBorder.none,
                             isDense: true,
                             contentPadding: const EdgeInsets.symmetric(
-                                vertical: 12),
+                              vertical: 12,
+                            ),
                           ),
                           onSubmitted: (_) => onSend(),
                           textInputAction: TextInputAction.send,
@@ -625,8 +655,11 @@ class _InputBar extends StatelessWidget {
                       if (!hasText)
                         Semantics(
                           label: 'Anexar ficheiro',
-                          child: Icon(Icons.attach_file_rounded,
-                              color: textSecondary, size: 22),
+                          child: Icon(
+                            Icons.attach_file_rounded,
+                            color: textSecondary,
+                            size: 22,
+                          ),
                         ),
                     ],
                   ),
@@ -656,11 +689,15 @@ class _InputBar extends StatelessWidget {
                                   ? const Padding(
                                       padding: EdgeInsets.all(13),
                                       child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2),
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
                                     )
-                                  : const Icon(Icons.send_rounded,
-                                      color: Colors.white, size: 22),
+                                  : const Icon(
+                                      Icons.send_rounded,
+                                      color: Colors.white,
+                                      size: 22,
+                                    ),
                             ),
                           ),
                         ),

@@ -1,18 +1,26 @@
-import 'package:branch1/telas/cadastro_tela.dart';
+import 'package:prever/telas/cadastro_tela.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import 'exportador_import.dart';
 import 'tela_sobrevivencia.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../controles/controle_acessibilidade.dart';
+import 'package:prever/telas/widgets/relatos_proximos.dart';
+import 'package:prever/services/relatos_proximos_service.dart';
 
 class Home extends StatefulWidget {
+  final bool ativa;
+  final ValueChanged<RelatoProximo>? onAbrirRelato;
   final Function(int) onChangePage;
   const Home({
     super.key,
     required this.title,
     required this.onChangePage,
+    this.ativa = true,
+    this.onAbrirRelato,
   });
 
   final String title;
@@ -21,26 +29,18 @@ class Home extends StatefulWidget {
   State<Home> createState() => _Home_State();
 }
 
-Future<void> _Ask_for_permission() async {
-  PermissionStatus status = await Permission.location.request();
 
-  if (status.isGranted) {
-    Position position = await Geolocator.getCurrentPosition();
-  } else if (status.isDenied || status.isPermanentlyDenied) {
-    debugPrint('Permissão de localização negada pelo usuário.');
-  }
-}
 
 Future<void> Criar_SOS(
-    BuildContext context, {
-      required String usuarioId,
-      required String localizacao,
-      required String data,
-      required String origem,
-    }) async {
+  BuildContext context, {
+  required String usuarioId,
+  required String localizacao,
+  required String data,
+  required String origem,
+}) async {
   final supabase = Supabase.instance.client;
 
-  await _Ask_for_permission();
+  
 
   Position posicao = await Geolocator.getCurrentPosition(
     locationSettings: const LocationSettings(
@@ -59,8 +59,6 @@ Future<void> Criar_SOS(
       'rel_localizacao': localizacao,
       'rel_data_hora': data,
     });
-
-    mostrarRelatoEnviado(context);
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -71,110 +69,226 @@ Future<void> Criar_SOS(
   }
 }
 
-void mostrarRelatoEnviado(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Sucesso'),
-      content: const Text(
-        'Ocorrência reportada com sucesso. As autoridades estão a caminho.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: const Text('OK'),
-        ),
-      ],
-    ),
-  );
-}
+//Message box para avisar que o relato foi enviado, ficou redundante.
 
 class _Home_State extends State<Home> {
   bool _sosEnviado = false;
+  bool _sosEnviando = false;
+
+  final _SOSvalidateController = TextEditingController();
+
+  final supabase = Supabase.instance.client;
+
+  Future<void> ValidarCPF() async {
+    String cpfDigitado = _SOSvalidateController.text.trim();
+
+    final userId = supabase.auth.currentUser?.id;
+
+    if (userId == null) {
+      return;
+    }
+
+    final data = await supabase
+        .from('Cidadao')
+        .select('cid_cpf')
+        .eq('cid_id', userId).single();
+
+    final String cpfCompleto = data['cid_cpf'].toString();
+
+    final String cpfLimpo = cpfCompleto.replaceAll(RegExp(r'[^0-9]'), '');
+    if (cpfLimpo == cpfDigitado) {
+        setState(() {
+          _sosEnviando = true;
+        });
+
+        Navigator.pop(context);
+
+        Position posicao = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+          ),
+        );
+
+        final String pontoGeografico =
+            'POINT(${posicao.longitude} ${posicao.latitude})';
+
+        await Criar_SOS(
+          context,
+          usuarioId: Supabase.instance.client.auth.currentUser!.id,
+          localizacao: pontoGeografico,
+          data: DateTime.now().toIso8601String(),
+          origem: 'SOS',
+        );
+
+        // Atualiza estado para animar e
+        // desabilitar
+        setState(() {
+          _sosEnviado = true;
+          _sosEnviando = false;
+        });
+    }
+  }
+
+  ValidacaoIdentidade(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black54,
+      barrierDismissible: false,
+      builder: (context) {
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 25),
+              width: 350,
+              height: 300,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  InkWell(
+                    child: Icon(Icons.close),
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                  )
+                    ],
+                  ),
+                  Text.rich(
+                    TextSpan(
+                      style: const TextStyle(
+                        fontSize: 20,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      children: [
+                        const TextSpan(
+                          text: "Insira os ",
+                        ),
+
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.red[900],
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              "TRÊS PRIMEIROS",
+                              style: TextStyle(
+                                fontSize: 20,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const TextSpan(
+                          text: " seu CPF",
+                        ),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  Text(
+                    "Precisamos confirmar sua identidade para emitir um alerta SOS",
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.black
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(
+                    height: 25,
+                  ),
+                  SizedBox(
+                    width: 200,
+                    height: 50,
+                    child: TextField(
+                      textAlign: TextAlign.center,
+                      textAlignVertical: TextAlignVertical.center,
+                      controller: _SOSvalidateController,
+                      maxLength: 14,
+                      maxLines: 1,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.zero,
+                        hintText: 'CPF...',
+                      ),
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red[900],
+                        ),
+                        onPressed: () async {
+                          try {
+                            await ValidarCPF();
+                          } catch (e) {
+                            print('Falha ao enviar SOS');
+                          }
+                        },
+                        child: Text("Enviar", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final acessibilidade = context.watch<AccessibilityController>();
+
     return Scaffold(
-      backgroundColor: const Color(0xFFE9EDF0),
+      backgroundColor: acessibilidade.fundo,
       body: SafeArea(
         child: Stack(
           children: [
-            Container(
-              width: double.infinity,
-              height: double.infinity,
-              decoration: const BoxDecoration(),
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                verticalDirection: VerticalDirection.up,
 
-                children: [
-                  /*Container(
-                width: double.infinity,
-                height: 90,
-                decoration: BoxDecoration(color: Color.fromRGBO(9, 22, 46, 1)),
-
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-
-                  children: [
-                    InkWell(
-                      borderRadius: BorderRadius.circular(30),
-                      onTap: () {},
-
-                      child: SvgPicture.asset(
-                        'gfx/svg/icons/btn_menu_alerta.svg',
-                        width: 75,
-
-                        colorFilter: ColorFilter.mode(
-                          Color.fromRGBO(138, 179, 255, 1),
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                    ),
-                    InkWell(
-                      borderRadius: BorderRadius.circular(30),
-                      onTap: () {},
-
-                      child: SvgPicture.asset(
-                        'gfx/svg/icons/btn_menu_mapa.svg',
-                        width: 75,
-                      ),
-                    ),
-                    InkWell(
-                      borderRadius: BorderRadius.circular(30),
-                      onTap: () {},
-
-                      child: SvgPicture.asset(
-                        'gfx/svg/icons/btn_menu_report.svg',
-                        width: 75,
-                      ),
-                    ),
-                    InkWell(
-                      borderRadius: BorderRadius.circular(30),
-                      onTap: () {},
-
-                      child: SvgPicture.asset(
-                        'gfx/svg/icons/btn_menu_clima.svg',
-                        width: 75,
-                      ),
-                    ),
-                  ],
-                ),
-              ),*/
-                  SingleChildScrollView(
+            Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                // Expanded é essencial aqui: ele diz ao
+                // SingleChildScrollView exatamente quanto espaço vertical
+                // está disponível. Sem isso, quando o conteúdo cresce
+                // (letras grandes), ele extravasa por baixo da tela em
+                // vez de rolar — foi essa a causa do "BOTTOM OVERFLOWED".
+                Expanded(
+                  child: SingleChildScrollView(
                     child: Container(
                       width: double.infinity,
-                      padding: EdgeInsets.fromLTRB(0, 30, 0, 0),
-
-                      decoration: BoxDecoration(
-                        //color: Colors.grey
-                      ),
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
                       child: Column(
                         children: [
-                          // ── Título principal animado ──────────────────────
+                          // Reserva o espaço do avatar
+                          // (ContainerPerfilSuperior tem height: 100) para
+                          // o título nunca ficar atrás dele, mesmo com
+                          // letras grandes.
+                          const SizedBox(height: 100),
+
+                          // ── Título principal animado ──────────────────
                           AnimatedSwitcher(
                             duration: const Duration(milliseconds: 500),
                             transitionBuilder: (child, animation) {
@@ -191,123 +305,208 @@ class _Home_State extends State<Home> {
                             },
                             child: _sosEnviado
                                 ? Container(
-                              key: const ValueKey('enviado'),
-                              width: double.infinity,
-                              alignment: Alignment.center,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16),
-                              child: const Text(
-                                "Auxílio solicitado!",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 34,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color.fromRGBO(9, 22, 46, 1),
-                                ),
-                              ),
-                            )
+                                    key: const ValueKey('enviado'),
+                                    width: double.infinity,
+                                    alignment: Alignment.center,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                    ),
+                                    child: Text(
+                                      "Auxílio solicitado!",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 34,
+                                        fontWeight: FontWeight.bold,
+                                        color: acessibilidade.corPrimaria,
+                                      ),
+                                    ),
+                                  )
+                                : _sosEnviando
+                                ? Column(
+                                    key: const ValueKey('enviando'),
+                                    children: [
+                                      Container(
+                                        width: double.infinity,
+                                        alignment: Alignment.center,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                        ),
+                                        child: Text(
+                                          "Enviando SOS para",
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 34,
+                                            fontWeight: FontWeight.bold,
+                                            color: acessibilidade.corPrimaria,
+                                          ),
+                                        ),
+                                      ),
+                                      Container(
+                                        width: double.infinity,
+                                        alignment: Alignment.center,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                        ),
+                                        child: Text(
+                                          "as autoridades",
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 34,
+                                            fontWeight: FontWeight.bold,
+                                            color: acessibilidade.corPrimaria,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  )
                                 : Column(
-                              key: const ValueKey('inicial'),
-                              children: [
-                                Container(
-                                  width: double.infinity,
-                                  alignment: Alignment.center,
-                                  child: const Text(
-                                    "Precisa de ajuda de",
-                                    style: TextStyle(
-                                      fontSize: 34,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color.fromRGBO(9, 22, 46, 1),
-                                    ),
+                                    key: const ValueKey('inicial'),
+                                    children: [
+                                      Container(
+                                        width: double.infinity,
+                                        alignment: Alignment.center,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                        ),
+                                        child: Text(
+                                          "Precisa de ajuda de",
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 34,
+                                            fontWeight: FontWeight.bold,
+                                            color: acessibilidade.corPrimaria,
+                                          ),
+                                        ),
+                                      ),
+                                      Container(
+                                        width: double.infinity,
+                                        alignment: Alignment.center,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                        ),
+                                        child: Text(
+                                          "emergência?",
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 34,
+                                            fontWeight: FontWeight.bold,
+                                            color: acessibilidade.corPrimaria,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                                Container(
-                                  width: double.infinity,
-                                  alignment: Alignment.center,
-                                  child: const Text(
-                                    "emergência?",
-                                    style: TextStyle(
-                                      fontSize: 34,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color.fromRGBO(9, 22, 46, 1),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
                           ),
 
-                          // ── Subtítulo animado ─────────────────────────────
+                          // ── Subtítulo animado ──────────────────────────
                           AnimatedSwitcher(
                             duration: const Duration(milliseconds: 400),
                             child: _sosEnviado
                                 ? Container(
-                              key: const ValueKey('subEnviado'),
-                              width: double.infinity,
-                              alignment: Alignment.center,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 24),
-                              child: const Text(
-                                "As autoridades estão a caminho",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Color.fromRGBO(68, 118, 155, 1),
-                                ),
-                              ),
-                            )
+                                    key: const ValueKey('subEnviado'),
+                                    width: double.infinity,
+                                    alignment: Alignment.center,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                    ),
+                                    child: Text(
+                                      "As autoridades estão a caminho",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: acessibilidade.corSecundaria,
+                                      ),
+                                    ),
+                                  )
+                                : _sosEnviando
+                                ? Container(
+                                    key: const ValueKey('subEnviando'),
+                                    width: double.infinity,
+                                    alignment: Alignment.center,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                    ),
+                                    child: Text(
+                                      "Por favor, aguarde alguns instantes.",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: acessibilidade.corSecundaria,
+                                      ),
+                                    ),
+                                  )
                                 : Container(
-                              key: const ValueKey('subInicial'),
-                              width: double.infinity,
-                              alignment: Alignment.center,
-                              child: const Text(
-                                "Pressione o botão abaixo para acioná-la",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Color.fromRGBO(68, 118, 155, 1),
-                                ),
-                              ),
-                            ),
+                                    key: const ValueKey('subInicial'),
+                                    width: double.infinity,
+                                    alignment: Alignment.center,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                    ),
+                                    child: Text(
+                                      "Pressione o botão abaixo para acioná-la",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: acessibilidade.corSecundaria,
+                                      ),
+                                    ),
+                                  ),
                           ),
 
                           const SizedBox(height: 20),
 
-                          // ── Botão SOS ─────────────────────────────────────
+                          // ── Botão SOS ───────────────────────────────────
                           AbsorbPointer(
                             absorbing: _sosEnviado,
                             child: InkWell(
                               borderRadius: BorderRadius.circular(150),
                               onTap: _sosEnviado
                                   ? null
-                                  : () async {
-                                Position posicao =
-                                await Geolocator.getCurrentPosition(
-                                  locationSettings: const LocationSettings(
-                                    accuracy: LocationAccuracy.high,
-                                  ),
-                                );
-
-                                final String pontoGeografico =
-                                    'POINT(${posicao.longitude} ${posicao.latitude})';
-
-                                await Criar_SOS(
-                                  context,
-                                  usuarioId: Supabase
-                                      .instance.client.auth.currentUser!.id,
-                                  localizacao: pontoGeografico,
-                                  data: DateTime.now().toIso8601String(),
-                                  origem: 'SOS',
-                                );
-
-                                // Atualiza estado para animar e desabilitar
-                                setState(() {
-                                  _sosEnviado = true;
-                                });
-                              },
+                                  : () => ValidacaoIdentidade(context),
                               child: Stack(
                                 alignment: Alignment.center,
+                                clipBehavior: Clip.none,
                                 children: [
-                                  // Anel externo
+                                  AnimatedPositioned(
+                                    duration: Duration(seconds: 2),
+                                    curve: ElasticOutCurve(0.6),
+                                    left: _sosEnviado ? -25 : 100,
+                                    bottom: _sosEnviado ? -25 : 100,
+                                    child: AnimatedContainer(
+                                      duration: Duration(seconds: 1),
+                                      curve: Curves.easeInOut,
+                                      width: 70,
+                                      height: 70,
+                                      decoration: BoxDecoration(
+                                        image: DecorationImage(
+                                          image: AssetImage(
+                                            "gfx/png/Image/chamadas.png",
+                                          ),
+                                        ),
+                                        color: _sosEnviado
+                                            ? const Color.fromRGBO(
+                                                80,
+                                                80,
+                                                80,
+                                                0.4,
+                                              )
+                                            : _sosEnviando
+                                            ? Colors.orangeAccent
+                                            : acessibilidade.daltonismo
+                                            ? const Color(
+                                                0xFFF4A261,
+                                              ).withValues(alpha: 0.5)
+                                            : const Color.fromRGBO(
+                                                200,
+                                                0,
+                                                0,
+                                                0.5,
+                                              ),
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ),
+                                  // Anel externo — vermelho ou laranja (daltonismo)
                                   AnimatedContainer(
                                     duration: const Duration(milliseconds: 600),
                                     curve: Curves.easeInOut,
@@ -316,13 +515,27 @@ class _Home_State extends State<Home> {
                                     decoration: BoxDecoration(
                                       color: _sosEnviado
                                           ? const Color.fromRGBO(
-                                          80, 80, 80, 0.4)
+                                              80,
+                                              80,
+                                              80,
+                                              0.4,
+                                            )
+                                          : _sosEnviando
+                                          ? Colors.orangeAccent
+                                          : acessibilidade.daltonismo
+                                          ? const Color(
+                                              0xFFF4A261,
+                                            ).withValues(alpha: 0.5)
                                           : const Color.fromRGBO(
-                                          200, 0, 0, 0.5),
+                                              200,
+                                              0,
+                                              0,
+                                              0.5,
+                                            ),
                                       shape: BoxShape.circle,
                                     ),
                                   ),
-                                  // Círculo interno
+                                  // Círculo interno — vermelho ou laranja (daltonismo)
                                   AnimatedContainer(
                                     duration: const Duration(milliseconds: 600),
                                     curve: Curves.easeInOut,
@@ -331,7 +544,15 @@ class _Home_State extends State<Home> {
                                     decoration: BoxDecoration(
                                       color: _sosEnviado
                                           ? const Color.fromRGBO(
-                                          100, 100, 100, 1)
+                                              100,
+                                              100,
+                                              100,
+                                              1,
+                                            )
+                                          : _sosEnviando
+                                          ? Colors.orange
+                                          : acessibilidade.daltonismo
+                                          ? const Color(0xFFF4A261)
                                           : const Color.fromRGBO(225, 0, 0, 1),
                                       shape: BoxShape.circle,
                                     ),
@@ -341,42 +562,43 @@ class _Home_State extends State<Home> {
                                     width: 225,
                                     colorFilter: _sosEnviado
                                         ? const ColorFilter.mode(
-                                      Color.fromRGBO(180, 180, 180, 1),
-                                      BlendMode.srcIn,
-                                    )
+                                            Color.fromRGBO(180, 180, 180, 1),
+                                            BlendMode.srcIn,
+                                          )
                                         : null,
                                   ),
                                 ],
                               ),
                             ),
                           ),
+
                           // BOTÃO DO GUIA DE SOBREVIVÊNCIA
-                          // BOTÃO DO GUIA DE SOBREVIVÊNCIA
-                          SizedBox(
-                            height: 40,
-                          ),
+                          const SizedBox(height: 40),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 30),
                             child: SizedBox(
                               width: double.infinity,
-                              height: 55,
                               child: TextButton(
-                                onPressed: () {
+                                onPressed: () async {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute( // <-- CERTIFIQUE-SE DE QUE NÃO HÁ "const" AQUI ANTES!
-                                      builder: (context) => TelaSobrevivencia(), // Sem const aqui também!
+                                    MaterialPageRoute(
+                                      builder: (context) => TelaSobrevivencia(),
                                     ),
                                   );
                                 },
                                 style: TextButton.styleFrom(
-                                  backgroundColor: const Color(0xFF09162E),
+                                  backgroundColor: acessibilidade.corPrimaria,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(30),
                                   ),
                                 ),
                                 child: const Text(
                                   'Acesse o Guia de Sobrevivência',
+                                  textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,
@@ -386,16 +608,22 @@ class _Home_State extends State<Home> {
                               ),
                             ),
                           ),
+                          SizedBox(
+                            height: 45,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
+                            child: RelatosProximos(ativa: widget.ativa,
+                              onAbrirRelato: widget.onAbrirRelato),
+                          ),
 
-                          const SizedBox(height: 90, width: double.infinity),
                         ],
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            ContainerPerfilSuperior(onChangePage: widget.onChangePage,),
           ],
         ),
       ),
