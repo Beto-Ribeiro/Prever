@@ -74,7 +74,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
           email.isEmpty ||
           !pickedDate ||
           senha.isEmpty ||
-          confsenha.isEmpty) {
+          confSenha.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
