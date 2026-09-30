@@ -189,6 +189,23 @@ function Circle2D({ center, radius, color, fillOpacity }) {
   return null;
 }
 
+function Map3DController({ center, zoom }) {
+  const map3D = useMap3D();
+  useEffect(() => {
+    if (!map3D) return;
+    try {
+      map3D.flyCameraTo({
+        endCamera: {
+          center: { lat: center.lat, lng: center.lng, altitude: zoom < 14 ? 15000 : 2000 },
+          tilt: 60,
+          heading: 0
+        }
+      });
+    } catch (err) {}
+  }, [map3D, center.lat, center.lng]);
+  return null;
+}
+
 const MapView = forwardRef(function MapView(
   { ocorrencias = [], vitimas = [], abrigos = [], onMapClick, onOccurrenceDetails, onVictimAssistance, onShelterSelect, savingVictimId, selectedShelterId, targetLocation, heatmap = false, mapMode, colorBlind = false, selectionRadiusKm = 3, showSelectionRadius = true },
   ref
@@ -239,6 +256,21 @@ const MapView = forwardRef(function MapView(
     }
   }, [targetLocation])
 
+  // Hide the Google Maps alpha development banner
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node.nodeType === 1 && node.innerText && (node.innerText.includes('canal Alfa') || node.innerText.includes('Alpha channel') || node.innerText.includes('fins de desenvolvimento'))) {
+            node.style.display = 'none';
+          }
+        }
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [])
+
   const renderMarkers = (is3dMode) => (
     <>
       {showOccurrences && validOccurrences.map(o => {
@@ -274,7 +306,10 @@ const MapView = forwardRef(function MapView(
 
   return (
     <div className="relative w-full h-full smdn-map-root">
-      <div className="absolute top-4 left-4 z-[500]">
+      <div 
+        className="absolute z-[500]"
+        style={{ top: '1rem', right: 'calc(clamp(19rem, 25vw, 24rem) + 2rem)' }}
+      >
         <button type="button" onClick={() => setShowSettings(!showSettings)} className="w-10 h-10 bg-white rounded-xl shadow-md flex items-center justify-center text-slate-700 hover:bg-slate-50 border border-slate-200" title="Configurações do Mapa">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </button>
@@ -298,15 +333,16 @@ const MapView = forwardRef(function MapView(
 
       {is3D ? (
         <Map3D 
-          center={{ lat: center.lat, lng: center.lng, altitude: zoom < 14 ? 15000 : 2000 }} 
-          tilt={60} 
-          heading={0}
+          defaultCenter={{ lat: center.lat, lng: center.lng, altitude: zoom < 14 ? 15000 : 2000 }} 
+          defaultTilt={60} 
+          defaultHeading={0}
           onClick={(e) => {
             if (e.detail?.position && onMapClick) {
               onMapClick(e.detail.position.lat, e.detail.position.lng)
             }
           }}
         >
+          <Map3DController center={center} zoom={zoom} />
           {renderMarkers(true)}
         </Map3D>
       ) : (
