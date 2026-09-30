@@ -4,10 +4,13 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';\nimport 'package:permission_handler/permission_handler.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../controles/controle_acessibilidade.dart';
+import '../services/antifraude_service.dart';
+import 'widgets/dialogo_antifraude.dart';
 
 class Relatos_tela extends StatefulWidget {
   final Function(int) onChangePage;
@@ -30,9 +33,16 @@ class _Relatos_telaState extends State<Relatos_tela> {
   int? tipoSelecionado;
   int? nivelSelecionado;
 
+  // Campo de descrição textual livre
+  final TextEditingController _descricaoController = TextEditingController();
+
+  // Controle de estado do filtro antifraude
+  bool _analisandoFraude = false;
+  final AntiFraudeService _antiFraudeService = AntiFraudeService();
+
   // Variáveis para o Mapa e Localização
   GoogleMapController? mapController;
-  
+
   LatLng? localizacaoSelecionada;
   Set<Marker> markers = {};
   bool _isLoadingMap = true;
@@ -51,6 +61,13 @@ class _Relatos_telaState extends State<Relatos_tela> {
   void initState() {
     super.initState();
     _checkLocationPermission();
+  }
+
+  @override
+  void dispose() {
+    _descricaoController.dispose();
+    _antiFraudeService.dispose();
+    super.dispose();
   }
 
   // Verifica permissões de localização
@@ -130,112 +147,236 @@ class _Relatos_telaState extends State<Relatos_tela> {
     }
   }
 
-  // Envia os dados e coordenadas para o Supabase
+  // ── Helpers de mapeamento ────────────────────────────────────────────────
+
+  String _mapearTipoDesastre(int? tipo) {
+    switch (tipo) {
+      case 0: return 'Alagamento';
+      case 1: return 'Tornado';
+      case 2: return 'Desabamento';
+      case 3: return 'Chuva Forte';
+      default: return 'Desconhecido';
+    }
+  }
+
+  String _mapearNivelRisco(int? nivel) {
+    switch (nivel) {
+      case 0: return 'Leve';
+      case 1: return 'Moderada';
+      case 2: return 'Severa';
+      default: return 'Desconhecida';
+    }
+  }
+
+  // ── Validação dos campos antes de enviar ─────────────────────────────────
+
+  bool _validarCampos() {
+    if (tipoSelecionado == null ||
+        nivelSelecionado == null ||
+        imagemSelecionada == null ||
+        imagemBytes == null ||
+        localizacaoSelecionada == null) {
+      _mostrarSnackBar(
+        'Preencha todos os campos e selecione a localização no mapa.',
+        Colors.orange,
+      );
+      return false;
+    }
+    return true;
+  }
+
+  // ── Grava o relato no Supabase com os metadados antifraude ───────────────
+
+  Future<void> _gravarNoSupabase({
+    required String tipoDesastre,
+    required String nivelRisco,
+    required String descricao,
+    required String userId,
+    required String pontoGeografico,
+    required ResultadoAntifraude resultadoAntifraude,
+  }) async {
+    final supabase = Supabase.instance.client;
+
+    final List<Map<String, dynamic>> respostaRelato = await supabase
+        .from('Relato')
+        .insert({
+          'rel_tipo_desastre': tipoDesastre,
+          'rel_gravidade': nivelRisco,
+          'rel_descricao': descricao,
+          'rel_cid_id': userId,
+          'rel_localizacao': pontoGeografico,
+          'rel_data_hora': DateTime.now().toIso8601String(),
+          // ── Campos do filtro antifraude ──────────────────────────────────
+          'rel_fraud_status': resultadoAntifraude.statusBanco,
+          'rel_fraud_score': resultadoAntifraude.scoreAutenticidade,
+          'rel_fraud_reason': resultadoAntifraude.motivoClassificacao,
+          'rel_needs_admin_review': resultadoAntifraude.precisaRevisaoAdmin,
+          'rel_prioridade': resultadoAntifraude.prioridadeBanco,
+        })
+        .select();
+
+    if (respostaRelato.isEmpty) {
+      throw Exception(
+        'O relato foi salvo, mas não retornou os dados. Verifique o RLS.',
+      );
+    }
+
+    final relatoId = respostaRelato.first['rel_id'];
+    final nomeArquivo = '${DateTime.now().millisecondsSinceEpoch}.png';
+    final path = 'relatos/$relatoId/$nomeArquivo';
+
+    await supabase.storage
+        .from('Fotos_Storage')
+        .uploadBinary(path, imagemBytes!);
+
+    await supabase.from('Foto').insert({
+      'fto_rel_id': relatoId,
+      'fto_url': path,
+      'fto_cid_id': userId,
+    });
+  }
+
+  /// Limpa o formulário após envio bem-sucedido.
+  void _limparFormulario() {
+    setState(() {
+      imagemSelecionada = null;
+      imagemBytes = null;
+      tipoSelecionado = null;
+      nivelSelecionado = null;
+      localizacaoSelecionada = null;
+      markers.clear();
+      _utilizarLocalizacaoAtual = true;
+    });
+    _descricaoController.clear();
+    _getCurrentLocation();
+  }
+
+  // ── Fluxo principal de envio com filtro antifraude ───────────────────────
+
+  /// Ponto de entrada quando o usuário toca em "Reportar".
+  ///
+  /// Fluxo:
+  ///   1. Valida campos obrigatórios
+  ///   2. Chama o [AntiFraudeService] (mostra diálogo de loading)
+  ///   3a. Se legítimo → grava direto no Supabase
+  ///   3b. Se suspeito → mostra diálogo ao usuário
+  ///     3b-i.  Confirma → grava com flag de revisão pendente
+  ///     3b-ii. Cancela  → retorna ao formulário para correção
   Future<void> enviarRelato() async {
+    final supabase = Supabase.instance.client;
+    final usuarioLogado = supabase.auth.currentUser;
+
+    if (usuarioLogado == null) {
+      _mostrarSnackBar(
+        'Erro: Você precisa estar logado para enviar um relato.',
+        Colors.red,
+      );
+      return;
+    }
+
+    if (!_validarCampos()) return;
+
+    final String tipoDesastre = _mapearTipoDesastre(tipoSelecionado);
+    final String nivelRisco = _mapearNivelRisco(nivelSelecionado);
+    final String descricao = _descricaoController.text.trim();
+    final String userId = usuarioLogado.id;
+    final String pontoGeografico =
+        'POINT(${localizacaoSelecionada!.longitude} ${localizacaoSelecionada!.latitude})';
+
+    // ── Etapa 1: Exibe diálogo de análise e chama o filtro antifraude ────
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const DialogoAnalisandoRelato(),
+    );
+
+    ResultadoAntifraude resultado;
     try {
-      final supabase = Supabase.instance.client;
-      final usuarioLogado = supabase.auth.currentUser;
-
-      if (usuarioLogado == null) {
-        _mostrarSnackBar(
-          'Erro: Você precisa estar logado para enviar um relato.',
-          Colors.red,
-        );
-        return;
-      }
-
-      if (tipoSelecionado == null ||
-          nivelSelecionado == null ||
-          imagemSelecionada == null ||
-          imagemBytes == null ||
-          localizacaoSelecionada == null) {
-        _mostrarSnackBar(
-          'Preencha todos os campos e selecione a localização no mapa.',
-          Colors.orange,
-        );
-        return;
-      }
-
-      String tipoDesastre = '';
-      switch (tipoSelecionado) {
-        case 0:
-          tipoDesastre = 'Alagamento';
-          break;
-        case 1:
-          tipoDesastre = 'Tornado';
-          break;
-        case 2:
-          tipoDesastre = 'Desabamento';
-          break;
-        case 3:
-          tipoDesastre = 'Chuva Forte';
-          break;
-      }
-
-      String nivelRisco = '';
-      switch (nivelSelecionado) {
-        case 0:
-          nivelRisco = 'Leve';
-          break;
-        case 1:
-          nivelRisco = 'Moderada';
-          break;
-        case 2:
-          nivelRisco = 'Severa';
-          break;
-      }
-
-      final String meuUserIdDoSupabase = usuarioLogado.id;
-
-      // FORMATANDO PARA O TIPO GEOGRAPHY (PostGIS) -> POINT(longitude latitude)
-      final String pontoGeografico =
-          'POINT(${localizacaoSelecionada!.longitude} ${localizacaoSelecionada!.latitude})';
-
-      final List<Map<String, dynamic>> respostaRelato = await supabase
-          .from('Relato')
-          .insert({
-        'rel_tipo_desastre': tipoDesastre,
-        'rel_descricao': nivelRisco,
-        'rel_cid_id': meuUserIdDoSupabase,
-        'rel_localizacao': pontoGeografico,
-        'rel_data_hora': DateTime.now().toIso8601String(),
-      })
-          .select();
-
-      if (respostaRelato.isEmpty) {
-        throw Exception(
-          "O relato foi salvo, mas não retornou os dados. Verifique o RLS.",
-        );
-      }
-
-      final relatoId = respostaRelato.first['rel_id'];
-      final nomeArquivo = '${DateTime.now().millisecondsSinceEpoch}.png';
-      final path = 'relatos/$relatoId/$nomeArquivo';
-
-      await supabase.storage
-          .from('Fotos_Storage')
-          .uploadBinary(path, imagemBytes!);
-
-      await supabase.from('Foto').insert({
-        'fto_rel_id': relatoId,
-        'fto_url': path,
-        'fto_cid_id': meuUserIdDoSupabase,
-      });
-
-      // Limpa todos os campos preenchidos e mostra a mensagem de sucesso
-      setState(() {
-        imagemSelecionada = null;
-        imagemBytes = null;
-        tipoSelecionado = null;
-        nivelSelecionado = null;
-        localizacaoSelecionada = null;
-        markers.clear();
-        _utilizarLocalizacaoAtual = true;
-      });
-      _getCurrentLocation();
-      _mostrarSnackBar('Relato e foto enviados com sucesso!', Colors.green);
+      resultado = await _antiFraudeService.analisarRelato(
+        tipoDesastre: tipoDesastre,
+        nivelGravidade: nivelRisco,
+        descricao: descricao,
+        latitude: localizacaoSelecionada!.latitude,
+        longitude: localizacaoSelecionada!.longitude,
+        imagemBytes: imagemBytes!,
+        mimeTypeImagem:
+            imagemSelecionada?.extension?.toLowerCase() == 'png'
+                ? 'image/png'
+                : 'image/jpeg',
+      );
     } catch (e) {
-      _mostrarSnackBar('Erro: $e', Colors.red);
+      resultado = ResultadoAntifraude.erro(e.toString());
+    }
+
+    // ── Fecha o diálogo de loading ────────────────────────────────────────
+    if (!mounted) return;
+    Navigator.of(context).pop();
+
+    // ── Etapa 2: Decide o próximo passo com base no resultado ─────────────
+    if (resultado.status == StatusAntifraude.legitimo) {
+      // ✅ Relato legítimo → grava normalmente
+      await _concluirEnvio(
+        tipoDesastre: tipoDesastre,
+        nivelRisco: nivelRisco,
+        descricao: descricao,
+        userId: userId,
+        pontoGeografico: pontoGeografico,
+        resultado: resultado,
+      );
+    } else {
+      // ⚠️ Suspeito → mostra diálogo de aviso ao usuário
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => DialogoRelatoSuspeito(
+          resultado: resultado,
+          onConfirmarEnvio: () async {
+            Navigator.of(context).pop(); // fecha o diálogo de suspeita
+            await _concluirEnvio(
+              tipoDesastre: tipoDesastre,
+              nivelRisco: nivelRisco,
+              descricao: descricao,
+              userId: userId,
+              pontoGeografico: pontoGeografico,
+              resultado: resultado,
+            );
+          },
+          onCancelar: () {
+            Navigator.of(context).pop(); // fecha o diálogo, volta ao form
+          },
+        ),
+      );
+    }
+  }
+
+  /// Executa a gravação no banco e exibe feedback de sucesso/erro.
+  Future<void> _concluirEnvio({
+    required String tipoDesastre,
+    required String nivelRisco,
+    required String descricao,
+    required String userId,
+    required String pontoGeografico,
+    required ResultadoAntifraude resultado,
+  }) async {
+    try {
+      await _gravarNoSupabase(
+        tipoDesastre: tipoDesastre,
+        nivelRisco: nivelRisco,
+        descricao: descricao,
+        userId: userId,
+        pontoGeografico: pontoGeografico,
+        resultadoAntifraude: resultado,
+      );
+      _limparFormulario();
+
+      final mensagem = resultado.precisaRevisaoAdmin
+          ? 'Relato enviado! Aguardando revisão de um administrador.'
+          : 'Relato enviado com sucesso!';
+      _mostrarSnackBar(mensagem, Colors.green);
+    } catch (e) {
+      _mostrarSnackBar('Erro ao enviar: $e', Colors.red);
     }
   }
 
@@ -342,6 +483,51 @@ class _Relatos_telaState extends State<Relatos_tela> {
                       ),
                     ),
                     const SizedBox(height: 25),
+
+                    // ── Campo de descrição textual ─────────────────────
+                    Text(
+                      'Descreva o que está acontecendo:',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: acessibilidade.corPrimaria,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _descricaoController,
+                      maxLines: 4,
+                      maxLength: 500,
+                      decoration: InputDecoration(
+                        hintText:
+                            'Ex.: A rua está completamente alagada, a água já chegou no joelho...'
+                            ' (opcional, mas ajuda na validação)',
+                        hintStyle: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black38,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide:
+                              BorderSide(color: Colors.grey.shade400),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide:
+                              BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: Color(0xFFC1272D), width: 2),
+                        ),
+                        contentPadding: const EdgeInsets.all(14),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                      ),
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    const SizedBox(height: 20),
 
                     Text(
                       'Escolha o nível de severidade:',
