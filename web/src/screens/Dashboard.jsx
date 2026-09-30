@@ -424,6 +424,7 @@ export default function Dashboard() {
           onVictimAssistance={handleVictimAssistance}
           savingVictimId={savingVictimId}
           colorBlind={settings.colorBlind}
+          theme={effectiveTheme}
         />
 
         <div className="absolute top-4 left-4 z-[500] flex items-center gap-3">

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle, useCallback, Fragment } from 'react'
-import { Map, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps'
+import { Map, AdvancedMarker, InfoWindow, useMap, Pin } from '@vis.gl/react-google-maps'
 import { Map3D, Marker3D, Popover, CirclePath, useMap3D } from '@vis.gl/react-google-maps/3d'
 
 const SEVERITY_STYLE = {
@@ -55,7 +55,9 @@ function OccurrenceMarker({ item, colorBlind, onOccurrenceDetails, is3D }) {
   if (is3D) {
     return (
       <>
-        <Marker3D position={{ lat: item.lat, lng: item.lng }} onClick={() => setOpen(true)}>{markerContent}</Marker3D>
+        <Marker3D position={{ lat: item.lat, lng: item.lng }} onClick={() => setOpen(true)}>
+          <Pin background={style.color} borderColor="#ffffff" scale={1.1} />
+        </Marker3D>
         {open && <Popover position={{ lat: item.lat, lng: item.lng }} onClose={() => setOpen(false)}>{popupContent}</Popover>}
       </>
     )
@@ -98,7 +100,9 @@ function ShelterMarker({ item, isSelected, onShelterSelect, is3D }) {
   if (is3D) {
     return (
       <>
-        <Marker3D position={{ lat: item.lat, lng: item.lng }} zIndex={isSelected ? 100 : 1}>{markerContent}</Marker3D>
+        <Marker3D position={{ lat: item.lat, lng: item.lng }} onClick={() => { setOpen(true); onShelterSelect?.(item); }} zIndex={isSelected ? 100 : 1}>
+          <Pin background={meta.color} borderColor="#ffffff" glyphColor={meta.text} scale={isSelected ? 1.3 : 1.1} />
+        </Marker3D>
         {open && <Popover position={{ lat: item.lat, lng: item.lng }} onClose={() => setOpen(false)}>{popupContent}</Popover>}
       </>
     )
@@ -144,7 +148,9 @@ function VictimMarker({ item, onVictimAssistance, savingVictimId, is3D }) {
   if (is3D) {
     return (
       <>
-        <Marker3D position={{ lat: item.lat, lng: item.lng }} onClick={() => setOpen(true)}>{markerContent}</Marker3D>
+        <Marker3D position={{ lat: item.lat, lng: item.lng }} onClick={() => setOpen(true)}>
+          <Pin background={attended ? '#0f766e' : '#020617'} borderColor="#ffffff" scale={0.9} />
+        </Marker3D>
         {open && <Popover position={{ lat: item.lat, lng: item.lng }} onClose={() => setOpen(false)}>{popupContent}</Popover>}
       </>
     )
@@ -193,21 +199,24 @@ function Map3DController({ center, zoom }) {
   const map3D = useMap3D();
   useEffect(() => {
     if (!map3D) return;
+    const altitude = zoom < 14 ? 15000 : 2000;
     try {
       map3D.flyCameraTo({
         endCamera: {
-          center: { lat: center.lat, lng: center.lng, altitude: zoom < 14 ? 15000 : 2000 },
+          center: { lat: center.lat, lng: center.lng, altitude },
           tilt: 60,
           heading: 0
         }
       });
-    } catch (err) {}
+    } catch (err) {
+      map3D.center = { lat: center.lat, lng: center.lng, altitude };
+    }
   }, [map3D, center.lat, center.lng]);
   return null;
 }
 
 const MapView = forwardRef(function MapView(
-  { ocorrencias = [], vitimas = [], abrigos = [], onMapClick, onOccurrenceDetails, onVictimAssistance, onShelterSelect, savingVictimId, selectedShelterId, targetLocation, heatmap = false, mapMode, mapType = 'roadmap', colorBlind = false, selectionRadiusKm = 3, showSelectionRadius = true },
+  { ocorrencias = [], vitimas = [], abrigos = [], onMapClick, onOccurrenceDetails, onVictimAssistance, onShelterSelect, savingVictimId, selectedShelterId, targetLocation, heatmap = false, mapMode, mapType = 'roadmap', colorBlind = false, selectionRadiusKm = 3, showSelectionRadius = true, theme },
   ref
 ) {
   const is3D = mapType === '3d'
@@ -256,17 +265,25 @@ const MapView = forwardRef(function MapView(
 
   // Hide the Google Maps alpha development banner
   useEffect(() => {
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        for (const node of mutation.addedNodes) {
-          if (node.nodeType === 1 && node.innerText && (node.innerText.includes('canal Alfa') || node.innerText.includes('Alpha channel') || node.innerText.includes('fins de desenvolvimento'))) {
-            node.style.display = 'none';
+    const interval = setInterval(() => {
+      document.querySelectorAll('.smdn-map-root .gm-style').forEach(mapContainer => {
+        const warningElements = Array.from(mapContainer.querySelectorAll('div')).filter(
+          el => el.innerText && el.innerText.includes('fins de desenvolvimento')
+        );
+        warningElements.forEach(el => {
+          if (el.style.display !== 'none') {
+             el.style.display = 'none';
           }
+        });
+      });
+      // Also check body just in case
+      Array.from(document.body.children).forEach(el => {
+        if (el.tagName === 'DIV' && el.innerText && (el.innerText.includes('canal Alfa') || el.innerText.includes('fins de desenvolvimento'))) {
+          el.style.display = 'none';
         }
-      }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-    return () => observer.disconnect();
+      });
+    }, 500);
+    return () => clearInterval(interval);
   }, [])
 
   const renderMarkers = (is3dMode) => (
@@ -290,7 +307,7 @@ const MapView = forwardRef(function MapView(
           {showSelectionRadius && <CircleOutline center={{ lat: targetLocation.lat, lng: targetLocation.lon }} radius={Math.max(0.5, Number(selectionRadiusKm) || 3) * 1000} is3D={is3dMode} />}
           {is3dMode ? (
             <Marker3D position={{ lat: targetLocation.lat, lng: targetLocation.lon }}>
-              <div style={{ width: 20, height: 20, background: '#44769b', border: '3px solid white', borderRadius: '50%' }} />
+              <Pin background="#44769b" borderColor="white" scale={0.8} />
             </Marker3D>
           ) : (
             <AdvancedMarker position={{ lat: targetLocation.lat, lng: targetLocation.lon }}>
@@ -333,7 +350,7 @@ const MapView = forwardRef(function MapView(
           }}
           mapId="DEMO_MAP_ID" 
           mapTypeId={mapType !== '3d' ? mapType : 'roadmap'}
-          colorScheme="FOLLOW_SYSTEM"
+          colorScheme={theme === 'dark' ? 'DARK' : 'LIGHT'}
           gestureHandling="greedy"
           disableDefaultUI={true}
         >
