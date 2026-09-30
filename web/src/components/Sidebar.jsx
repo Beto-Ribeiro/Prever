@@ -397,7 +397,7 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
           </button>
         </div>
 
-        <nav className={`min-h-0 flex-1 overflow-hidden ${collapsed ? 'px-2 py-2 space-y-1' : 'px-3 py-2.5 space-y-0.5'}`}>
+        <nav className={`min-h-0 flex-1 overflow-y-auto sidebar-nav-scroll ${collapsed ? 'px-2 py-2 space-y-1' : 'px-3 py-2.5 space-y-0.5'}`}>
           {visibleNavItems.map((item) => (
             <NavButton
               key={item.id}
