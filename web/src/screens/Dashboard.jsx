@@ -168,6 +168,32 @@ function findOccurrenceByAiQuery(occurrences, detail = {}) {
   }) || occurrences[0] || null
 }
 
+function MapSettingsButton({ mapType, setMapType, showMapSettings, setShowMapSettings }) {
+  return (
+    <div className="relative z-[500]">
+      <button type="button" onClick={() => setShowMapSettings(!showMapSettings)} className="w-10 h-10 bg-bg-surface/95 rounded-xl shadow-md flex items-center justify-center text-slate-700 hover:bg-slate-50 border border-border-soft backdrop-blur-sm" title="Configurações do Mapa">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
+      {showMapSettings && (
+        <div className="absolute top-12 right-0 bg-bg-surface/95 backdrop-blur-sm rounded-xl shadow-xl border border-border-soft p-2 w-48 flex flex-col gap-1">
+          <div className="px-3 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Tipo de Mapa</div>
+          {[
+            { id: 'roadmap', label: 'Ruas (Padrão)' },
+            { id: 'satellite', label: 'Satélite (2D)' },
+            { id: 'hybrid', label: 'Híbrido' },
+            { id: 'terrain', label: 'Relevo' },
+            { id: '3d', label: 'Satélite 3D' }
+          ].map(t => (
+            <button key={t.id} type="button" onClick={() => { setMapType(t.id); setShowMapSettings(false); }} className={`text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${mapType === t.id ? 'bg-action-hover/20 text-slate-800 font-bold' : 'text-slate-600 hover:bg-action-hover/10'}`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const [selectedOcc, setSelectedOcc] = useState(null)
   const [statusDraft, setStatusDraft] = useState('active')
@@ -191,6 +217,8 @@ export default function Dashboard() {
   const [error, setError] = useState('')
   const { settings, effectiveTheme } = useSmdnSettings()
   const [mapMode, setMapMode] = useState(normalizeMapMode(settings.defaultMapMode))
+  const [mapType, setMapType] = useState('roadmap')
+  const [showMapSettings, setShowMapSettings] = useState(false)
   const [showShelters, setShowShelters] = useState(false)
   const [shelters, setShelters] = useState([])
   const mapRef = useRef(null)
@@ -390,6 +418,7 @@ export default function Dashboard() {
           vitimas={mapVictims}
           abrigos={showShelters ? mapShelters : []}
           mapMode={mapMode}
+          mapType={mapType}
           heatmap={mapMode === 'heat'}
           onOccurrenceDetails={handleMapOccurrenceDetails}
           onVictimAssistance={handleVictimAssistance}
@@ -397,76 +426,80 @@ export default function Dashboard() {
           colorBlind={settings.colorBlind}
         />
 
-        <div
-          className="absolute top-4 left-16 z-[500] flex rounded-xl bg-bg-surface/95 backdrop-blur-sm border border-border-soft shadow-sm overflow-hidden"
-          role="group"
-          aria-label="Filtro de visualização do mapa"
-        >
-          {MAP_MODES.map((mode) => (
-            <button
-              key={mode.id}
-              type="button"
-              className={`px-3 py-2 text-xs font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${mapMode === mode.id ? 'bg-text-main text-white' : 'text-slate-600 hover:bg-action-hover/20'}`}
-              onClick={() => setMapMode(mode.id)}
-              aria-pressed={mapMode === mode.id}
-              aria-label={mode.aria}
-            >
-              {mode.label}
-            </button>
-          ))}
+        <div className="absolute top-4 left-4 z-[500] flex items-center gap-3">
+          <div
+            className="flex rounded-xl bg-bg-surface/95 backdrop-blur-sm border border-border-soft shadow-sm overflow-hidden"
+            role="group"
+            aria-label="Filtro de visualização do mapa"
+          >
+            {MAP_MODES.map((mode) => (
+              <button
+                key={mode.id}
+                type="button"
+                className={`px-3 py-2 text-xs font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${mapMode === mode.id ? 'bg-text-main text-white' : 'text-slate-600 hover:bg-action-hover/20'}`}
+                onClick={() => setMapMode(mode.id)}
+                aria-pressed={mapMode === mode.id}
+                aria-label={mode.aria}
+              >
+                {mode.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowShelters((value) => !value)}
+            className={`rounded-xl border px-3 py-2 text-xs font-bold shadow-sm backdrop-blur-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${showShelters ? 'border-text-main bg-text-main text-white' : 'border-border-soft bg-bg-surface/95 text-slate-600 hover:bg-action-hover/20'}`}
+            aria-pressed={showShelters}
+            aria-label="Mostrar ou ocultar abrigos no mapa do dashboard"
+          >
+            Abrigos {mapShelters.length > 0 ? `(${mapShelters.length})` : ''}
+          </button>
         </div>
-
-
-        <button
-          type="button"
-          onClick={() => setShowShelters((value) => !value)}
-          className={`absolute top-4 left-[360px] z-[500] rounded-xl border px-3 py-2 text-xs font-bold shadow-sm backdrop-blur-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 ${showShelters ? 'border-text-main bg-text-main text-white' : 'border-border-soft bg-bg-surface/95 text-slate-600 hover:bg-action-hover/20'}`}
-          aria-pressed={showShelters}
-          aria-label="Mostrar ou ocultar abrigos no mapa do dashboard"
-        >
-          Abrigos {mapShelters.length > 0 ? `(${mapShelters.length})` : ''}
-        </button>
       </Card>
 
       <div
-        className="absolute top-8 right-8 z-10 flex flex-col items-end gap-3"
-        style={{ width: 'clamp(19rem, 25vw, 24rem)' }}
+        className="absolute top-8 right-8 z-[500] flex flex-col items-end gap-3 pointer-events-none"
+        style={{ width: recentMinimized ? 'auto' : 'clamp(19rem, 25vw, 24rem)' }}
       >
-        {recentMinimized ? (
-          <div className="flex items-center gap-2 self-end">
-            {mapVictims.length > 0 && (
-              <Card className="!rounded-xl border border-border-soft bg-bg-surface/95 px-3 py-2 shadow-lg backdrop-blur-sm">
-                <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-black align-middle ring-2 ring-white" />
-                <span className="text-[0.6875rem] font-bold text-slate-700">
-                  {mapMode === 'victims' ? `${mapVictims.length} vítima(s)` : `${mapVictims.length} vítima(s) · ${dashboard.stats.assistedVictims || 0} atendida(s)`}
-                </span>
-              </Card>
-            )}
+        <div className="flex items-start gap-3 w-full justify-end pointer-events-auto">
+          <MapSettingsButton mapType={mapType} setMapType={setMapType} showMapSettings={showMapSettings} setShowMapSettings={setShowMapSettings} />
+          
+          {recentMinimized ? (
+            <div className="flex items-center gap-2">
+              {mapVictims.length > 0 && (
+                <Card className="!rounded-xl border border-border-soft bg-bg-surface/95 px-3 py-2 shadow-lg backdrop-blur-sm">
+                  <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-black align-middle ring-2 ring-white" />
+                  <span className="text-[0.6875rem] font-bold text-slate-700">
+                    {mapMode === 'victims' ? `${mapVictims.length} vítima(s)` : `${mapVictims.length} vítima(s) · ${dashboard.stats.assistedVictims || 0} atendida(s)`}
+                  </span>
+                </Card>
+              )}
 
-            <Card
-              className="h-12 w-12 shadow-xl border border-border-soft bg-bg-surface/95 backdrop-blur-sm !p-0 overflow-hidden flex items-center justify-center transition-all duration-200"
-              role="region"
-              aria-label="Ocorrências recentes minimizadas"
-            >
-              <button
-                type="button"
-                onClick={() => setRecentMinimized(false)}
-                className="flex h-full w-full items-center justify-center text-lg font-black text-slate-700 hover:bg-action-hover/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
-                aria-label="Expandir ocorrências recentes"
-                title="Expandir ocorrências recentes"
+              <Card
+                className="h-12 w-12 shadow-xl border border-border-soft bg-bg-surface/95 backdrop-blur-sm !p-0 overflow-hidden flex items-center justify-center transition-all duration-200"
+                role="region"
+                aria-label="Ocorrências recentes minimizadas"
               >
-                +
-              </button>
-            </Card>
-          </div>
-        ) : (
-          <Card
-            className="w-full max-h-[360px] shadow-xl border border-border-soft bg-bg-surface/95 backdrop-blur-sm p-0 overflow-hidden flex flex-col transition-all duration-200"
-            role="region"
-            aria-label="Ocorrências recentes"
-          >
-            <div className="px-3 pt-4 pb-3 border-b border-slate-100">
-              <div className="flex items-start justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => setRecentMinimized(false)}
+                  className="flex h-full w-full items-center justify-center text-lg font-black text-slate-700 hover:bg-action-hover/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
+                  aria-label="Expandir ocorrências recentes"
+                  title="Expandir ocorrências recentes"
+                >
+                  +
+                </button>
+              </Card>
+            </div>
+          ) : (
+            <Card
+              className="w-full max-h-[360px] shadow-xl border border-border-soft bg-bg-surface/95 backdrop-blur-sm p-0 overflow-hidden flex flex-col transition-all duration-200"
+              role="region"
+              aria-label="Ocorrências recentes"
+            >
+              <div className="px-3 pt-4 pb-3 border-b border-slate-100">
+                <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h3 className="text-sm font-bold leading-tight text-slate-800">Ocorrências Recentes</h3>
                   <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Resumo rápido do dashboard">
@@ -546,10 +579,11 @@ export default function Dashboard() {
               )}
             </div>
           </Card>
-        )}
+          )}
+        </div>
 
         {!recentMinimized && mapVictims.length > 0 && (
-          <Card className="self-start !rounded-xl border border-border-soft bg-bg-surface/95 px-3 py-2 shadow-lg backdrop-blur-sm">
+          <Card className="self-end !rounded-xl border border-border-soft bg-bg-surface/95 px-3 py-2 shadow-lg backdrop-blur-sm pointer-events-auto">
             <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-black align-middle ring-2 ring-white" />
             <span className="text-[0.6875rem] font-bold text-slate-700">
               {mapMode === 'victims' ? `${mapVictims.length} vítima(s) no mapa` : `${mapVictims.length} vítima(s) · ${dashboard.stats.assistedVictims || 0} atendida(s)`}
