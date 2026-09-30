@@ -129,9 +129,13 @@ class AntiFraudeService {
       'O critério principal é a INCOERÊNCIA FLAGRANTE entre os campos.\n\n'
       'FORMATO DE RESPOSTA OBRIGATÓRIO:\n'
       'Responda EXCLUSIVAMENTE com um objeto JSON válido, sem nenhum texto '
-      'antes ou depois, sem blocos de código markdown, sem explicações fora '
-      'do JSON. Use exatamente este formato:\n'
-      '{"legitimo":true,"score_autenticidade":0.95,"motivo":"Explicação concisa"}';
+      'antes ou depois, sem blocos de código markdown. O JSON deve conter:\n'
+      '- "legitimo": boolean (true se for coerente, false se for suspeito)\n'
+      '- "score_autenticidade": número de 0.0 a 1.0\n'
+      '- "motivo": string contendo uma explicação de forma humana, clara e empática, direcionada diretamente ao usuário (ex: "Notamos que a imagem que você enviou..."), justificando o motivo da suspeita ou aprovação.\n\n'
+      'IMPORTANTE: Não copie o exemplo abaixo. Gere a sua própria análise com base na imagem e dados recebidos.\n'
+      'Exemplo de saída:\n'
+      '{"legitimo": false, "score_autenticidade": 0.1, "motivo": "Notamos que a foto que você enviou mostra um ambiente interno e seco, o que não condiz com o relato de rua alagada. Por favor, verifique se enviou a foto correta."}';
 
 
   // ── Inicialização do modelo ─────────────────────────────────────────────────
@@ -142,10 +146,8 @@ class AntiFraudeService {
       systemInstruction: Content.system(_systemPrompt),
       generationConfig: GenerationConfig(
         temperature: 0.2, // baixo = determinístico, mas evita resposta vazia
-        maxOutputTokens: 512,
-        // NÃO usar responseMimeType: 'application/json' — não suportado
-        // em todas as configs do Vertex AI via Firebase web.
-        // O prompt já instrui o modelo a retornar JSON puro.
+        maxOutputTokens: 1024,
+        responseMimeType: 'application/json',
       ),
     );
   }
