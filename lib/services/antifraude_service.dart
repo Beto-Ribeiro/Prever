@@ -116,23 +116,23 @@ class AntiFraudeService {
       '3. Conteúdo da imagem e o contexto do evento relatado\n'
       '4. Plausibilidade geral do relato\n\n'
       'Exemplos de FRAUDE:\n'
-      '- Relato de inundação severa com foto de palhaço desenhado\n'
-      '- Relato de tornado com descrição de receita de bolo\n'
-      '- Relato de deslizamento com foto de um pôr do sol ensolarado e tranquilo\n'
+      '- Relato de inundação severa com foto de anúncio de produto\n'
+      '- Relato de tornado com descrição de terremoto\n'
+      '- Relato de deslizamento com foto de pôr do sol tranquilo\n'
       '- Descrição completamente irrelevante para o tipo de desastre\n\n'
       'Exemplos de LEGÍTIMO:\n'
-      '- Relato de alagamento com foto de ruas inundadas e água nas calçadas\n'
-      '- Relato de chuva forte com descrição de acúmulo de água e ventos\n'
+      '- Relato de alagamento com foto de ruas inundadas\n'
+      '- Relato de chuva forte com descrição de acúmulo de água\n'
       '- Foto com contexto plausível mesmo que não seja perfeita\n\n'
       'IMPORTANTE: Seja rigoroso mas justo. Fotos de celular em desastres '
       'reais podem ser tremidas, escuras ou com ângulo ruim. '
       'O critério principal é a INCOERÊNCIA FLAGRANTE entre os campos.\n\n'
-      'Responda EXCLUSIVAMENTE no seguinte formato JSON (sem markdown, sem explicações fora do JSON):\n'
-      '{\n'
-      '  "legitimo": true | false,\n'
-      '  "score_autenticidade": 0.0 a 1.0,\n'
-      '  "motivo": "Explicação concisa em português sobre a classificação"\n'
-      '}';
+      'FORMATO DE RESPOSTA OBRIGATÓRIO:\n'
+      'Responda EXCLUSIVAMENTE com um objeto JSON válido, sem nenhum texto '
+      'antes ou depois, sem blocos de código markdown, sem explicações fora '
+      'do JSON. Use exatamente este formato:\n'
+      '{"legitimo":true,"score_autenticidade":0.95,"motivo":"Explicação concisa"}';
+
 
   // ── Inicialização do modelo ─────────────────────────────────────────────────
   Future<void> _initModel() async {
@@ -141,9 +141,11 @@ class AntiFraudeService {
       model: 'gemini-2.5-flash',
       systemInstruction: Content.system(_systemPrompt),
       generationConfig: GenerationConfig(
-        temperature: 0.1, // temperatura baixa = respostas mais determinísticas
-        maxOutputTokens: 400,
-        responseMimeType: 'application/json',
+        temperature: 0.2, // baixo = determinístico, mas evita resposta vazia
+        maxOutputTokens: 512,
+        // NÃO usar responseMimeType: 'application/json' — não suportado
+        // em todas as configs do Vertex AI via Firebase web.
+        // O prompt já instrui o modelo a retornar JSON puro.
       ),
     );
   }
@@ -260,7 +262,7 @@ Retorne o JSON de análise conforme o formato definido.
     }
   }
 
-  /// Libera recursos.
+  /// Libera recursos e força reinicialização na próxima chamada.
   void dispose() {
     _model = null;
   }
