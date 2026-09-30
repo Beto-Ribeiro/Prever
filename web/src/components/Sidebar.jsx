@@ -87,6 +87,12 @@ function FeatherIcon({ name, size = 20 }) {
         <line x1="21" y1="12" x2="9" y2="12" />
       </>
     ),
+    'check-circle': (
+      <>
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline points="22 4 12 14.01 9 11.01" />
+      </>
+    ),
   }
 
   return <svg {...commonProps}>{paths[name] || paths.user}</svg>
@@ -115,6 +121,7 @@ const NAV_ITEMS = [
   { id: 'abrigos', label: 'Abrigos', permissionKey: 'ocorrencias', icon: <FeatherIcon name="home" />, iconWhite: <FeatherIcon name="home" /> },
   { id: 'ocorrencias', label: 'Ocorrências', icon: <FeatherIcon name="alert-triangle" />, iconWhite: <FeatherIcon name="alert-triangle" /> },
   { id: 'relatorios', label: 'Relatórios', icon: <FeatherIcon name="pie-chart" />, iconWhite: <FeatherIcon name="pie-chart" /> },
+  { id: 'validacao', label: 'Validação', permissionKey: 'validacao', icon: <FeatherIcon name="check-circle" />, iconWhite: <FeatherIcon name="check-circle" /> },
   { id: 'auditoria', label: 'Auditoria', icon: <FeatherIcon name="lock" />, iconWhite: <FeatherIcon name="lock" /> },
   { id: 'perfil', label: 'Perfil', icon: <FeatherIcon name="user" />, iconWhite: <FeatherIcon name="user" /> },
 ]
@@ -222,9 +229,11 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
       : null)
 
   const permissions = displayUser?.permissions || {}
+  const isValidatorRole = ['admin', 'defesa_civil', 'bombeiros'].includes(user?.role)
   const managerItems = [['dashboard', 'Visão geral', 'home'], ['ocupantes', 'Ocupantes', 'users'], ['estoque', 'Estoque', 'home'], ['pedidos', 'Pedidos de ajuda', 'flag'], ['relatorios', 'Relatórios', 'pie-chart'], ['perfil', 'Perfil', 'user']].map(([id, label, icon]) => ({ id, label, icon: <FeatherIcon name={icon} />, iconWhite: <FeatherIcon name={icon} /> }))
   const visibleNavItems = user?.role === 'shelter_manager' ? managerItems : NAV_ITEMS.filter((item) => {
     if (item.id === 'perfil') return true
+    if (item.id === 'validacao') return isValidatorRole || devBypassAuth
     return Boolean(permissions[item.permissionKey || item.id]) || devBypassAuth
   })
 

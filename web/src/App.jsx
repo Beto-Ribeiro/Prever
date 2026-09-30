@@ -10,6 +10,7 @@ import Auditoria from './screens/Auditoria.jsx'
 import Perfil from './screens/Perfil.jsx'
 import AdminPanel from './screens/AdminPanel.jsx'
 import UserList from './screens/UserList.jsx'
+import ValidacaoAntifraude from './screens/ValidacaoAntifraude.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import { useAuth } from './hooks/useAuth.js'
 import { createWebAccessRequest } from './backend/auth/webAccessService.js'
@@ -24,6 +25,7 @@ const SCREENS = {
   abrigos: Abrigos,
   ocorrencias: Ocorrencias,
   relatorios: Relatorios,
+  validacao: ValidacaoAntifraude,
   auditoria: Auditoria,
   perfil: Perfil,
   admin: AdminHomeScreen,
@@ -70,6 +72,7 @@ export default function App() {
       abrigos: 'ocorrencias',
       ocorrencias: 'ocorrencias',
       relatorios: 'relatorios',
+      validacao: 'validacao',
       auditoria: 'auditoria',
     }
 
