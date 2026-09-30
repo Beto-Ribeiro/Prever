@@ -233,10 +233,11 @@ Retorne o JSON de análise conforme o formato definido.
     }
 
     try {
-      // Remove possíveis blocos markdown caso o modelo ignore a instrução
+      // Extrai apenas o bloco JSON, ignorando textos antes ou depois
       String json = textoResposta.trim();
-      if (json.startsWith('```')) {
-        json = json.replaceAll(RegExp(r'```[a-z]*\n?'), '').trim();
+      final match = RegExp(r'\{[\s\S]*\}').firstMatch(json);
+      if (match != null) {
+        json = match.group(0)!;
       }
 
       final Map<String, dynamic> dados = jsonDecode(json);
