@@ -209,7 +209,7 @@ class DialogoRelatoSuspeito extends StatelessWidget {
   /// Chip visual com a porcentagem de autenticidade.
   Widget _buildScoreChip(double score) {
     final porcentagem = (score * 100).toStringAsFixed(0);
-    Color cor;
+    MaterialColor cor;
     if (score >= 0.7) {
       cor = Colors.green;
     } else if (score >= 0.4) {
@@ -221,9 +221,9 @@ class DialogoRelatoSuspeito extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(
-        color: cor.withOpacity(0.12),
+        color: cor.shade100,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: cor.withOpacity(0.4)),
+        border: Border.all(color: cor.shade300),
       ),
       child: Text(
         '$porcentagem%',
