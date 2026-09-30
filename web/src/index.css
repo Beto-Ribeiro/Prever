@@ -679,3 +679,21 @@ html[data-theme='dark'] .dashboard-map-panel .text-status-severe { color: #ffb86
 html[data-theme='dark'] .dashboard-map-panel .text-status-success { color: #69e6b2; }
 html[data-theme='dark'][data-colorblind='true'] .dashboard-map-panel .text-status-critical { color: #72c1ff; }
 html[data-theme='dark'][data-colorblind='true'] .dashboard-map-panel .text-status-severe { color: #ffb86b; }
+
+/* Google Maps Native Popups / InfoWindows in Dark Mode */
+html[data-theme='dark'] .gm-style .gm-style-iw-c {
+  background-color: rgb(30 41 59) !important;
+}
+html[data-theme='dark'] .gm-style .gm-style-iw-tc::after,
+html[data-theme='dark'] .gm-style .gm-style-iw-t::after {
+  background: rgb(30 41 59) !important;
+}
+html[data-theme='dark'] .gm-style .gm-ui-hover-effect {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Fallback for Map3D Popovers or generic popup containers */
+html[data-theme='dark'] .smdn-map-popup {
+  color: rgb(226 232 240);
+}
+
