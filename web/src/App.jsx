@@ -135,7 +135,7 @@ export default function App() {
   const ActiveScreen = SCREENS[currentScreen] || Dashboard
 
   return (
-    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY} version="beta">
+    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY} version="alpha">
       <div className="flex h-screen bg-bg-main overflow-hidden">
         <a href="#main-content" className="skip-link">Ir para o conteúdo</a>
         <Sidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} onLogout={handleLogout} />

@@ -193,7 +193,9 @@ const MapView = forwardRef(function MapView(
   { ocorrencias = [], vitimas = [], abrigos = [], onMapClick, onOccurrenceDetails, onVictimAssistance, onShelterSelect, savingVictimId, selectedShelterId, targetLocation, heatmap = false, mapMode, colorBlind = false, selectionRadiusKm = 3, showSelectionRadius = true },
   ref
 ) {
-  const [is3D, setIs3D] = useState(false)
+  const [mapType, setMapType] = useState('roadmap')
+  const [showSettings, setShowSettings] = useState(false)
+  const is3D = mapType === '3d'
   const effectiveMode = mapMode || (heatmap ? 'heat' : 'points')
   const showOccurrences = effectiveMode !== 'victims'
   const showHeat = effectiveMode === 'heat'
@@ -212,21 +214,29 @@ const MapView = forwardRef(function MapView(
   }))
 
   useEffect(() => {
-    if (!targetLocation) return
-    if (isValidCoord(targetLocation.lat) && isValidCoord(targetLocation.lon)) {
-      setCenter({ lat: targetLocation.lat, lng: targetLocation.lon })
-      setZoom(targetLocation.neighborhood ? 14 : 12)
-      return
-    }
-    const query = [targetLocation.neighborhood, targetLocation.city].filter(Boolean).join(', ')
-    if (!query) return
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`)
-      .then((r) => r.json())
-      .then((results) => {
-        if (!results.length) return
-        setCenter({ lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) })
+    if (targetLocation) {
+      if (isValidCoord(targetLocation.lat) && isValidCoord(targetLocation.lon)) {
+        setCenter({ lat: targetLocation.lat, lng: targetLocation.lon })
         setZoom(targetLocation.neighborhood ? 14 : 12)
-      }).catch(() => {})
+        return
+      }
+      const query = [targetLocation.neighborhood, targetLocation.city].filter(Boolean).join(', ')
+      if (!query) return
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`)
+        .then((r) => r.json())
+        .then((results) => {
+          if (!results.length) return
+          setCenter({ lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) })
+          setZoom(targetLocation.neighborhood ? 14 : 12)
+        }).catch(() => {})
+    } else {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition((pos) => {
+          setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+          setZoom(13)
+        }, () => {})
+      }
+    }
   }, [targetLocation])
 
   const renderMarkers = (is3dMode) => (
@@ -264,13 +274,26 @@ const MapView = forwardRef(function MapView(
 
   return (
     <div className="relative w-full h-full smdn-map-root">
-      <div className="absolute top-4 left-4 z-50 flex gap-2">
-        <button type="button" onClick={() => setIs3D(false)} className={`px-4 py-2 rounded-lg font-semibold text-sm shadow-md transition-colors ${!is3D ? 'bg-blue-600 text-white' : 'bg-white text-slate-700 hover:bg-slate-50'}`}>
-          Mapa 2D
+      <div className="absolute top-4 right-4 z-[60]">
+        <button type="button" onClick={() => setShowSettings(!showSettings)} className="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-slate-700 hover:bg-slate-50 border border-slate-200" title="Configurações do Mapa">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </button>
-        <button type="button" onClick={() => setIs3D(true)} className={`px-4 py-2 rounded-lg font-semibold text-sm shadow-md transition-colors ${is3D ? 'bg-blue-600 text-white' : 'bg-white text-slate-700 hover:bg-slate-50'}`}>
-          Satélite 3D (Photorealistic)
-        </button>
+        {showSettings && (
+          <div className="absolute top-12 right-0 bg-white rounded-xl shadow-xl border border-slate-200 p-2 w-48 flex flex-col gap-1">
+            <div className="px-3 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Tipo de Mapa</div>
+            {[
+              { id: 'roadmap', label: 'Ruas (Padrão)' },
+              { id: 'satellite', label: 'Satélite (2D)' },
+              { id: 'hybrid', label: 'Híbrido' },
+              { id: 'terrain', label: 'Relevo' },
+              { id: '3d', label: 'Satélite 3D' }
+            ].map(t => (
+              <button key={t.id} type="button" onClick={() => { setMapType(t.id); setShowSettings(false); }} className={`text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${mapType === t.id ? 'bg-blue-50 text-blue-700' : 'text-slate-700 hover:bg-slate-100'}`}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {is3D ? (
@@ -299,6 +322,8 @@ const MapView = forwardRef(function MapView(
             }
           }}
           mapId="DEMO_MAP_ID" 
+          mapTypeId={mapType !== '3d' ? mapType : 'roadmap'}
+          colorScheme="FOLLOW_SYSTEM"
           gestureHandling="greedy"
           disableDefaultUI={true}
         >
