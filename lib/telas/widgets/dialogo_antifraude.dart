@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/antifraude_service.dart';
+import '../../services/antifraude_service.dart';
 
 /// Widget de diálogo que aparece quando um relato é detectado como suspeito.
 ///
