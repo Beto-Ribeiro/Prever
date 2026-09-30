@@ -64,6 +64,7 @@ export default function App() {
     if (isManager) return ['dashboard', 'ocupantes', 'estoque', 'pedidos', 'relatorios', 'perfil'].includes(screenId)
     if (screenId === 'perfil') return true
     if (['admin', 'users'].includes(screenId)) return canOpenAdmin
+    if (screenId === 'validacao') return ['admin', 'defesa_civil', 'bombeiros'].includes(user?.role) || devBypassAuth || canOpenAdmin
     if (devBypassAuth) return true
 
     const permissionKeyByScreen = {
@@ -89,7 +90,7 @@ export default function App() {
     if (!canOpenScreen(currentScreen)) {
       setCurrentScreen(canOpenScreen('dashboard') ? 'dashboard' : 'perfil')
     }
-  }, [currentScreen, isManager, canOpenAdmin, devBypassAuth, recoveryMode, permissions.dashboard, permissions.reportar, permissions.ocorrencias, permissions.relatorios, permissions.auditoria])
+  }, [currentScreen, isManager, canOpenAdmin, devBypassAuth, recoveryMode, permissions.dashboard, permissions.reportar, permissions.ocorrencias, permissions.relatorios, permissions.validacao, permissions.auditoria, user?.role])
 
   const handleLogin = async ({ email, password }) => {
     await signIn({ email, password })

@@ -244,9 +244,12 @@ Retorne o JSON de análise conforme o formato definido.
 
       final Map<String, dynamic> dados = jsonDecode(json);
 
-      final bool legitimo = dados['legitimo'] as bool? ?? false;
       final double score =
           (dados['score_autenticidade'] as num?)?.toDouble() ?? 0.0;
+      
+      // Override the boolean returned by the AI with a strict threshold
+      final bool legitimo = score >= 0.80;
+
       final String motivo =
           dados['motivo'] as String? ?? 'Sem motivo retornado pelo modelo.';
 
