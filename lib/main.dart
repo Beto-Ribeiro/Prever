@@ -12,6 +12,9 @@ import 'telas/exportador_import.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // dotenv.load() DEVE ser chamado antes de qualquer acesso a dotenv.env
+  await dotenv.load(fileName: ".env");
+
   // Inicializa o Firebase (necessário para o Nimbo — chatbot IA)
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -21,8 +24,6 @@ Future<void> main() async {
     url: dotenv.env['SUPABASE_URL'] ?? 'https://robfgvtnoooivihlnomr.supabase.co',
     anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? 'sb_publishable_eVCeoqzfhoAgkpBnJxzs7w_-PGO0TO9',
   );
-
-  await dotenv.load(fileName: ".env");
 
   runApp(
     ChangeNotifierProvider(
