@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, forwardRef, useImperativeHandle, useCallback } from 'react'
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle, useCallback, Fragment } from 'react'
 import { Map, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps'
 import { Map3D, Marker3D, Popover, CirclePath, useMap3D } from '@vis.gl/react-google-maps/3d'
 
@@ -157,12 +157,35 @@ function VictimMarker({ item, onVictimAssistance, savingVictimId, is3D }) {
   )
 }
 
-function CircleOutline({ center, radius, is3D }) {
+function CircleOutline({ center, radius, is3D, color = '#44769b', fillOpacity = 0.12 }) {
   if (is3D) {
-    return <CirclePath center={center} radius={radius} strokeColor="#44769b" strokeWidth={2} fillColor="#44769b" fillOpacity={0.12} />
+    return <CirclePath center={center} radius={radius} strokeColor={color} strokeWidth={1.5} fillColor={color} fillOpacity={fillOpacity} />
   }
-  // Circle rendering on 2D map requires a hook or child component with useMap. 
-  // Let's implement it inside the map using standard AdvancedMarker for simplicity, or omit since AdvancedMarker is large.
+  return <Circle2D center={center} radius={radius} color={color} fillOpacity={fillOpacity} />
+}
+
+function Circle2D({ center, radius, color, fillOpacity }) {
+  const map = useMap();
+  const circleRef = useRef(null);
+
+  useEffect(() => {
+    if (!map) return;
+    circleRef.current = new google.maps.Circle({
+      map,
+      center,
+      radius,
+      strokeColor: color,
+      strokeOpacity: Math.min(fillOpacity + 0.1, 1),
+      strokeWeight: 1.5,
+      fillColor: color,
+      fillOpacity: fillOpacity,
+      clickable: false,
+    });
+    return () => {
+      if (circleRef.current) circleRef.current.setMap(null);
+    }
+  }, [map, center.lat, center.lng, radius, color, fillOpacity]);
+
   return null;
 }
 
@@ -173,6 +196,7 @@ const MapView = forwardRef(function MapView(
   const [is3D, setIs3D] = useState(false)
   const effectiveMode = mapMode || (heatmap ? 'heat' : 'points')
   const showOccurrences = effectiveMode !== 'victims'
+  const showHeat = effectiveMode === 'heat'
   const [center, setCenter] = useState({ lat: -23.5505, lng: -46.6333 })
   const [zoom, setZoom] = useState(10)
 
@@ -207,7 +231,17 @@ const MapView = forwardRef(function MapView(
 
   const renderMarkers = (is3dMode) => (
     <>
-      {showOccurrences && validOccurrences.map(o => <OccurrenceMarker key={o.id} item={o} colorBlind={colorBlind} onOccurrenceDetails={onOccurrenceDetails} is3D={is3dMode} />)}
+      {showOccurrences && validOccurrences.map(o => {
+        const style = getSeverityStyle(o.severidade, colorBlind)
+        return (
+          <Fragment key={o.id}>
+            {showHeat && (
+              <CircleOutline center={{ lat: o.lat, lng: o.lng }} radius={style.radius} color={style.color} fillOpacity={style.opacity} is3D={is3dMode} />
+            )}
+            <OccurrenceMarker item={o} colorBlind={colorBlind} onOccurrenceDetails={onOccurrenceDetails} is3D={is3dMode} />
+          </Fragment>
+        )
+      })}
       {validVictims.map(v => <VictimMarker key={v.id} item={v} onVictimAssistance={onVictimAssistance} savingVictimId={savingVictimId} is3D={is3dMode} />)}
       {validShelters.map(s => <ShelterMarker key={s.id} item={s} isSelected={s.id === selectedShelterId} onShelterSelect={onShelterSelect} is3D={is3dMode} />)}
       
