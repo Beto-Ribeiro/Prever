@@ -12,6 +12,7 @@ import AdminPanel from './screens/AdminPanel.jsx'
 import UserList from './screens/UserList.jsx'
 import ValidacaoAntifraude from './screens/ValidacaoAntifraude.jsx'
 import Sidebar from './components/Sidebar.jsx'
+import { APIProvider } from '@vis.gl/react-google-maps'
 import { useAuth } from './hooks/useAuth.js'
 import { createWebAccessRequest } from './backend/auth/webAccessService.js'
 
@@ -134,12 +135,14 @@ export default function App() {
   const ActiveScreen = SCREENS[currentScreen] || Dashboard
 
   return (
-    <div className="flex h-screen bg-bg-main overflow-hidden">
-      <a href="#main-content" className="skip-link">Ir para o conteúdo</a>
-      <Sidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} onLogout={handleLogout} />
-      <main id="main-content" tabIndex={-1} data-nimbo-account={user?.id} data-nimbo-screen={currentScreen} className="flex-1 min-w-0 h-full overflow-y-auto">
-        {isManager ? <ManagerPortal key={user.id} screen={canOpenScreen(currentScreen) ? currentScreen : 'dashboard'} /> : <ActiveScreen />}
-      </main>
-    </div>
+    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY} version="beta">
+      <div className="flex h-screen bg-bg-main overflow-hidden">
+        <a href="#main-content" className="skip-link">Ir para o conteúdo</a>
+        <Sidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} onLogout={handleLogout} />
+        <main id="main-content" tabIndex={-1} data-nimbo-account={user?.id} data-nimbo-screen={currentScreen} className="flex-1 min-w-0 h-full overflow-y-auto">
+          {isManager ? <ManagerPortal key={user.id} screen={canOpenScreen(currentScreen) ? currentScreen : 'dashboard'} /> : <ActiveScreen />}
+        </main>
+      </div>
+    </APIProvider>
   )
 }

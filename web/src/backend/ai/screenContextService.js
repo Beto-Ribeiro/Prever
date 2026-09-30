@@ -39,7 +39,7 @@ export function captureScreenContext({ currentScreen, accountId, document: doc =
     }))
     return { ...readText(root), fields, fieldsTruncated: allFields.length > 80 }
   }
-  const dialogs = Array.from(doc.querySelectorAll('.modal-panel,[role="dialog"],.leaflet-popup')).filter(el => !main.contains(el) && visible(el))
+  const dialogs = Array.from(doc.querySelectorAll('.modal-panel,[role="dialog"]')).filter(el => !main.contains(el) && visible(el))
   const unique = dialogs.filter(el => !dialogs.some(other => other !== el && other.contains(el)))
   return { accountId, currentScreen, capturedAt: new Date().toISOString(), page: snapshot(main), dialogs: unique.slice(-4).map(snapshot), note: 'Conteúdo da tela e formulários no envio da pergunta. Dialogs são janelas abertas; campos podem conter alterações não salvas. Não é uma captura de imagem.' }
 }
