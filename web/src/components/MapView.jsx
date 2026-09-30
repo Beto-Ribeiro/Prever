@@ -199,7 +199,7 @@ function Map3DController({ center, zoom }) {
   const map3D = useMap3D();
   useEffect(() => {
     if (!map3D) return;
-    const altitude = zoom < 14 ? 15000 : 2000;
+    const altitude = zoom < 14 ? 15000 : (zoom > 16 ? 600 : 2000);
     try {
       map3D.flyCameraTo({
         endCamera: {
@@ -211,7 +211,7 @@ function Map3DController({ center, zoom }) {
     } catch (err) {
       map3D.center = { lat: center.lat, lng: center.lng, altitude };
     }
-  }, [map3D, center.lat, center.lng]);
+  }, [map3D, center.lat, center.lng, zoom]);
   return null;
 }
 
@@ -268,7 +268,7 @@ const MapView = forwardRef(function MapView(
     const interval = setInterval(() => {
       document.querySelectorAll('.smdn-map-root .gm-style').forEach(mapContainer => {
         const warningElements = Array.from(mapContainer.querySelectorAll('div')).filter(
-          el => el.innerText && el.innerText.includes('fins de desenvolvimento')
+          el => el.textContent && el.textContent.includes('fins de desenvolvimento')
         );
         warningElements.forEach(el => {
           if (el.style.display !== 'none') {
@@ -276,9 +276,9 @@ const MapView = forwardRef(function MapView(
           }
         });
       });
-      // Also check body just in case
+      // Scan body children, ignore the React root
       Array.from(document.body.children).forEach(el => {
-        if (el.tagName === 'DIV' && el.innerText && (el.innerText.includes('canal Alfa') || el.innerText.includes('fins de desenvolvimento'))) {
+        if (el.id !== 'root' && el.textContent && (el.textContent.includes('canal Alfa') || el.textContent.includes('fins de desenvolvimento'))) {
           el.style.display = 'none';
         }
       });
