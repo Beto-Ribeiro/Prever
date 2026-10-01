@@ -180,7 +180,7 @@ function getCircleCoordinates(center, radius) {
       Math.cos(radius / earthRadius) - Math.sin(lat1) * Math.sin(lat2)
     );
     
-    points.push({ lat: (lat2 * 180) / Math.PI, lng: (lon2 * 180) / Math.PI, altitude: 10 });
+    points.push({ lat: (lat2 * 180) / Math.PI, lng: (lon2 * 180) / Math.PI, altitude: 50 });
   }
   return points;
 }
@@ -194,7 +194,7 @@ function getPolygonColor(hex, opacity) {
 function CircleOutline({ center, radius, is3D, color = '#44769b', fillOpacity = 0.12 }) {
   if (is3D) {
     const coords = getCircleCoordinates(center, radius);
-    return <Polygon3D outerCoordinates={coords} strokeColor={color} strokeWidth={1.5} fillColor={getPolygonColor(color, fillOpacity)} altitudeMode="CLAMP_TO_GROUND" />
+    return <Polygon3D outerCoordinates={coords} strokeColor={color} strokeWidth={1.5} fillColor={getPolygonColor(color, fillOpacity)} altitudeMode="RELATIVE_TO_GROUND" extruded={true} />
   }
   return <Circle2D center={center} radius={radius} color={color} fillOpacity={fillOpacity} />
 }
