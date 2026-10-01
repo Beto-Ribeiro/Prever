@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle, useCallback, Fragment } from 'react'
 import { Map, AdvancedMarker, InfoWindow, useMap, Pin } from '@vis.gl/react-google-maps'
-import { Map3D, Marker3D, Popover, CirclePath, useMap3D } from '@vis.gl/react-google-maps/3d'
+import { Map3D, Marker3D, Popover, Polygon3D, useMap3D } from '@vis.gl/react-google-maps/3d'
 
 const SEVERITY_STYLE = {
   Crítico: { color: '#c60202', radius: 3000, opacity: 0.24, shape: 'critical', label: 'Crítico' },
@@ -163,9 +163,38 @@ function VictimMarker({ item, onVictimAssistance, savingVictimId, is3D }) {
   )
 }
 
+function getCircleCoordinates(center, radius) {
+  const points = [];
+  const earthRadius = 6371000;
+  for (let i = 0; i <= 360; i += 10) {
+    const brng = (i * Math.PI) / 180;
+    const lat1 = (center.lat * Math.PI) / 180;
+    const lon1 = (center.lng * Math.PI) / 180;
+    
+    const lat2 = Math.asin(
+      Math.sin(lat1) * Math.cos(radius / earthRadius) + 
+      Math.cos(lat1) * Math.sin(radius / earthRadius) * Math.cos(brng)
+    );
+    const lon2 = lon1 + Math.atan2(
+      Math.sin(brng) * Math.sin(radius / earthRadius) * Math.cos(lat1), 
+      Math.cos(radius / earthRadius) - Math.sin(lat1) * Math.sin(lat2)
+    );
+    
+    points.push({ lat: (lat2 * 180) / Math.PI, lng: (lon2 * 180) / Math.PI, altitude: 10 });
+  }
+  return points;
+}
+
+function getPolygonColor(hex, opacity) {
+  if (!/^#[0-9A-F]{6}$/i.test(hex)) return hex;
+  const alpha = Math.round(opacity * 255).toString(16).padStart(2, '0');
+  return `${hex}${alpha}`;
+}
+
 function CircleOutline({ center, radius, is3D, color = '#44769b', fillOpacity = 0.12 }) {
   if (is3D) {
-    return <CirclePath center={center} radius={radius} strokeColor={color} strokeWidth={1.5} fillColor={color} fillOpacity={fillOpacity} />
+    const coords = getCircleCoordinates(center, radius);
+    return <Polygon3D outerCoordinates={coords} strokeColor={color} strokeWidth={1.5} fillColor={getPolygonColor(color, fillOpacity)} altitudeMode="CLAMP_TO_GROUND" />
   }
   return <Circle2D center={center} radius={radius} color={color} fillOpacity={fillOpacity} />
 }
