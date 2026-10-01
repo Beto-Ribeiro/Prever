@@ -503,7 +503,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    widget.onChangePage(5);
+                    widget.onChangePage(6);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromRGBO(228, 232, 235, 0.2),

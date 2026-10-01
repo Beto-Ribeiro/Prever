@@ -89,6 +89,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
     Icons.location_on_outlined,
     Icons.flag_outlined,
     Icons.cloud_queue,
+    Icons.home_outlined,
   ];
 
 
@@ -113,7 +114,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
     _currentIndex =
     supabase.auth.currentUser == null
-        ? 5
+        ? 6
         : 0;
 
 
@@ -208,11 +209,11 @@ class _TelaPrincipalState extends State<TelaPrincipal>
               setState(() {
 
                 // ---------------------------------------------------------------
-                // ÍNDICE 11:
+                // ÍNDICE 12:
                 // WriteChangedPassword
                 // ---------------------------------------------------------------
 
-                _currentIndex = 11;
+                _currentIndex = 12;
 
               });
 
@@ -422,7 +423,17 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
 
       // ======================================================================
-      // 4 - CADASTRO
+      // 4 - ABRIGOS
+      // ======================================================================
+
+      AbrigosTela(
+        title: 'Abrigos',
+        onChangePage: changePage,
+      ),
+
+
+      // ======================================================================
+      // 5 - CADASTRO
       // ======================================================================
 
       Cadastro_tela(
@@ -453,15 +464,15 @@ class _TelaPrincipalState extends State<TelaPrincipal>
             // Abre confirmação de e-mail
             // ---------------------------------------------------------------
 
-            _currentIndex = 6;
+            _currentIndex = 7;
 
 
             // ---------------------------------------------------------------
-            // Recria somente a tela 6 com os dados
+            // Recria somente a tela 7 com os dados
             // que acabaram de chegar.
             // ---------------------------------------------------------------
 
-            _telas[6] = ConfEmail(
+            _telas[7] = ConfEmail(
 
               title: "Confirmação",
 
@@ -481,7 +492,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
 
       // ======================================================================
-      // 5 - LANDING PAGE LOGIN/CADASTRO
+      // 6 - LANDING PAGE LOGIN/CADASTRO
       // ======================================================================
 
       SLogCad(
@@ -491,7 +502,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
 
       // ======================================================================
-      // 6 - CONFIRMAÇÃO DE E-MAIL
+      // 7 - CONFIRMAÇÃO DE E-MAIL
       // ======================================================================
 
       ConfEmail(
@@ -508,7 +519,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
 
       // ======================================================================
-      // 7 - LOGIN
+      // 8 - LOGIN
       // ======================================================================
 
       SLogin(
@@ -518,7 +529,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
 
       // ======================================================================
-      // 8 - PERFIL
+      // 9 - PERFIL
       // ======================================================================
 
       TelaPerfil(
@@ -528,7 +539,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
 
       // ======================================================================
-      // 9 - NIMBO
+      // 10 - NIMBO
       // ======================================================================
 
       ChatbotTela(
@@ -538,7 +549,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
 
       // ======================================================================
-      // 10 - SOLICITAR REDEFINIÇÃO DE SENHA
+      // 11 - SOLICITAR REDEFINIÇÃO DE SENHA
       //
       // Aqui o usuário digita o e-mail.
       // ======================================================================
@@ -550,7 +561,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
 
       // ======================================================================
-      // 11 - ESCREVER A NOVA SENHA
+      // 12 - ESCREVER A NOVA SENHA
       //
       // Essa é a tela aberta depois que o usuário
       // clica no link recebido no e-mail.
@@ -561,7 +572,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
       ),
 
       //=======================================================================
-      //12 - EDITAR PERFIL
+      //13 - EDITAR PERFIL
 
       EditarPerfilTela(title: 'editar', onChangePage: changePage)
     ];
@@ -636,11 +647,11 @@ class _TelaPrincipalState extends State<TelaPrincipal>
       _currentIndex = index;
 
       // O IndexedStack preserva o estado: recarrega os dados ao abrir o perfil.
-      if (index == 8) {
-        _telas[8] = TelaPerfil(key: UniqueKey(), title: 'Perfil',
+      if (index == 9) {
+        _telas[9] = TelaPerfil(key: UniqueKey(), title: 'Perfil',
             onChangePage: changePage);
-      } else if (index == 12) {
-        _telas[12] = EditarPerfilTela(key: UniqueKey(), title: 'Editar perfil',
+      } else if (index == 13) {
+        _telas[13] = EditarPerfilTela(key: UniqueKey(), title: 'Editar perfil',
             onChangePage: changePage);
       }
 
@@ -694,7 +705,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
     // ========================================================================
 
     final bool ocultarNav =
-        _currentIndex >= 4;
+        _currentIndex >= 5;
 
 
     // ========================================================================
@@ -702,7 +713,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
     // ========================================================================
 
     final bool noNimbo =
-        _currentIndex == 9;
+        _currentIndex == 10;
 
 
     return Scaffold(
@@ -800,7 +811,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
                     _nimboAnimController.forward();
 
-                    changePage(9);
+                    changePage(10);
 
                   },
 

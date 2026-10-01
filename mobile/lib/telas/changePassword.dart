@@ -425,7 +425,7 @@ class _changePassword_State extends State<ChangePassword> {
                     onPressed: _estaCarregando
                         ? null
                         : () {
-                      widget.onChangePage(7);
+                      widget.onChangePage(8);
                     },
 
                     style: ElevatedButton.styleFrom(

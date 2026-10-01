@@ -166,7 +166,7 @@ class _confEmail_state extends State<ConfEmail> {
                         const SizedBox(height: 10),
                         GestureDetector(
                           onTap: () {
-                            widget.onChangePage(7); // Ir para tela de login
+                            widget.onChangePage(8); // Ir para tela de login
                           },
                           child: const Text(
                             "Ir para Login",

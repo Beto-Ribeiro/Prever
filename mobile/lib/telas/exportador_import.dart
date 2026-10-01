@@ -19,4 +19,5 @@ export 'ChangePassword.dart';
 export 'WriteChangedPassword.dart';
 export 'dart:typed_data';
 export 'editar_perfil_tela.dart';
+export 'abrigos_tela.dart';
 export 'package:flutter/services.dart';

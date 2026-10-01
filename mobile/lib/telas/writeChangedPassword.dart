@@ -152,7 +152,7 @@ class _WriteChangedPasswordState extends State<WriteChangedPassword> {
 
       if (!mounted) return;
 
-      widget.onChangePage(7);
+      widget.onChangePage(8);
 
 
       // Retorna para a primeira tela da navegação.

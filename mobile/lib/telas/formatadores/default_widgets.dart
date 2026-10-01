@@ -28,7 +28,7 @@ class ContainerPerfilSuperior extends StatelessWidget {
               color: Colors.transparent,
               child: InkWell(
                 onTap: () {
-                  onChangePage(8);
+                  onChangePage(9);
                 },
 
                 child: Container(
@@ -60,7 +60,7 @@ class ContainerPerfilSuperior extends StatelessWidget {
               color: Colors.transparent,
               child: InkWell(
                 onTap: () {
-                  onChangePage(8);
+                  onChangePage(9);
                 },
 
                 child: Container(

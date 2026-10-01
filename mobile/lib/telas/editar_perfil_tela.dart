@@ -121,7 +121,7 @@ class _EditarPerfilTelaState extends State<EditarPerfilTela> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Informações salvas com sucesso!')),
       );
-      widget.onChangePage(8); // volta para a tela de perfil
+      widget.onChangePage(9); // volta para a tela de perfil
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -157,7 +157,7 @@ class _EditarPerfilTelaState extends State<EditarPerfilTela> {
                           ElevatedButton(
                             onPressed: salvando
                                 ? null
-                                : () => widget.onChangePage(8),
+                                : () => widget.onChangePage(9),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color.fromRGBO(
                                 228,

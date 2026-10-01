@@ -197,8 +197,8 @@ class _TelaPerfilState extends State<TelaPerfil> {
 
             // ── Botão de acessibilidade (canto superior direito) ─────
             BotaoAcessibilidade(
-              onEditarPerfil: () => widget.onChangePage(12),
-              onLogout: () => widget.onChangePage(7),
+              onEditarPerfil: () => widget.onChangePage(13),
+              onLogout: () => widget.onChangePage(8),
             ),
           ],
         ),

@@ -66,7 +66,7 @@ class _sLogCad_telaState extends State<SLogCad> {
                       spacing: 35,
                       children: <Widget>[
                         ElevatedButton(
-                          onPressed: () {widget.onChangePage(7);},
+                          onPressed: () {widget.onChangePage(8);},
                           child: Text(
                             'Entrar',
                               style: TextStyle(color: Colors.white)
@@ -77,7 +77,7 @@ class _sLogCad_telaState extends State<SLogCad> {
                           ),
                         ),
                         ElevatedButton(
-                          onPressed: () {widget.onChangePage(4);},
+                          onPressed: () {widget.onChangePage(5);},
                           child: Text(
                             'Registrar',
                               style: TextStyle(color: Colors.white)

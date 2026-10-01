@@ -168,7 +168,7 @@ class _SLoginState extends State<SLogin> {
                                 children: [
                                   TextButton(
                                     onPressed: () {
-                                      widget.onChangePage(10);
+                                      widget.onChangePage(11);
                                     },
                                     child: const Text(
                                       "Esqueci a senha",
@@ -181,7 +181,7 @@ class _SLoginState extends State<SLogin> {
                                   ),
                                   TextButton(
                                     onPressed: () {
-                                      widget.onChangePage(4);
+                                      widget.onChangePage(5);
                                     },
                                     child: const Text(
                                       "Não tenho uma conta prever",
@@ -249,7 +249,7 @@ class _SLoginState extends State<SLogin> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    widget.onChangePage(5);
+                    widget.onChangePage(6);
                   },
                   child: Icon(
                     Icons.arrow_back,
