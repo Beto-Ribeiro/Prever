@@ -1,13 +1,10 @@
-import 'dart:typed_data';
 import 'package:prever/telas/exportador_import.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../controles/controle_acessibilidade.dart';
 import '../services/antifraude_service.dart';
 import 'widgets/dialogo_antifraude.dart';
@@ -37,7 +34,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
   final TextEditingController _descricaoController = TextEditingController();
 
   // Controle de estado do filtro antifraude
-  bool _analisandoFraude = false;
+  final bool _analisandoFraude = false;
   final AntiFraudeService _antiFraudeService = AntiFraudeService();
 
   // Variáveis para o Mapa e Localização
@@ -83,8 +80,8 @@ class _Relatos_telaState extends State<Relatos_tela> {
   // Pega a localização atual do celular
   Future<void> _getCurrentLocation() async {
     try {
-      Position _locationData = await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(accuracy: LocationAccuracy.high));
-      LatLng posicaoAtual = LatLng(_locationData.latitude, _locationData.longitude);
+      Position locationData = await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(accuracy: LocationAccuracy.high));
+      LatLng posicaoAtual = LatLng(locationData.latitude, locationData.longitude);
 
       setState(() {
         localizacaoSelecionada = posicaoAtual;
@@ -98,7 +95,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
         );
       }
     } catch (e) {
-      print("Erro ao obter localização: $e");
+      debugPrint("Erro ao obter localização: $e");
       setState(() => _isLoadingMap = false);
     }
   }
@@ -398,11 +395,11 @@ class _Relatos_telaState extends State<Relatos_tela> {
             SingleChildScrollView(
               physics: _scrollPhysics,
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 50),
+                    SizedBox(height: 50),
                     Text(
                       'Insira as informações para reportar:',
                       style: TextStyle(
@@ -411,11 +408,11 @@ class _Relatos_telaState extends State<Relatos_tela> {
                         color: acessibilidade.corPrimaria,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20),
 
                     // Seleção de imagem: caixa tracejada "Adicionar" + caixa decorativa
                     _buildImagePicker(),
-                    const SizedBox(height: 25),
+                    SizedBox(height: 25),
 
                     Text(
                       'Escolha o tipo de desastre:',
@@ -425,7 +422,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
                         color: acessibilidade.corPrimaria,
                       ),
                     ),
-                    const SizedBox(height: 15),
+                    SizedBox(height: 15),
 
                     Wrap(
                       alignment: WrapAlignment.center,
@@ -464,25 +461,25 @@ class _Relatos_telaState extends State<Relatos_tela> {
                       duration: const Duration(milliseconds: 250),
                       curve: Curves.easeInOut,
                       child: tipoSelecionado == null
-                          ? const SizedBox(width: double.infinity)
+                          ? SizedBox(width: double.infinity)
                           : Container(
                         width: double.infinity,
-                        margin: const EdgeInsets.only(top: 14),
-                        padding: const EdgeInsets.all(12),
+                        margin: EdgeInsets.only(top: 14),
+                        padding: EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.blueGrey.shade50,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
                           _descricaoTipo(tipoSelecionado),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12.5,
                             color: Colors.black87,
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 25),
+                    SizedBox(height: 25),
 
                     // ── Campo de descrição textual ─────────────────────
                     Text(
@@ -493,7 +490,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
                         color: acessibilidade.corPrimaria,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     TextField(
                       controller: _descricaoController,
                       maxLines: 4,
@@ -502,7 +499,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
                         hintText:
                             'Ex.: A rua está completamente alagada, a água já chegou no joelho...'
                             ' (opcional, mas ajuda na validação)',
-                        hintStyle: const TextStyle(
+                        hintStyle: TextStyle(
                           fontSize: 13,
                           color: Colors.black38,
                         ),
@@ -521,13 +518,13 @@ class _Relatos_telaState extends State<Relatos_tela> {
                           borderSide: const BorderSide(
                               color: Color(0xFFC1272D), width: 2),
                         ),
-                        contentPadding: const EdgeInsets.all(14),
+                        contentPadding: EdgeInsets.all(14),
                         filled: true,
                         fillColor: Colors.grey.shade50,
                       ),
-                      style: const TextStyle(fontSize: 14),
+                      style: TextStyle(fontSize: 14),
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20),
 
                     Text(
                       'Escolha o nível de severidade:',
@@ -537,11 +534,11 @@ class _Relatos_telaState extends State<Relatos_tela> {
                         color: acessibilidade.corPrimaria,
                       ),
                     ),
-                    const SizedBox(height: 15),
+                    SizedBox(height: 15),
 
                     // Seletor animado de severidade (a "pílula" desliza e muda de cor)
                     _buildSeveridadeSelector(),
-                    const SizedBox(height: 25),
+                    SizedBox(height: 25),
 
                     Text(
                       'Escolha o local do desastre:',
@@ -551,7 +548,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
                         color: acessibilidade.corPrimaria,
                       ),
                     ),
-                    const SizedBox(height: 15),
+                    SizedBox(height: 15),
 
                     Listener(
                       onPointerDown: (event) {
@@ -592,7 +589,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(11),
                           child: _isLoadingMap
-                              ? const Center(child: CircularProgressIndicator())
+                              ? Center(child: CircularProgressIndicator())
                               : GoogleMap(
                             initialCameraPosition: CameraPosition(
                               target:
@@ -614,7 +611,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
 
                     Row(
                       children: [
@@ -638,20 +635,20 @@ class _Relatos_telaState extends State<Relatos_tela> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 30),
+                    SizedBox(height: 30),
 
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: enviarRelato,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFC1272D),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          backgroundColor: Color(0xFFC1272D),
+                          padding: EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Reportar',
                           textAlign: TextAlign.center,
                           style: TextStyle(
@@ -662,7 +659,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 80),
+                    SizedBox(height: 80),
                   ],
                 ),
               ),
@@ -690,7 +687,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
                   color: Colors.black45,
                   radius: 12,
                 ),
-                child: const Center(
+                child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -711,7 +708,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Expanded(
           child: GestureDetector(
             onTap: selecionarImagem, // também permite trocar a foto por aqui
@@ -822,7 +819,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.all(14),
+              padding: EdgeInsets.all(14),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: selecionado ? Colors.blue.shade50 : Colors.white,
@@ -845,7 +842,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
                 },
               ),
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: 6),
             Text(
               nomeDesastre,
               textAlign: TextAlign.center,
@@ -870,13 +867,10 @@ class _DashedBorderPainter extends CustomPainter {
   final double dashWidth;
   final double dashSpace;
 
-  _DashedBorderPainter({
+  const _DashedBorderPainter({
     this.color = Colors.black45,
-    this.strokeWidth = 1.4,
     this.radius = 12,
-    this.dashWidth = 6,
-    this.dashSpace = 4,
-  });
+  }) : strokeWidth = 1.4 : dashWidth = 6 : dashSpace = 4;
 
   @override
   void paint(Canvas canvas, Size size) {

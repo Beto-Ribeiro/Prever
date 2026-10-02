@@ -199,11 +199,11 @@ class _AbrigosTelaState extends State<AbrigosTela> {
   Color _corStatus(String status) {
     switch (status) {
       case 'lotado':
-        return const Color(0xFFc60202);
+        return Color(0xFFc60202);
       case 'quase_lotado':
-        return const Color(0xFFff6a00);
+        return Color(0xFFff6a00);
       default:
-        return const Color(0xFF00c000);
+        return Color(0xFF00c000);
     }
   }
 
@@ -236,7 +236,7 @@ class _AbrigosTelaState extends State<AbrigosTela> {
           children: [
 
             // Espaço para o ContainerPerfilSuperior
-            const SizedBox(height: 60),
+            SizedBox(height: 60),
 
 
             // ================================================================
@@ -244,10 +244,10 @@ class _AbrigosTelaState extends State<AbrigosTela> {
             // ================================================================
 
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
 
                   Text(
                     'Abrigos',
@@ -267,14 +267,14 @@ class _AbrigosTelaState extends State<AbrigosTela> {
                     ),
                   ),
 
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
 
                   if (_posicaoUsuario != null)
                     Text(
                       'Ordenados pela proximidade da sua localização',
                       style: TextStyle(
                         fontSize: 12,
-                        color: acessibilidade.corPrimaria.withOpacity(0.6),
+                        color: acessibilidade.corPrimaria.withValues(alpha: 0.6),
                       ),
                     ),
                 ],
@@ -282,7 +282,7 @@ class _AbrigosTelaState extends State<AbrigosTela> {
             ),
 
 
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
 
             // ================================================================
@@ -291,9 +291,9 @@ class _AbrigosTelaState extends State<AbrigosTela> {
 
             Expanded(
               child: _carregando
-                  ? const Center(
+                  ? Center(
                       child: CircularProgressIndicator(
-                        color: Color(0xFF09162E),
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     )
                   : _erro != null
@@ -304,9 +304,9 @@ class _AbrigosTelaState extends State<AbrigosTela> {
                               Icon(
                                 Icons.error_outline,
                                 size: 48,
-                                color: acessibilidade.corPrimaria.withOpacity(0.5),
+                                color: acessibilidade.corPrimaria.withValues(alpha: 0.5),
                               ),
-                              const SizedBox(height: 12),
+                              SizedBox(height: 12),
                               Text(
                                 _erro!,
                                 style: TextStyle(
@@ -314,10 +314,10 @@ class _AbrigosTelaState extends State<AbrigosTela> {
                                   fontSize: 16,
                                 ),
                               ),
-                              const SizedBox(height: 16),
+                              SizedBox(height: 16),
                               ElevatedButton(
                                 onPressed: _carregarDados,
-                                child: const Text('Tentar novamente'),
+                                child: Text('Tentar novamente'),
                               ),
                             ],
                           ),
@@ -334,9 +334,9 @@ class _AbrigosTelaState extends State<AbrigosTela> {
                             )
                           : RefreshIndicator(
                               onRefresh: _carregarDados,
-                              color: const Color(0xFF09162E),
+                              color: Theme.of(context).colorScheme.primary,
                               child: ListView.builder(
-                                padding: const EdgeInsets.fromLTRB(
+                                padding: EdgeInsets.fromLTRB(
                                   20, 0, 20, 110,
                                 ),
                                 itemCount: _abrigos.length,
@@ -371,7 +371,7 @@ class _AbrigosTelaState extends State<AbrigosTela> {
     final double? distancia = abrigo['distancia_km'];
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: EdgeInsets.only(bottom: 14),
       child: GestureDetector(
         onTap: () {
           Navigator.of(context).push(
@@ -386,11 +386,11 @@ class _AbrigosTelaState extends State<AbrigosTela> {
         child: Container(
           height: 160,
           decoration: BoxDecoration(
-            color: const Color(0xFF09162E),
+            color: Theme.of(context).colorScheme.primary,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.25),
+                color: Colors.black.withValues(alpha: 0.25),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -410,14 +410,14 @@ class _AbrigosTelaState extends State<AbrigosTela> {
                   width: 130,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1A2A45),
+                    color: Theme.of(context).colorScheme.secondary,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Center(
                     child: Icon(
                       Icons.home_outlined,
                       size: 48,
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                     ),
                   ),
                 ),
@@ -436,7 +436,7 @@ class _AbrigosTelaState extends State<AbrigosTela> {
                   nome,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
@@ -460,15 +460,15 @@ class _AbrigosTelaState extends State<AbrigosTela> {
                       Icon(
                         Icons.near_me,
                         size: 14,
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                       ),
 
-                      const SizedBox(width: 4),
+                      SizedBox(width: 4),
 
                       Text(
                         _formatarDistancia(distancia),
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 12,
                         ),
                       ),
@@ -490,14 +490,14 @@ class _AbrigosTelaState extends State<AbrigosTela> {
                     // Lotação
                     Text(
                       '$ocupacao/$capacidade',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
 
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10),
 
                     // Indicador de status
                     Container(
@@ -508,7 +508,7 @@ class _AbrigosTelaState extends State<AbrigosTela> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: _corStatus(status).withOpacity(0.5),
+                            color: _corStatus(status).withValues(alpha: 0.5),
                             blurRadius: 6,
                           ),
                         ],

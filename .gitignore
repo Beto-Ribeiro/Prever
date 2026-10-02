@@ -89,3 +89,12 @@ Icon?
 *.key
 google-services.json
 GoogleService-Info.plist
+
+# Global ignores
+**/.dart_tool/
+**/build/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.packages
+

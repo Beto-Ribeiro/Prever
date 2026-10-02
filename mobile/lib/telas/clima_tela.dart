@@ -251,11 +251,11 @@ class _ClimaTelaState extends State<ClimaTela> {
       backgroundColor: acessibilidade.fundo,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(18),
+          padding: EdgeInsets.all(18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 25),
+              SizedBox(height: 25),
 
               // Campo de busca
               Row(
@@ -265,7 +265,7 @@ class _ClimaTelaState extends State<ClimaTela> {
                       controller: cidadeController,
                       decoration: InputDecoration(
                         hintText: "Buscar por cidade",
-                        prefixIcon: const Icon(Icons.search),
+                        prefixIcon: Icon(Icons.search),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(25),
                         ),
@@ -275,9 +275,9 @@ class _ClimaTelaState extends State<ClimaTela> {
                       },
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   _carregandoLocalizacao
-                      ? const Padding(
+                      ? Padding(
                           padding: EdgeInsets.all(8.0),
                           child: SizedBox(
                             width: 24,
@@ -286,7 +286,7 @@ class _ClimaTelaState extends State<ClimaTela> {
                           ),
                         )
                       : IconButton(
-                          icon: const Icon(Icons.location_on, size: 35),
+                          icon: Icon(Icons.location_on, size: 35),
                           onPressed: () {
                             cidadeController.clear();
                             buscarClimaPorLocalizacao();
@@ -295,7 +295,7 @@ class _ClimaTelaState extends State<ClimaTela> {
                 ],
               ),
 
-              const SizedBox(height: 30),
+              SizedBox(height: 30),
 
               Text(
                 "Buscas recentes",
@@ -306,14 +306,14 @@ class _ClimaTelaState extends State<ClimaTela> {
                 ),
               ),
 
-              const SizedBox(height: 15),
+              SizedBox(height: 15),
 
               // Gera um card para cada resultado do histórico,
               // do mais recente (topo) para o mais antigo.
               // Cada card é clicável e abre a tela de detalhe.
               ...historicoClima.map((resultado) {
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 15),
+                  padding: EdgeInsets.only(bottom: 15),
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
@@ -321,7 +321,7 @@ class _ClimaTelaState extends State<ClimaTela> {
                       onTap: () => _abrirDetalhe(resultado),
                       child: Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.all(20),
+                        padding: EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: acessibilidade.corSecundaria,
                           borderRadius: BorderRadius.circular(25),
@@ -342,7 +342,7 @@ class _ClimaTelaState extends State<ClimaTela> {
                                       color: acessibilidade.corPrimaria,
                                     ),
                                   ),
-                                  const SizedBox(height: 10),
+                                  SizedBox(height: 10),
                                   Text(
                                     resultado["temperatura"] as String? ?? "",
                                     style: TextStyle(
@@ -361,7 +361,7 @@ class _ClimaTelaState extends State<ClimaTela> {
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            SizedBox(width: 10),
                             Icon(
                               iconeParaClima(
                                 icone: resultado["icone"] as String?,

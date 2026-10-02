@@ -37,19 +37,33 @@ class _SLoginState extends State<SLogin> {
     setState(() => _estaCarregando = true);
     try {
       final email = _EmailController.text.trim();
-      final regexEmail = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-      if (!regexEmail.hasMatch(email)) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('E-mail inválido.'))); return; }
       final senha = _SenhaController.text;
+
+      // Verifica campos vazios primeiro
       if (email.isEmpty || senha.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              email.isEmpty ? 'Insira seu e-mail' : 'Insira sua senha',
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                email.isEmpty ? 'Insira seu e-mail' : 'Insira sua senha',
+              ),
             ),
-          ),
-        );
+          );
+        }
         return;
       }
+
+      // Valida o formato do e-mail
+      final regexEmail = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+      if (!regexEmail.hasMatch(email)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('E-mail inválido.')),
+          );
+        }
+        return;
+      }
+
       final response = await Supabase.instance.client.auth.signInWithPassword(
         email: email,
         password: senha,
@@ -73,13 +87,17 @@ class _SLoginState extends State<SLogin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blueGrey[600],
+      
 
       body: Stack(
         children: [
           Positioned.fill(
             child: CustomPaint(
-              painter: AbstractBackgroundPainter(),
+              painter: AbstractBackgroundPainter(
+                primaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                secondaryColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
+                tertiaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              ),
             ),
           ),
           SafeArea(
@@ -109,7 +127,7 @@ class _SLoginState extends State<SLogin> {
                             50 + MediaQuery.paddingOf(context).bottom,
                           ),
                           width: double.infinity,
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             color: Colors.white,
 
                             borderRadius: BorderRadius.only(
@@ -130,7 +148,7 @@ class _SLoginState extends State<SLogin> {
                                 style: TextStyle(
                                   fontSize: 30,
                                   fontWeight: FontWeight.w700,
-                                  color: Color.fromRGBO(9, 22, 46, 1),
+                                  color: Theme.of(context).colorScheme.onSurface,
                                 ),
                               ),
                               SizedBox(
@@ -170,7 +188,7 @@ class _SLoginState extends State<SLogin> {
                                     onPressed: () {
                                       widget.onChangePage(11);
                                     },
-                                    child: const Text(
+                                    child: Text(
                                       "Esqueci a senha",
                                       style: TextStyle(
                                         fontStyle: FontStyle.italic,
@@ -183,7 +201,7 @@ class _SLoginState extends State<SLogin> {
                                     onPressed: () {
                                       widget.onChangePage(5);
                                     },
-                                    child: const Text(
+                                    child: Text(
                                       "Não tenho uma conta prever",
                                       style: TextStyle(
                                         fontStyle: FontStyle.italic,
@@ -194,19 +212,14 @@ class _SLoginState extends State<SLogin> {
                                   ),
                                 ],
                               ),
-                              Container(
+                              SizedBox(
                                 height: 50,
                                 width: double.infinity,
                               ),
 
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Color.fromRGBO(
-                                    24,
-                                    57,
-                                    92,
-                                    1,
-                                  ),
+                                  backgroundColor: Theme.of(context).colorScheme.primary,
                                   minimumSize: Size(350, 45),
                                 ),
 
@@ -215,14 +228,14 @@ class _SLoginState extends State<SLogin> {
                                     : Login, //MUDAR DEPOIS
 
                                 child: _estaCarregando
-                                    ? const SizedBox(
+                                    ? SizedBox(
                                         width: 20,
                                         height: 20,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
                                         ),
                                       )
-                                    : const Text(
+                                    : Text(
                                         'Acessar',
                                         style: TextStyle(color: Colors.white),
                                       ),
@@ -232,7 +245,7 @@ class _SLoginState extends State<SLogin> {
                         ),
 
                         Container(
-                          margin: const EdgeInsets.fromLTRB(
+                          margin: EdgeInsets.fromLTRB(
                             0,
                             80,
                             0,
@@ -251,14 +264,14 @@ class _SLoginState extends State<SLogin> {
                   onPressed: () {
                     widget.onChangePage(6);
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                  ),
                   child: Icon(
                     Icons.arrow_back,
                     size: 15,
                     fontWeight: FontWeight(800),
-                    color: Color.fromRGBO(228, 232, 235, 1),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color.fromRGBO(24, 57, 92, 1),
+                    color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
               ],

@@ -33,8 +33,8 @@ class _TelaPerfilState extends State<TelaPerfil> {
 
   final double alturaCard = 90;
 
-  Color azul = const Color(0xFF1D3557);
-  Color azulClaro = const Color(0xFF8FB3D9);
+  Color azul = Color(0xFF1D3557);
+  Color azulClaro = Color(0xFF8FB3D9);
 
   String nome = '';
   String cpf = '';
@@ -130,9 +130,9 @@ class _TelaPerfilState extends State<TelaPerfil> {
         child: Stack(
           children: [
             carregando
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(child: CircularProgressIndicator())
                 : SingleChildScrollView(
-                    padding: const EdgeInsets.all(18),
+                    padding: EdgeInsets.all(18),
                     child: Column(
                       children: [
                         Row(
@@ -141,14 +141,14 @@ class _TelaPerfilState extends State<TelaPerfil> {
                             ElevatedButton(
                               onPressed: () => widget.onChangePage(0),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color.fromRGBO(
+                                backgroundColor: Color.fromRGBO(
                                   228,
                                   232,
                                   235,
                                   0.2,
                                 ),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.arrow_back,
                                 size: 15,
                                 color: Color.fromRGBO(228, 232, 235, 1),
@@ -156,7 +156,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         Text(
                           "Perfil do usuário",
                           style: TextStyle(
@@ -164,7 +164,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
                             fontStyle: FontStyle.italic,
                           ),
                         ),
-                        const SizedBox(height: 15),
+                        SizedBox(height: 15),
                         Container(
                           width: 95,
                           height: 95,
@@ -172,25 +172,25 @@ class _TelaPerfilState extends State<TelaPerfil> {
                             color: Colors.grey.shade300,
                             borderRadius: BorderRadius.circular(18),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.person,
                             size: 45,
                             color: Colors.white,
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         campoTexto(nome, 28, true),
                         campoTexto(tipoUsuario, 16, false),
                         campoTexto(cpf, 16, false),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         campoTipoSanguineo(),
-                        const SizedBox(height: 30),
+                        SizedBox(height: 30),
                         titulo("Alergias"),
                         areaTexto(alergias),
-                        const SizedBox(height: 30),
+                        SizedBox(height: 30),
                         titulo("Doenças"),
                         areaTexto(observacoes),
-                        const SizedBox(height: 30),
+                        SizedBox(height: 30),
                       ],
                     ),
                   ),
@@ -208,7 +208,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
 
   Widget campoTexto(String texto, double tamanho, bool destaque) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: 4),
       child: Text(
         texto.isEmpty ? '—' : texto,
         textAlign: TextAlign.center,
@@ -224,7 +224,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
   Widget campoTipoSanguineo() {
     return Container(
       height: alturaCard,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         border: Border.all(color: azulClaro),
         borderRadius: BorderRadius.circular(12),
@@ -236,7 +236,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
             "Tipo sanguíneo",
             style: TextStyle(fontSize: 12, color: azulClaro),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             tipoSanguineo.isEmpty ? '—' : tipoSanguineo,
             style: TextStyle(
@@ -267,8 +267,8 @@ class _TelaPerfilState extends State<TelaPerfil> {
   Widget areaTexto(String texto) {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(top: 10),
-      padding: const EdgeInsets.all(12),
+      margin: EdgeInsets.only(top: 10),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         border: Border.all(color: azulClaro),
         borderRadius: BorderRadius.circular(12),

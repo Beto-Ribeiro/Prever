@@ -148,13 +148,13 @@ class _ChatbotTelaState extends State<ChatbotTela>
     final navyMid = acessibilidade.altoContraste
         ? Colors.grey.shade900
         : acessibilidade.daltonismo
-        ? const Color(0xFF3D2B6B)
-        : const Color(0xFF1A2B4A);
+        ? Color(0xFF3D2B6B)
+        : Color(0xFF1A2B4A);
     final sendBtnColor = acessibilidade.altoContraste
         ? Colors.yellow
         : acessibilidade.daltonismo
-        ? const Color(0xFFF4A261)
-        : const Color(0xFF3B7DD8);
+        ? Color(0xFFF4A261)
+        : Color(0xFF3B7DD8);
     final textSecondary = acessibilidade.corSecundaria;
 
     return Scaffold(
@@ -227,7 +227,7 @@ class _AppBar extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+        padding: EdgeInsets.fromLTRB(20, 12, 20, 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -241,10 +241,10 @@ class _AppBar extends StatelessWidget {
                   width: 46,
                   height: 46,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFCDD5E0),
+                    color: Color(0xFFCDD5E0),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.arrow_back_ios_new_rounded,
                     color: Color(0xFF0B1426),
                     size: 20,
@@ -262,7 +262,7 @@ class _AppBar extends StatelessWidget {
                   color: navyDark,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.person_rounded,
                   color: Colors.white,
                   size: 24,
@@ -293,7 +293,7 @@ class _WelcomeView extends StatelessWidget {
       children: [
         // Balão de saudação do bot
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 80, 0),
+          padding: EdgeInsets.fromLTRB(16, 8, 80, 0),
           child: Align(
             alignment: Alignment.topLeft,
             child: _BotBubble(text: greeting, navyDark: navyDark),
@@ -362,7 +362,7 @@ class _MessageListView extends StatelessWidget {
 
     return ListView.builder(
       controller: scrollController,
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
       itemCount: total,
       itemBuilder: (ctx, i) {
         // Indicador de digitação no final
@@ -372,7 +372,7 @@ class _MessageListView extends StatelessWidget {
 
         final msg = messages[i];
         return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
+          padding: EdgeInsets.only(bottom: 12),
           child: Align(
             alignment: msg.isUser
                 ? Alignment.centerRight
@@ -405,10 +405,10 @@ class _BotBubble extends StatelessWidget {
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        padding: EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
           color: navyDark,
-          borderRadius: const BorderRadius.only(
+          borderRadius: BorderRadius.only(
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
             bottomRight: Radius.circular(20),
@@ -417,7 +417,7 @@ class _BotBubble extends StatelessWidget {
         ),
         child: Text(
           text,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
             fontSize: 15,
             height: 1.45,
@@ -442,10 +442,10 @@ class _UserBubble extends StatelessWidget {
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        padding: EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: const BorderRadius.only(
+          borderRadius: BorderRadius.only(
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
             bottomLeft: Radius.circular(20),
@@ -481,14 +481,14 @@ class _TypingIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.only(bottom: 12),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+          padding: EdgeInsets.symmetric(horizontal: 22, vertical: 18),
           decoration: BoxDecoration(
             color: navyDark,
-            borderRadius: const BorderRadius.only(
+            borderRadius: BorderRadius.only(
               topLeft: Radius.circular(20),
               topRight: Radius.circular(20),
               bottomRight: Radius.circular(20),
@@ -505,10 +505,10 @@ class _TypingIndicator extends StatelessWidget {
                   final scale =
                       0.6 + 0.4 * (phase < 0.5 ? phase * 2 : (1.0 - phase) * 2);
                   return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    margin: EdgeInsets.symmetric(horizontal: 3),
                     width: 8 * scale,
                     height: 8 * scale,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: Colors.white70,
                       shape: BoxShape.circle,
                     ),
@@ -536,29 +536,29 @@ class _ErrorBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      margin: EdgeInsets.fromLTRB(16, 4, 16, 4),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.red.shade800.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.error_outline_rounded,
             color: Colors.white,
             size: 18,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(color: Colors.white, fontSize: 13),
+              style: TextStyle(color: Colors.white, fontSize: 13),
             ),
           ),
           GestureDetector(
             onTap: onDismiss,
-            child: const Icon(
+            child: Icon(
               Icons.close_rounded,
               color: Colors.white,
               size: 18,
@@ -605,7 +605,7 @@ class _InputBar extends StatelessWidget {
         return Container(
           decoration: BoxDecoration(
             color: navyDark,
-            borderRadius: const BorderRadius.only(
+            borderRadius: BorderRadius.only(
               topLeft: Radius.circular(28),
               topRight: Radius.circular(28),
             ),
@@ -618,7 +618,7 @@ class _InputBar extends StatelessWidget {
               Expanded(
                 child: Container(
                   constraints: const BoxConstraints(maxHeight: 120),
-                  padding: const EdgeInsets.symmetric(
+                  padding: EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 4,
                   ),
@@ -632,7 +632,7 @@ class _InputBar extends StatelessWidget {
                       Expanded(
                         child: TextField(
                           controller: controller,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontSize: 16,
                           ),
@@ -641,7 +641,7 @@ class _InputBar extends StatelessWidget {
                             hintStyle: TextStyle(color: textSecondary),
                             border: InputBorder.none,
                             isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(
+                            contentPadding: EdgeInsets.symmetric(
                               vertical: 12,
                             ),
                           ),
@@ -672,7 +672,7 @@ class _InputBar extends StatelessWidget {
                 curve: Curves.easeInOut,
                 child: hasText
                     ? Padding(
-                        padding: const EdgeInsets.only(left: 10),
+                        padding: EdgeInsets.only(left: 10),
                         child: Semantics(
                           label: 'Enviar mensagem',
                           button: true,
@@ -686,14 +686,14 @@ class _InputBar extends StatelessWidget {
                                 shape: BoxShape.circle,
                               ),
                               child: isLoading
-                                  ? const Padding(
+                                  ? Padding(
                                       padding: EdgeInsets.all(13),
                                       child: CircularProgressIndicator(
                                         color: Colors.white,
                                         strokeWidth: 2,
                                       ),
                                     )
-                                  : const Icon(
+                                  : Icon(
                                       Icons.send_rounded,
                                       color: Colors.white,
                                       size: 22,
@@ -702,7 +702,7 @@ class _InputBar extends StatelessWidget {
                           ),
                         ),
                       )
-                    : const SizedBox.shrink(),
+                    : SizedBox.shrink(),
               ),
             ],
           ),

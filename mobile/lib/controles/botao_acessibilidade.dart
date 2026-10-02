@@ -43,17 +43,17 @@ class _BotaoAcessibilidadeState extends State<BotaoAcessibilidade>
     final confirmou = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Sair da conta'),
-        content: const Text('Tem certeza que deseja sair?'),
+        title: Text('Sair da conta'),
+        content: Text('Tem certeza que deseja sair?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text('Cancelar'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Sair'),
+            child: Text('Sair'),
           ),
         ],
       ),
@@ -81,48 +81,48 @@ class _BotaoAcessibilidadeState extends State<BotaoAcessibilidade>
           listenable: acessibilidade,
           builder: (context, _) {
             return Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+              padding: EdgeInsets.fromLTRB(20, 20, 20, 32),
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Acessibilidade',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
+                    SizedBox(height: 8),
+                    Text(
                       'As opções abaixo se aplicam a todas as telas do app.',
                       style: TextStyle(fontSize: 13, color: Colors.grey),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Letras grandes'),
-                      subtitle: const Text('Aumenta o tamanho do texto'),
+                      title: Text('Letras grandes'),
+                      subtitle: Text('Aumenta o tamanho do texto'),
                       value: acessibilidade.letrasGrandes,
                       onChanged: (_) => acessibilidade.toggleLetrasGrandes(),
                     ),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Alto contraste'),
-                      subtitle: const Text('Cores com maior contraste'),
+                      title: Text('Alto contraste'),
+                      subtitle: Text('Cores com maior contraste'),
                       value: acessibilidade.altoContraste,
                       onChanged: (_) => acessibilidade.toggleAltoContraste(),
                     ),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Modo daltonismo'),
-                      subtitle: const Text('Paleta de cores adaptada'),
+                      title: Text('Modo daltonismo'),
+                      subtitle: Text('Paleta de cores adaptada'),
                       value: acessibilidade.daltonismo,
                       onChanged: (_) => acessibilidade.toggleDaltonismo(),
                     ),
 
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.symmetric(vertical: 8),
                       child: Divider(height: 1),
                     ),
@@ -130,8 +130,8 @@ class _BotaoAcessibilidadeState extends State<BotaoAcessibilidade>
                     // ── Editar perfil ─────────────────────────────────────
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.edit_outlined),
-                      title: const Text('Editar perfil'),
+                      leading: Icon(Icons.edit_outlined),
+                      title: Text('Editar perfil'),
                       onTap: () {
                         Navigator.pop(context); // fecha o bottom sheet
                         widget.onEditarPerfil?.call();
@@ -141,8 +141,8 @@ class _BotaoAcessibilidadeState extends State<BotaoAcessibilidade>
                     // ── Logout ────────────────────────────────────────────
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.logout, color: Colors.red),
-                      title: const Text(
+                      leading: Icon(Icons.logout, color: Colors.red),
+                      title: Text(
                         'Sair',
                         style: TextStyle(color: Colors.red),
                       ),
@@ -174,7 +174,7 @@ class _BotaoAcessibilidadeState extends State<BotaoAcessibilidade>
           customBorder: const CircleBorder(),
           onTap: _abrirPainel,
           child: Padding(
-            padding: const EdgeInsets.all(10),
+            padding: EdgeInsets.all(10),
             child: RotationTransition(
               turns: _controller,
               child: Icon(

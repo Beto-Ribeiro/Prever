@@ -40,8 +40,8 @@ class _EditarPerfilTelaState extends State<EditarPerfilTela> {
   bool carregando = true;
   bool salvando = false;
 
-  Color azul = const Color(0xFF1D3557);
-  Color azulClaro = const Color(0xFF8FB3D9);
+  Color azul = Color(0xFF1D3557);
+  Color azulClaro = Color(0xFF8FB3D9);
 
   @override
   void initState() {
@@ -142,9 +142,9 @@ class _EditarPerfilTelaState extends State<EditarPerfilTela> {
       backgroundColor: acessibilidade.fundo,
       body: SafeArea(
         child: carregando
-            ? const Center(child: CircularProgressIndicator())
+            ? Center(child: CircularProgressIndicator())
             : SingleChildScrollView(
-                padding: const EdgeInsets.all(18),
+                padding: EdgeInsets.all(18),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -159,14 +159,14 @@ class _EditarPerfilTelaState extends State<EditarPerfilTela> {
                                 ? null
                                 : () => widget.onChangePage(9),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color.fromRGBO(
+                              backgroundColor: Color.fromRGBO(
                                 228,
                                 232,
                                 235,
                                 0.2,
                               ),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.arrow_back,
                               size: 15,
                               color: Color.fromRGBO(228, 232, 235, 1),
@@ -175,7 +175,7 @@ class _EditarPerfilTelaState extends State<EditarPerfilTela> {
                         ],
                       ),
 
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
 
                       Text(
                         'Editar informações de saúde',
@@ -185,7 +185,7 @@ class _EditarPerfilTelaState extends State<EditarPerfilTela> {
                           color: azul,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
                       Text(
                         'Essas informações ajudam no seu atendimento em caso de emergência.',
                         style: TextStyle(
@@ -194,7 +194,7 @@ class _EditarPerfilTelaState extends State<EditarPerfilTela> {
                         ),
                       ),
 
-                      const SizedBox(height: 28),
+                      SizedBox(height: 28),
 
                       // ── Tipo sanguíneo ────────────────────────────
                       Text(
@@ -205,15 +205,15 @@ class _EditarPerfilTelaState extends State<EditarPerfilTela> {
                           color: azulClaro,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        value: _tipoSanguineoSelecionado,
+                        initialValue: _tipoSanguineoSelecionado,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(color: azulClaro),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
+                          contentPadding: EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 10,
                           ),
@@ -232,7 +232,7 @@ class _EditarPerfilTelaState extends State<EditarPerfilTela> {
                         },
                       ),
 
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
 
                       // ── Alergias ───────────────────────────────────
                       Text(
@@ -243,7 +243,7 @@ class _EditarPerfilTelaState extends State<EditarPerfilTela> {
                           color: azulClaro,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       TextFormField(
                         controller: _alergiasController,
                         maxLines: 3,
@@ -252,12 +252,12 @@ class _EditarPerfilTelaState extends State<EditarPerfilTela> {
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(color: azulClaro),
                           ),
-                          contentPadding: const EdgeInsets.all(12),
+                          contentPadding: EdgeInsets.all(12),
                           hintText: 'Ex: alergia a dipirona, amendoim...',
                         ),
                       ),
 
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
 
                       // ── Doenças ──────────────────────────────────
                       Text(
@@ -268,7 +268,7 @@ class _EditarPerfilTelaState extends State<EditarPerfilTela> {
                           color: azulClaro,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       TextFormField(
                         controller: _doencasController,
                         maxLines: 3,
@@ -277,12 +277,12 @@ class _EditarPerfilTelaState extends State<EditarPerfilTela> {
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(color: azulClaro),
                           ),
-                          contentPadding: const EdgeInsets.all(12),
+                          contentPadding: EdgeInsets.all(12),
                           hintText: 'Ex: diabetes, hipertensão...',
                         ),
                       ),
 
-                      const SizedBox(height: 36),
+                      SizedBox(height: 36),
 
                       // ── Botão salvar ────────────────────────────────
                       SizedBox(
@@ -291,13 +291,13 @@ class _EditarPerfilTelaState extends State<EditarPerfilTela> {
                           onPressed: salvando ? null : _salvar,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: azul,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            padding: EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           child: salvando
-                              ? const SizedBox(
+                              ? SizedBox(
                                   height: 20,
                                   width: 20,
                                   child: CircularProgressIndicator(
@@ -305,7 +305,7 @@ class _EditarPerfilTelaState extends State<EditarPerfilTela> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Text(
+                              : Text(
                                   'Salvar',
                                   style: TextStyle(
                                     color: Colors.white,

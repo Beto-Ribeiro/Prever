@@ -35,7 +35,7 @@ class DialogoRelatoSuspeito extends StatelessWidget {
     return AlertDialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: corPrincipal.withOpacity(0.2), width: 2),
+        side: BorderSide(color: corPrincipal.withValues(alpha: 0.2), width: 2),
       ),
       backgroundColor: fundo,
       contentPadding: EdgeInsets.zero,
@@ -46,18 +46,18 @@ class DialogoRelatoSuspeito extends StatelessWidget {
           Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: corPrincipal.withOpacity(0.1),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              color: corPrincipal.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
             ),
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
             child: Column(
               children: [
                 Icon(
                   Icons.warning_amber_rounded,
                   size: 40 * escala,
-                  color: const Color(0xFFC1272D), // Cor de alerta do sistema
+                  color: Color(0xFFC1272D), // Cor de alerta do sistema
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 Text(
                   'Atenção ao Relato',
                   style: TextStyle(
@@ -73,7 +73,7 @@ class DialogoRelatoSuspeito extends StatelessWidget {
 
           // ── Corpo do diálogo ─────────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -91,7 +91,7 @@ class DialogoRelatoSuspeito extends StatelessWidget {
                     _buildScoreChip(resultado.scoreAutenticidade, escala),
                   ],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
 
                 // Motivo da suspeita com o Nimbo
                 Row(
@@ -106,7 +106,7 @@ class DialogoRelatoSuspeito extends StatelessWidget {
                         size: 24 * escala,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Análise do Nimbo:',
@@ -119,13 +119,13 @@ class DialogoRelatoSuspeito extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.all(14),
+                  padding: EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: corPrincipal.withOpacity(0.05),
+                    color: corPrincipal.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: corPrincipal.withOpacity(0.1)),
+                    border: Border.all(color: corPrincipal.withValues(alpha: 0.1)),
                   ),
                   child: Text(
                     resultado.motivoClassificacao,
@@ -136,21 +136,21 @@ class DialogoRelatoSuspeito extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
 
                 // Aviso sobre revisão
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFC1272D).withOpacity(0.05),
+                    color: Color(0xFFC1272D).withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFC1272D).withOpacity(0.2)),
+                    border: Border.all(color: Color(0xFFC1272D).withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.info_outline, color: const Color(0xFFC1272D), size: 18 * escala),
-                      const SizedBox(width: 8),
+                      Icon(Icons.info_outline, color: Color(0xFFC1272D), size: 18 * escala),
+                      SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Se confirmar o envio, seu relato será enviado com '
@@ -172,15 +172,15 @@ class DialogoRelatoSuspeito extends StatelessWidget {
 
           // ── Botões de ação ───────────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+            padding: EdgeInsets.only(left: 20, right: 20, bottom: 20),
             child: Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
                     onPressed: onCancelar,
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: BorderSide(color: corPrincipal.withOpacity(0.5)),
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      side: BorderSide(color: corPrincipal.withValues(alpha: 0.5)),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
@@ -195,13 +195,13 @@ class DialogoRelatoSuspeito extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: onConfirmarEnvio,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFC1272D),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: Color(0xFFC1272D),
+                      padding: EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
@@ -233,15 +233,15 @@ class DialogoRelatoSuspeito extends StatelessWidget {
     } else if (score >= 0.4) {
       cor = Colors.orange;
     } else {
-      cor = const Color(0xFFC1272D);
+      cor = Color(0xFFC1272D);
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: cor.withOpacity(0.15),
+        color: cor.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: cor.withOpacity(0.4)),
+        border: Border.all(color: cor.withValues(alpha: 0.4)),
       ),
       child: Text(
         '$porcentagem%',
@@ -269,18 +269,18 @@ class DialogoAnalisandoRelato extends StatelessWidget {
     return AlertDialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: corPrincipal.withOpacity(0.2), width: 2),
+        side: BorderSide(color: corPrincipal.withValues(alpha: 0.2), width: 2),
       ),
       backgroundColor: fundo,
       content: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: EdgeInsets.symmetric(vertical: 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: corPrincipal.withOpacity(0.05),
+                color: corPrincipal.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
               child: Image.asset(
@@ -294,7 +294,7 @@ class DialogoAnalisandoRelato extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               'O Nimbo está verificando...',
               style: TextStyle(
@@ -304,20 +304,20 @@ class DialogoAnalisandoRelato extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'Nossa IA está analisando seu relato para garantir a qualidade das informações.',
               style: TextStyle(
                 fontSize: 13 * escala,
-                color: corPrincipal.withOpacity(0.8),
+                color: corPrincipal.withValues(alpha: 0.8),
                 height: 1.4,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             LinearProgressIndicator(
-              backgroundColor: corPrincipal.withOpacity(0.1),
-              valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFFC1272D)),
+              backgroundColor: corPrincipal.withValues(alpha: 0.1),
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC1272D)),
             ),
           ],
         ),

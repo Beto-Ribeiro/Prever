@@ -30,10 +30,10 @@ class AccessibilityController extends ChangeNotifier {
     }
 
     if (daltonismo) {
-      return const Color(0xFF6A4C93);
+      return Color(0xFF6A4C93);
     }
 
-    return const Color(0xFF1D3557);
+    return Color(0xFF1D3557);
   }
 
   Color get corSecundaria {
@@ -42,13 +42,13 @@ class AccessibilityController extends ChangeNotifier {
     }
 
     if (daltonismo) {
-      return const Color(0xFFF4A261);
+      return Color(0xFFF4A261);
     }
 
-    return const Color(0xFF8FB3D9);
+    return Color(0xFF8FB3D9);
   }
 
   Color get fundo {
-    return altoContraste ? Colors.black : const Color(0xFFF5F7FA);
+    return altoContraste ? Colors.black : Color(0xFFF5F7FA);
   }
 }

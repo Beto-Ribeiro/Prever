@@ -99,17 +99,17 @@ class _RelatosProximosState extends State<RelatosProximos> {
           'Em um raio de 3 km • Mais próximos primeiro',
           style: TextStyle(fontSize: 13, color: cores.corPrimaria),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: cores.fundo,
             borderRadius: BorderRadius.circular(25),
             border: Border.all(color: cores.corSecundaria),
           ),
           child: _carregando
-              ? const Padding(
+              ? Padding(
                   padding: EdgeInsets.all(20),
                   child: Center(child: CircularProgressIndicator()),
                 )
@@ -132,7 +132,7 @@ class _RelatosProximosState extends State<RelatosProximos> {
                             relato: _relatos[i],
                             icone: _icone(_relatos[i].tipo),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,7 +145,7 @@ class _RelatosProximosState extends State<RelatosProximos> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
+                                SizedBox(height: 4),
                                 Text(
                                   _relatos[i].distanciaMetros < 1000
                                       ? '${_relatos[i].distanciaMetros.round()} m de você'
@@ -156,7 +156,7 @@ class _RelatosProximosState extends State<RelatosProximos> {
                                   ),
                                 ),
                                 if (_relatos[i].descricao.isNotEmpty) ...[
-                                  const SizedBox(height: 6),
+                                  SizedBox(height: 6),
                                   Text(
                                     _relatos[i].descricao,
                                     style: TextStyle(
@@ -165,7 +165,7 @@ class _RelatosProximosState extends State<RelatosProximos> {
                                     ),
                                   ),
                                 ],
-                                const SizedBox(height: 8),
+                                SizedBox(height: 8),
                                 OutlinedButton.icon(
                                   onPressed:
                                       widget.onAbrirRelato == null ||
@@ -180,16 +180,16 @@ class _RelatosProximosState extends State<RelatosProximos> {
                                     side: BorderSide(
                                       color: cores.corSecundaria,
                                     ),
-                                    padding: const EdgeInsets.symmetric(
+                                    padding: EdgeInsets.symmetric(
                                       horizontal: 10,
                                       vertical: 8,
                                     ),
                                   ),
-                                  icon: const Icon(
+                                  icon: Icon(
                                     Icons.location_on_outlined,
                                     size: 18,
                                   ),
-                                  label: const Text('Ver no mapa'),
+                                  label: Text('Ver no mapa'),
                                 ),
                               ],
                             ),
@@ -259,7 +259,7 @@ class _FotoRelatoState extends State<FotoRelato> {
           future: _foto,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
+              return Center(
                 child: SizedBox(
                   width: 20,
                   height: 20,

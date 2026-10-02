@@ -1,6 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../exportador_import.dart';
 
 class Home_Tela extends StatefulWidget {
@@ -57,7 +54,7 @@ class _Home_TelaState extends State<Home_Tela> {
                 ],
               ),
             ),
-            Container(
+            SizedBox(
               width: double.infinity,
               child: SingleChildScrollView(
                 child: Container(
@@ -81,6 +78,9 @@ class _Home_TelaState extends State<Home_Tela> {
                       Container(
                         clipBehavior: Clip.hardEdge,
                         width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
                         child: Stack(
                           children: [
                             Image(
@@ -107,9 +107,6 @@ class _Home_TelaState extends State<Home_Tela> {
                               ),
                             ),
                           ],
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(25),
                         ),
                       ),
                     ],

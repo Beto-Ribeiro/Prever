@@ -58,7 +58,7 @@ class ClimaDetalheTela extends StatelessWidget {
           children: [
             // Cabeçalho: voltar + ícone de perfil (mesmo do ContainerPerfilSuperior)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -89,7 +89,7 @@ class ClimaDetalheTela extends StatelessWidget {
                       child: Container(
                         width: 65,
                         height: 65,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: Colors.white,
                           shape: BoxShape.circle,
                         ),
@@ -106,7 +106,7 @@ class ClimaDetalheTela extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
 
             // Temperatura em destaque
             Text(
@@ -118,7 +118,7 @@ class ClimaDetalheTela extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
 
             // Ícone grande do clima atual
             Icon(
@@ -131,7 +131,7 @@ class ClimaDetalheTela extends StatelessWidget {
               color: acessibilidade.corPrimaria,
             ),
 
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
 
             Text(
               cidade,
@@ -141,16 +141,16 @@ class ClimaDetalheTela extends StatelessWidget {
                 color: acessibilidade.corPrimaria,
               ),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               horaFormatada,
               style: TextStyle(
                 fontSize: 15,
-                color: acessibilidade.corPrimaria.withOpacity(0.8),
+                color: acessibilidade.corPrimaria.withValues(alpha: 0.8),
               ),
             ),
 
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
 
             // Seção inferior curva com a previsão por hora
             Expanded(
@@ -159,10 +159,10 @@ class ClimaDetalheTela extends StatelessWidget {
                 child: Container(
                   width: double.infinity,
                   color: acessibilidade.corSecundaria,
-                  padding: const EdgeInsets.fromLTRB(18, 40, 18, 20),
+                  padding: EdgeInsets.fromLTRB(18, 40, 18, 20),
                   child: Column(
                     children: [
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: previsao.map((item) {
@@ -208,9 +208,9 @@ class _CardHora extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 65,
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.5),
+        color: Colors.white.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -219,9 +219,9 @@ class _CardHora extends StatelessWidget {
             hora,
             style: TextStyle(fontSize: 13, color: cor),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Icon(icone, color: cor, size: 22),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             temperatura,
             style: TextStyle(

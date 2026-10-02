@@ -1,9 +1,4 @@
-import 'package:prever/telas/cadastro_tela.dart';
-import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'exportador_import.dart';
-import 'package:prever/main.dart';
 
 class SLogCad extends StatefulWidget {
   final Function(int) onChangePage;
@@ -30,7 +25,11 @@ class _sLogCad_telaState extends State<SLogCad> {
         children: [
           Positioned.fill(
             child: CustomPaint(
-              painter: AbstractBackgroundPainter(),
+              painter: AbstractBackgroundPainter(
+                primaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                secondaryColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
+                tertiaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              ),
             ),
           ),
 
@@ -46,7 +45,7 @@ class _sLogCad_telaState extends State<SLogCad> {
 
                 children: <Widget>[
                   Container(
-                    padding: const EdgeInsets.fromLTRB(
+                    padding: EdgeInsets.fromLTRB(
                       25,
                       0,
                       25,
@@ -54,7 +53,7 @@ class _sLogCad_telaState extends State<SLogCad> {
                     ),
                     width: double.infinity,
                     height: 150,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(30),
@@ -67,24 +66,24 @@ class _sLogCad_telaState extends State<SLogCad> {
                       children: <Widget>[
                         ElevatedButton(
                           onPressed: () {widget.onChangePage(8);},
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Color.fromRGBO(24, 57, 92, 1),
+                              minimumSize: Size(139, 40)
+                          ),
                           child: Text(
                             'Entrar',
                               style: TextStyle(color: Colors.white)
                           ),
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: Color.fromRGBO(24, 57, 92, 1),
-                              minimumSize: Size(139, 40)
-                          ),
                         ),
                         ElevatedButton(
                           onPressed: () {widget.onChangePage(5);},
-                          child: Text(
-                            'Registrar',
-                              style: TextStyle(color: Colors.white)
-                          ),
                           style: ElevatedButton.styleFrom(
                               backgroundColor: Color.fromRGBO(24, 57, 92, 1),
                               minimumSize: Size(139, 40)
+                          ),
+                          child: Text(
+                            'Registrar',
+                              style: TextStyle(color: Colors.white)
                           ),
                         ),
                       ],

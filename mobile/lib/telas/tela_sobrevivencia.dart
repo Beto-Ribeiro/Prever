@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../controles/controle_acessibilidade.dart';
 
 class TelaSobrevivencia extends StatefulWidget {
-  TelaSobrevivencia({super.key});
+  const TelaSobrevivencia({super.key});
 
   @override
   State<TelaSobrevivencia> createState() => _TelaSobrevivenciaState();
@@ -69,16 +69,16 @@ class _TelaSobrevivenciaState extends State<TelaSobrevivencia> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: acessibilidade.corPrimaria.withOpacity(0.1),
+                        color: acessibilidade.corPrimaria.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -90,7 +90,7 @@ class _TelaSobrevivenciaState extends State<TelaSobrevivencia> {
                   CircleAvatar(
                     radius: 22,
                     backgroundColor: acessibilidade.corPrimaria,
-                    child: const Icon(
+                    child: Icon(
                       Icons.person,
                       color: Colors.white,
                       size: 26,
@@ -99,7 +99,7 @@ class _TelaSobrevivenciaState extends State<TelaSobrevivencia> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             Text(
               'Guia de sobrevivência',
               style: TextStyle(
@@ -108,10 +108,10 @@ class _TelaSobrevivenciaState extends State<TelaSobrevivencia> {
                 color: acessibilidade.corPrimaria,
               ),
             ),
-            const SizedBox(height: 25),
+            SizedBox(height: 25),
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.symmetric(horizontal: 20),
                 itemCount: _conteudoGuia.length,
                 itemBuilder: (context, index) {
                   final item = _conteudoGuia[index];
@@ -125,8 +125,8 @@ class _TelaSobrevivenciaState extends State<TelaSobrevivencia> {
                     },
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
-                      margin: const EdgeInsets.only(bottom: 15),
-                      padding: const EdgeInsets.all(20),
+                      margin: EdgeInsets.only(bottom: 15),
+                      padding: EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: acessibilidade.corPrimaria,
                         borderRadius: BorderRadius.circular(25),
@@ -149,7 +149,7 @@ class _TelaSobrevivenciaState extends State<TelaSobrevivencia> {
                                   );
                                 },
                               ),
-                              const SizedBox(width: 15),
+                              SizedBox(width: 15),
                               Expanded(
                                 child: Text(
                                   item['titulo'] as String,
@@ -169,9 +169,9 @@ class _TelaSobrevivenciaState extends State<TelaSobrevivencia> {
                             ],
                           ),
                           if (estaExpandido) ...[
-                            const SizedBox(height: 20),
+                            SizedBox(height: 20),
                             const Divider(color: Colors.white24, height: 1),
-                            const SizedBox(height: 15),
+                            SizedBox(height: 15),
                             Text(
                               '1-   Antes do Desastre:',
                               style: TextStyle(
@@ -180,16 +180,16 @@ class _TelaSobrevivenciaState extends State<TelaSobrevivencia> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(height: 5),
+                            SizedBox(height: 5),
                             Text(
                               item['antes'] as String,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Color(0xFFE4E4E4),
                                 fontSize: 14,
                                 height: 1.3,
                               ),
                             ),
-                            const SizedBox(height: 20),
+                            SizedBox(height: 20),
                             Text(
                               '2-   Durante o Desastre:',
                               style: TextStyle(
@@ -198,7 +198,7 @@ class _TelaSobrevivenciaState extends State<TelaSobrevivencia> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(height: 10),
+                            SizedBox(height: 10),
                             ...(item['durante'] as List<String>)
                                 .asMap()
                                 .entries
@@ -210,7 +210,7 @@ class _TelaSobrevivenciaState extends State<TelaSobrevivencia> {
                                   );
 
                                   return Padding(
-                                    padding: const EdgeInsets.only(bottom: 12),
+                                    padding: EdgeInsets.only(bottom: 12),
                                     child: Row(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -219,24 +219,24 @@ class _TelaSobrevivenciaState extends State<TelaSobrevivencia> {
                                           width: 22,
                                           height: 22,
                                           alignment: Alignment.center,
-                                          decoration: const BoxDecoration(
+                                          decoration: BoxDecoration(
                                             color: Colors.white24,
                                             shape: BoxShape.circle,
                                           ),
                                           child: Text(
                                             letra,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               color: Colors.white,
                                               fontSize: 12,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                         ),
-                                        const SizedBox(width: 10),
+                                        SizedBox(width: 10),
                                         Expanded(
                                           child: Text(
                                             textoPasso,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               color: Color(0xFFD8D8D8),
                                               fontSize: 14,
                                               height: 1.3,
@@ -247,7 +247,7 @@ class _TelaSobrevivenciaState extends State<TelaSobrevivencia> {
                                     ),
                                   );
                                 })
-                                .toList(),
+                                ,
                           ],
                         ],
                       ),

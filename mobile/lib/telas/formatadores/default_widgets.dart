@@ -1,5 +1,4 @@
 import '../exportador_import.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ContainerPerfilSuperior extends StatelessWidget {
   final Function(int) onChangePage;
@@ -13,9 +12,8 @@ class ContainerPerfilSuperior extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = Supabase.instance.client.auth.currentUser;
     return Container(
-      decoration: BoxDecoration(color: Color.fromRGBO(9, 22, 46, 1)),
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary),
       padding: EdgeInsets.fromLTRB(20, 0, 15, 0),
       child: SizedBox(
         width: double.infinity,
@@ -148,7 +146,7 @@ class _PinsVisaoState extends State<PinsVisao> {
         carregando = false;
       });
     } catch (e) {
-      print('Erro ao carregar imagem: $e');
+      debugPrint('Erro ao carregar imagem: $e');
 
       if (!mounted || id != widget.pinID) return;
       setState(() {
@@ -229,7 +227,7 @@ class _PinsVisaoState extends State<PinsVisao> {
             HorizontalResponsivePadding,
             90,
           ),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(10),
@@ -302,7 +300,7 @@ class _PinsVisaoState extends State<PinsVisao> {
                         ),
                         Text(
                           TipoDesatrePinVisao ?? 'Carregando...',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -321,7 +319,7 @@ class _PinsVisaoState extends State<PinsVisao> {
                         ),
                         Text(
                           MagnitudePinVisao ?? 'Carregando...',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
@@ -353,7 +351,7 @@ class PinsMapa {
 }
 
 class UltimosRelatosContainer extends StatefulWidget{
- UltimosRelatosContainer({
+ const UltimosRelatosContainer({
    super.key
 });
 
@@ -408,7 +406,7 @@ class _ultimosRelatosContainerState extends State<UltimosRelatosContainer>{
         carregando = false;
       });
     } catch (e) {
-      print('Erro ao carregar imagem: $e');
+      debugPrint('Erro ao carregar imagem: $e');
 
       setState(() {
         imagemURL = null;
@@ -420,10 +418,9 @@ class _ultimosRelatosContainerState extends State<UltimosRelatosContainer>{
   Future<void> BuscarUltimosRelatos() async {
     final data = await supabase.from('relato').select('rel_id').order('rel_data_hora', ascending: false);
 
-    for(final r in data){
-      carregarImagem(r["rel_id"]);
+    for(final relato in data){
+      carregarImagem(relato["rel_id"]);
     }
-
 
 
   }

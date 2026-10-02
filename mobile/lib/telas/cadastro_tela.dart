@@ -1,8 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'exportador_import.dart';
-import 'package:prever/main.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class Cadastro_tela extends StatefulWidget {
@@ -138,6 +134,16 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
         return;
       }
 
+      if (!_validarEmail(email)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('E-mail inválido.'),
+          ),
+        );
+        setState(() { _estaCarregando = false; });
+        return;
+      }
+
       if (senha.length < 6) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('A senha deve ter pelo menos 6 caracteres.')));
         setState(() { _estaCarregando = false; });
@@ -211,21 +217,30 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
       _SenhaController.clear();
       _ConSenhaController.clear();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Cadastro Realizado com sucesso!',
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Cadastro Realizado com sucesso!',
+            ),
           ),
-        ),
-      );
+        );
+      }
 
     } catch (e) {
-      debugPrint('Erro: $e'); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro no cadastro.')));
+      debugPrint('Erro no cadastro: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Erro no cadastro. Tente novamente.')),
+        );
+      }
     }
 
-    setState(() {
-      _estaCarregando = false;
-    });
+    if (mounted) {
+      setState(() {
+        _estaCarregando = false;
+      });
+    }
 
   }
 
@@ -257,13 +272,17 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
   Widget build(BuildContext context) {
 
     return Scaffold(
-      backgroundColor: Colors.blueGrey[600],
+      
 
       body: Stack(
         children: [
           Positioned.fill(
             child: CustomPaint(
-              painter: AbstractBackgroundPainter(),
+              painter: AbstractBackgroundPainter(
+                primaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                secondaryColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
+                tertiaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              ),
             ),
           ),
           SafeArea(
@@ -277,7 +296,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
 
                     children: <Widget>[
                       Container(
-                        padding: const EdgeInsets.fromLTRB(
+                        padding: EdgeInsets.fromLTRB(
                           25,
                           50,
                           25,
@@ -287,7 +306,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
                         constraints: BoxConstraints(
                           minHeight: MediaQuery.of(context).size.height,
                         ),
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: Colors.white,
 
                           borderRadius: BorderRadius.only(
@@ -465,19 +484,19 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
                             ElevatedButton(
                               onPressed: _estaCarregando ? null : _enviarDados,
                               style: ElevatedButton.styleFrom(
-                                  backgroundColor: Color.fromRGBO(24, 57, 92, 1),
+                                  backgroundColor: Theme.of(context).colorScheme.primary,
                                   minimumSize: Size(139, 40)
                               ),
 
                               child: _estaCarregando
-                                  ? const SizedBox(
+                                  ? SizedBox(
                                       width: 20,
                                       height: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
                                       ),
                                     )
-                                  : const Text(
+                                  : Text(
                                       'Enviar',
                                         style: TextStyle(color: Colors.white)
                                     ),
@@ -487,7 +506,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
                       ),
 
                       Container(
-                        margin: const EdgeInsets.fromLTRB(
+                        margin: EdgeInsets.fromLTRB(
                           0,
                           80,
                           0,
@@ -512,7 +531,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
                     Icons.arrow_back,
                     size: 15,
                     fontWeight: FontWeight(800),
-                    color: Color.fromRGBO(228, 232, 235, 1),
+                    color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
               ],

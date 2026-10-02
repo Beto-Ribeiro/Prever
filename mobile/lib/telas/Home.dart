@@ -1,12 +1,7 @@
-import 'package:prever/telas/cadastro_tela.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'exportador_import.dart';
 import 'tela_sobrevivencia.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../controles/controle_acessibilidade.dart';
 import 'package:prever/telas/widgets/relatos_proximos.dart';
 import 'package:prever/services/relatos_proximos_service.dart';
@@ -40,17 +35,6 @@ Future<void> Criar_SOS(
 }) async {
   final supabase = Supabase.instance.client;
 
-  
-
-  Position posicao = await Geolocator.getCurrentPosition(
-    locationSettings: const LocationSettings(
-      accuracy: LocationAccuracy.high,
-    ),
-  );
-
-  final String pontoGeografico =
-      'POINT(${posicao.longitude} ${posicao.latitude})';
-
   try {
     await supabase.from('Relato').insert({
       'rel_cid_id': usuarioId,
@@ -60,12 +44,16 @@ Future<void> Criar_SOS(
       'rel_data_hora': data,
     });
   } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Erro'),
-        duration: Duration(seconds: 3),
-      ),
-    );
+    debugPrint('Erro ao criar SOS: $e');
+    // Verifica se o contexto ainda está montado antes de usar
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erro ao enviar SOS. Tente novamente.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
   }
 }
 
@@ -80,7 +68,7 @@ class _Home_State extends State<Home> {
   final supabase = Supabase.instance.client;
 
   Future<void> ValidarCPF() async {
-    String cpfDigitado = _SOSvalidateController.text.trim();
+    final String cpfDigitadoLimpo = _SOSvalidateController.text.trim().replaceAll(RegExp(r'[^0-9]'), '');
 
     final userId = supabase.auth.currentUser?.id;
 
@@ -96,18 +84,22 @@ class _Home_State extends State<Home> {
     final String cpfCompleto = data['cid_cpf'].toString();
 
     final String cpfLimpo = cpfCompleto.replaceAll(RegExp(r'[^0-9]'), '');
-    if (cpfLimpo == cpfDigitado) {
+    if (cpfLimpo == cpfDigitadoLimpo) {
         setState(() {
           _sosEnviando = true;
         });
 
         Navigator.pop(context);
 
+        if (!mounted) return;
+
         Position posicao = await Geolocator.getCurrentPosition(
           locationSettings: const LocationSettings(
             accuracy: LocationAccuracy.high,
           ),
         );
+
+        if (!mounted) return;
 
         final String pontoGeografico =
             'POINT(${posicao.longitude} ${posicao.latitude})';
@@ -122,14 +114,16 @@ class _Home_State extends State<Home> {
 
         // Atualiza estado para animar e
         // desabilitar
-        setState(() {
-          _sosEnviado = true;
-          _sosEnviando = false;
-        });
+        if (mounted) {
+          setState(() {
+            _sosEnviado = true;
+            _sosEnviando = false;
+          });
+        }
     }
   }
 
-  ValidacaoIdentidade(BuildContext context) {
+  void ValidacaoIdentidade(BuildContext context) {
     showDialog(
       context: context,
       barrierColor: Colors.black54,
@@ -163,20 +157,20 @@ class _Home_State extends State<Home> {
                   ),
                   Text.rich(
                     TextSpan(
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
                       ),
                       children: [
-                        const TextSpan(
+                        TextSpan(
                           text: "Insira os ",
                         ),
 
                         WidgetSpan(
                           alignment: PlaceholderAlignment.middle,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(
+                            padding: EdgeInsets.symmetric(
                               horizontal: 5,
                               vertical: 2,
                             ),
@@ -184,7 +178,7 @@ class _Home_State extends State<Home> {
                               color: Colors.red[900],
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Text(
+                            child: Text(
                               "TRÊS PRIMEIROS",
                               style: TextStyle(
                                 fontSize: 20,
@@ -195,7 +189,7 @@ class _Home_State extends State<Home> {
                           ),
                         ),
 
-                        const TextSpan(
+                        TextSpan(
                           text: " seu CPF",
                         ),
                       ],
@@ -241,7 +235,7 @@ class _Home_State extends State<Home> {
                           try {
                             await ValidarCPF();
                           } catch (e) {
-                            print('Falha ao enviar SOS');
+                            debugPrint('Falha ao enviar SOS: $e');
                           }
                         },
                         child: Text("Enviar", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
@@ -279,14 +273,14 @@ class _Home_State extends State<Home> {
                   child: SingleChildScrollView(
                     child: Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                      padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
                       child: Column(
                         children: [
                           // Reserva o espaço do avatar
                           // (ContainerPerfilSuperior tem height: 100) para
                           // o título nunca ficar atrás dele, mesmo com
                           // letras grandes.
-                          const SizedBox(height: 100),
+                          SizedBox(height: 100),
 
                           // ── Título principal animado ──────────────────
                           AnimatedSwitcher(
@@ -308,7 +302,7 @@ class _Home_State extends State<Home> {
                                     key: const ValueKey('enviado'),
                                     width: double.infinity,
                                     alignment: Alignment.center,
-                                    padding: const EdgeInsets.symmetric(
+                                    padding: EdgeInsets.symmetric(
                                       horizontal: 16,
                                     ),
                                     child: Text(
@@ -328,7 +322,7 @@ class _Home_State extends State<Home> {
                                       Container(
                                         width: double.infinity,
                                         alignment: Alignment.center,
-                                        padding: const EdgeInsets.symmetric(
+                                        padding: EdgeInsets.symmetric(
                                           horizontal: 16,
                                         ),
                                         child: Text(
@@ -344,7 +338,7 @@ class _Home_State extends State<Home> {
                                       Container(
                                         width: double.infinity,
                                         alignment: Alignment.center,
-                                        padding: const EdgeInsets.symmetric(
+                                        padding: EdgeInsets.symmetric(
                                           horizontal: 16,
                                         ),
                                         child: Text(
@@ -365,7 +359,7 @@ class _Home_State extends State<Home> {
                                       Container(
                                         width: double.infinity,
                                         alignment: Alignment.center,
-                                        padding: const EdgeInsets.symmetric(
+                                        padding: EdgeInsets.symmetric(
                                           horizontal: 16,
                                         ),
                                         child: Text(
@@ -381,7 +375,7 @@ class _Home_State extends State<Home> {
                                       Container(
                                         width: double.infinity,
                                         alignment: Alignment.center,
-                                        padding: const EdgeInsets.symmetric(
+                                        padding: EdgeInsets.symmetric(
                                           horizontal: 16,
                                         ),
                                         child: Text(
@@ -406,7 +400,7 @@ class _Home_State extends State<Home> {
                                     key: const ValueKey('subEnviado'),
                                     width: double.infinity,
                                     alignment: Alignment.center,
-                                    padding: const EdgeInsets.symmetric(
+                                    padding: EdgeInsets.symmetric(
                                       horizontal: 24,
                                     ),
                                     child: Text(
@@ -423,7 +417,7 @@ class _Home_State extends State<Home> {
                                     key: const ValueKey('subEnviando'),
                                     width: double.infinity,
                                     alignment: Alignment.center,
-                                    padding: const EdgeInsets.symmetric(
+                                    padding: EdgeInsets.symmetric(
                                       horizontal: 24,
                                     ),
                                     child: Text(
@@ -439,7 +433,7 @@ class _Home_State extends State<Home> {
                                     key: const ValueKey('subInicial'),
                                     width: double.infinity,
                                     alignment: Alignment.center,
-                                    padding: const EdgeInsets.symmetric(
+                                    padding: EdgeInsets.symmetric(
                                       horizontal: 24,
                                     ),
                                     child: Text(
@@ -453,7 +447,7 @@ class _Home_State extends State<Home> {
                                   ),
                           ),
 
-                          const SizedBox(height: 20),
+                          SizedBox(height: 20),
 
                           // ── Botão SOS ───────────────────────────────────
                           AbsorbPointer(
@@ -484,7 +478,7 @@ class _Home_State extends State<Home> {
                                           ),
                                         ),
                                         color: _sosEnviado
-                                            ? const Color.fromRGBO(
+                                            ? Color.fromRGBO(
                                                 80,
                                                 80,
                                                 80,
@@ -493,10 +487,10 @@ class _Home_State extends State<Home> {
                                             : _sosEnviando
                                             ? Colors.orangeAccent
                                             : acessibilidade.daltonismo
-                                            ? const Color(
+                                            ? Color(
                                                 0xFFF4A261,
                                               ).withValues(alpha: 0.5)
-                                            : const Color.fromRGBO(
+                                            : Color.fromRGBO(
                                                 200,
                                                 0,
                                                 0,
@@ -514,7 +508,7 @@ class _Home_State extends State<Home> {
                                     height: 300,
                                     decoration: BoxDecoration(
                                       color: _sosEnviado
-                                          ? const Color.fromRGBO(
+                                          ? Color.fromRGBO(
                                               80,
                                               80,
                                               80,
@@ -523,10 +517,10 @@ class _Home_State extends State<Home> {
                                           : _sosEnviando
                                           ? Colors.orangeAccent
                                           : acessibilidade.daltonismo
-                                          ? const Color(
+                                          ? Color(
                                               0xFFF4A261,
                                             ).withValues(alpha: 0.5)
-                                          : const Color.fromRGBO(
+                                          : Color.fromRGBO(
                                               200,
                                               0,
                                               0,
@@ -543,7 +537,7 @@ class _Home_State extends State<Home> {
                                     height: 275,
                                     decoration: BoxDecoration(
                                       color: _sosEnviado
-                                          ? const Color.fromRGBO(
+                                          ? Color.fromRGBO(
                                               100,
                                               100,
                                               100,
@@ -552,8 +546,8 @@ class _Home_State extends State<Home> {
                                           : _sosEnviando
                                           ? Colors.orange
                                           : acessibilidade.daltonismo
-                                          ? const Color(0xFFF4A261)
-                                          : const Color.fromRGBO(225, 0, 0, 1),
+                                          ? Color(0xFFF4A261)
+                                          : Color.fromRGBO(225, 0, 0, 1),
                                       shape: BoxShape.circle,
                                     ),
                                   ),
@@ -561,7 +555,7 @@ class _Home_State extends State<Home> {
                                     'gfx/svg/icons/btn_alert.svg',
                                     width: 225,
                                     colorFilter: _sosEnviado
-                                        ? const ColorFilter.mode(
+                                        ? ColorFilter.mode(
                                             Color.fromRGBO(180, 180, 180, 1),
                                             BlendMode.srcIn,
                                           )
@@ -573,9 +567,9 @@ class _Home_State extends State<Home> {
                           ),
 
                           // BOTÃO DO GUIA DE SOBREVIVÊNCIA
-                          const SizedBox(height: 40),
+                          SizedBox(height: 40),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 30),
+                            padding: EdgeInsets.symmetric(horizontal: 30),
                             child: SizedBox(
                               width: double.infinity,
                               child: TextButton(
@@ -589,14 +583,14 @@ class _Home_State extends State<Home> {
                                 },
                                 style: TextButton.styleFrom(
                                   backgroundColor: acessibilidade.corPrimaria,
-                                  padding: const EdgeInsets.symmetric(
+                                  padding: EdgeInsets.symmetric(
                                     vertical: 14,
                                   ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(30),
                                   ),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'Acesse o Guia de Sobrevivência',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
@@ -612,7 +606,7 @@ class _Home_State extends State<Home> {
                             height: 45,
                           ),
                           Padding(
-                            padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
+                            padding: EdgeInsets.fromLTRB(18, 0, 18, 24),
                             child: RelatosProximos(ativa: widget.ativa,
                               onAbrirRelato: widget.onAbrirRelato),
                           ),

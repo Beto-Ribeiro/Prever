@@ -1,9 +1,4 @@
-import 'package:prever/telas/cadastro_tela.dart';
-import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'exportador_import.dart';
-import 'package:prever/main.dart';
 
 class ConfEmail extends StatefulWidget {
   final Function(int) onChangePage;
@@ -29,15 +24,16 @@ class _confEmail_state extends State<ConfEmail> {
   bool _verificando = false;
 
   Future<void> verificarConfirmacao() async {
-    print("Clicou em Já confirmei");
-    print("EMAIL: ${widget.email}");
-    print("SENHA: ${widget.senha}");
+    // IMPORTANTE: Nunca registrar credenciais em logs de produção.
+    debugPrint("Verificando confirmação de e-mail...");
     if (widget.email == null || widget.senha == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Erro: e-mail ou senha não foram recebidos. Tente cadastrar novamente."),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Erro: e-mail ou senha não foram recebidos. Tente cadastrar novamente."),
+          ),
+        );
+      }
       return;
     }
 
@@ -51,6 +47,8 @@ class _confEmail_state extends State<ConfEmail> {
         password: widget.senha!,
       );
 
+      if (!mounted) return;
+
       if (response.session != null) {
         widget.onChangePage(0);
       } else {
@@ -61,7 +59,7 @@ class _confEmail_state extends State<ConfEmail> {
         );
       }
     } on AuthException catch (e) {
-      print("AuthException: ${e.message} | statusCode: ${e.statusCode}");
+      debugPrint("AuthException na confirmação de e-mail: ${e.statusCode}");
       String mensagem;
       // Supabase returns "Email not confirmed" when email is unverified
       if (e.message.toLowerCase().contains('email not confirmed') ||
@@ -73,14 +71,16 @@ class _confEmail_state extends State<ConfEmail> {
       } else {
         mensagem = "Erro: ${e.message}";
       }
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(mensagem)),
       );
     } catch (e) {
-      print("Erro genérico: $e");
+      debugPrint("Erro genérico na confirmação de e-mail");
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Erro inesperado: $e"),
+        const SnackBar(
+          content: Text("Erro inesperado. Tente novamente."),
         ),
       );
     } finally {
@@ -95,13 +95,17 @@ class _confEmail_state extends State<ConfEmail> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blueGrey[600],
+      
 
       body: Stack(
         children: [
           Positioned.fill(
             child: CustomPaint(
-              painter: AbstractBackgroundPainter(),
+              painter: AbstractBackgroundPainter(
+                primaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                secondaryColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
+                tertiaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              ),
             ),
           ),
 
@@ -117,7 +121,7 @@ class _confEmail_state extends State<ConfEmail> {
 
                 children: <Widget>[
                   Container(
-                    padding: const EdgeInsets.fromLTRB(
+                    padding: EdgeInsets.fromLTRB(
                       25,
                       25,
                       25,
@@ -125,7 +129,7 @@ class _confEmail_state extends State<ConfEmail> {
                     ),
                     width: double.infinity,
                     height: 300,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(30),
@@ -149,26 +153,26 @@ class _confEmail_state extends State<ConfEmail> {
                             Text("para prosseguir", style: TextStyle(fontSize: 20, fontWeight: FontWeight(900)),)
                           ],
                         ),
-                        Container(
+                        SizedBox(
                           height: 30,
                           width: double.infinity,
                         ),
                         ElevatedButton(
                           onPressed: _verificando ? null : verificarConfirmacao,
                           child: _verificando
-                              ? const SizedBox(
+                              ? SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(strokeWidth: 2),
                                 )
-                              : const Text("Já confirmei!"),
+                              : Text("Já confirmei!"),
                         ),
-                        const SizedBox(height: 10),
+                        SizedBox(height: 10),
                         GestureDetector(
                           onTap: () {
                             widget.onChangePage(8); // Ir para tela de login
                           },
-                          child: const Text(
+                          child: Text(
                             "Ir para Login",
                             style: TextStyle(
                               fontStyle: FontStyle.italic,
@@ -182,7 +186,7 @@ class _confEmail_state extends State<ConfEmail> {
                     ),
                   ),
                   Container(
-                    margin: const EdgeInsets.fromLTRB(
+                    margin: EdgeInsets.fromLTRB(
                       0,
                       80,
                       0,

@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'exportador_import.dart';
 
 class WriteChangedPassword extends StatefulWidget {
@@ -67,6 +65,21 @@ class _WriteChangedPasswordState extends State<WriteChangedPassword> {
     }
 
 
+    // Verifica o comprimento mínimo da senha
+    if (senha.length < 6) {
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'A senha deve ter pelo menos 6 caracteres.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+
     // Verifica se existe uma sessão de recuperação válida
     if (supabase.auth.currentSession == null) {
 
@@ -119,11 +132,11 @@ class _WriteChangedPasswordState extends State<WriteChangedPassword> {
 
           return AlertDialog(
 
-            title: const Text(
+            title: Text(
               'Senha alterada',
             ),
 
-            content: const Text(
+            content: Text(
               'Sua senha foi redefinida com sucesso. '
                   'Você poderá entrar novamente usando a nova senha.',
             ),
@@ -136,7 +149,7 @@ class _WriteChangedPasswordState extends State<WriteChangedPassword> {
                   Navigator.of(context).pop();
                 },
 
-                child: const Text(
+                child: Text(
                   'OK',
                 ),
               ),
@@ -232,7 +245,7 @@ class _WriteChangedPasswordState extends State<WriteChangedPassword> {
 
     return Scaffold(
 
-      backgroundColor: Colors.blueGrey[600],
+      
 
       body: Stack(
 
@@ -244,7 +257,11 @@ class _WriteChangedPasswordState extends State<WriteChangedPassword> {
 
           Positioned.fill(
             child: CustomPaint(
-              painter: AbstractBackgroundPainter(),
+              painter: AbstractBackgroundPainter(
+                primaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                secondaryColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
+                tertiaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              ),
             ),
           ),
 
@@ -268,7 +285,7 @@ class _WriteChangedPasswordState extends State<WriteChangedPassword> {
 
                   Container(
 
-                    padding: const EdgeInsets.fromLTRB(
+                    padding: EdgeInsets.fromLTRB(
                       25,
                       50,
                       25,
@@ -282,7 +299,7 @@ class _WriteChangedPasswordState extends State<WriteChangedPassword> {
                       MediaQuery.of(context).size.height,
                     ),
 
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
 
                       color: Colors.white,
 
@@ -307,7 +324,7 @@ class _WriteChangedPasswordState extends State<WriteChangedPassword> {
                         // TÍTULO
                         // --------------------------------------------
 
-                        const Text(
+                        Text(
 
                           'Criar nova senha',
 
@@ -333,7 +350,7 @@ class _WriteChangedPasswordState extends State<WriteChangedPassword> {
                         // DESCRIÇÃO
                         // --------------------------------------------
 
-                        const Text(
+                        Text(
 
                           'Digite uma nova senha para sua conta.',
 
@@ -350,7 +367,7 @@ class _WriteChangedPasswordState extends State<WriteChangedPassword> {
                         ),
 
 
-                        const SizedBox(
+                        SizedBox(
                           height: 10,
                         ),
 
@@ -379,7 +396,7 @@ class _WriteChangedPasswordState extends State<WriteChangedPassword> {
 
                               labelText: 'Nova senha',
 
-                              prefixIcon: const Icon(
+                              prefixIcon: Icon(
                                 Icons.lock_outline,
                               ),
 
@@ -441,7 +458,7 @@ class _WriteChangedPasswordState extends State<WriteChangedPassword> {
                               labelText:
                               'Confirmar nova senha',
 
-                              prefixIcon: const Icon(
+                              prefixIcon: Icon(
                                 Icons.lock_outline,
                               ),
 
@@ -488,7 +505,7 @@ class _WriteChangedPasswordState extends State<WriteChangedPassword> {
                         ),
 
 
-                        const SizedBox(
+                        SizedBox(
                           height: 10,
                         ),
 
@@ -505,13 +522,7 @@ class _WriteChangedPasswordState extends State<WriteChangedPassword> {
 
                           style: ElevatedButton.styleFrom(
 
-                            backgroundColor:
-                            const Color.fromRGBO(
-                              24,
-                              57,
-                              92,
-                              1,
-                            ),
+                            backgroundColor: Theme.of(context).colorScheme.primary,
 
                             minimumSize:
                             const Size(
@@ -524,7 +535,7 @@ class _WriteChangedPasswordState extends State<WriteChangedPassword> {
 
                           child: _estaCarregando
 
-                              ? const SizedBox(
+                              ? SizedBox(
 
                             width: 20,
 
@@ -540,7 +551,7 @@ class _WriteChangedPasswordState extends State<WriteChangedPassword> {
                             ),
                           )
 
-                              : const Text(
+                              : Text(
 
                             'Redefinir senha',
 
@@ -565,7 +576,7 @@ class _WriteChangedPasswordState extends State<WriteChangedPassword> {
 
                   Container(
 
-                    margin: const EdgeInsets.fromLTRB(
+                    margin: EdgeInsets.fromLTRB(
                       0,
                       80,
                       0,

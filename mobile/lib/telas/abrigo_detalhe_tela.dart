@@ -24,11 +24,11 @@ class AbrigoDetalheTela extends StatelessWidget {
   Color _corStatus(String status) {
     switch (status) {
       case 'lotado':
-        return const Color(0xFFc60202);
+        return Color(0xFFc60202);
       case 'quase_lotado':
-        return const Color(0xFFff6a00);
+        return Color(0xFFff6a00);
       default:
-        return const Color(0xFF00c000);
+        return Color(0xFF00c000);
     }
   }
 
@@ -136,15 +136,15 @@ class AbrigoDetalheTela extends StatelessWidget {
             // ================================================================
 
             Container(
-              decoration: const BoxDecoration(
-                color: Color(0xFF09162E),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
               ),
-              padding: const EdgeInsets.fromLTRB(8, 8, 16, 12),
+              padding: EdgeInsets.fromLTRB(8, 8, 16, 12),
               child: Row(
                 children: [
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.arrow_back_ios_new_rounded,
                       color: Colors.white,
                       size: 22,
@@ -155,7 +155,7 @@ class AbrigoDetalheTela extends StatelessWidget {
                       nome,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -173,12 +173,12 @@ class AbrigoDetalheTela extends StatelessWidget {
 
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
+                padding: EdgeInsets.fromLTRB(20, 0, 20, 30),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
 
-                    const SizedBox(height: 14),
+                    SizedBox(height: 14),
 
 
                     // ========================================================
@@ -187,13 +187,13 @@ class AbrigoDetalheTela extends StatelessWidget {
 
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(18),
+                      padding: EdgeInsets.all(18),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF09162E),
+                        color: Theme.of(context).colorScheme.primary,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.25),
+                            color: Colors.black.withValues(alpha: 0.25),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -210,7 +210,7 @@ class AbrigoDetalheTela extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   nome,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
@@ -219,20 +219,20 @@ class AbrigoDetalheTela extends StatelessWidget {
                                 ),
                               ),
 
-                              const SizedBox(width: 14),
+                              SizedBox(width: 14),
 
                               Container(
                                 width: 110,
                                 height: 90,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF1A2A45),
+                                  color: Theme.of(context).colorScheme.secondary,
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                                 child: Center(
                                   child: Icon(
                                     Icons.home_outlined,
                                     size: 40,
-                                    color: Colors.white.withOpacity(0.3),
+                                    color: Colors.white.withValues(alpha: 0.3),
                                   ),
                                 ),
                               ),
@@ -240,7 +240,7 @@ class AbrigoDetalheTela extends StatelessWidget {
                           ),
 
 
-                          const SizedBox(height: 18),
+                          SizedBox(height: 18),
 
 
                           // COORDENADOR + CAPACIDADE
@@ -254,10 +254,10 @@ class AbrigoDetalheTela extends StatelessWidget {
                                       Icon(
                                         Icons.person_outline,
                                         size: 18,
-                                        color: Colors.white.withOpacity(0.5),
+                                        color: Colors.white.withValues(alpha: 0.5),
                                       ),
 
-                                      const SizedBox(width: 6),
+                                      SizedBox(width: 6),
 
                                       Flexible(
                                         child: Column(
@@ -266,7 +266,7 @@ class AbrigoDetalheTela extends StatelessWidget {
                                             Text(
                                               'Responsável:',
                                               style: TextStyle(
-                                                color: Colors.white.withOpacity(0.5),
+                                                color: Colors.white.withValues(alpha: 0.5),
                                                 fontSize: 11,
                                               ),
                                             ),
@@ -274,7 +274,7 @@ class AbrigoDetalheTela extends StatelessWidget {
                                               coordenador,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.w600,
@@ -294,7 +294,7 @@ class AbrigoDetalheTela extends StatelessWidget {
                                 children: [
                                   Text(
                                     '$ocupacao/$capacidade',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 22,
                                       fontWeight: FontWeight.bold,
@@ -303,7 +303,7 @@ class AbrigoDetalheTela extends StatelessWidget {
                                   Text(
                                     'Capacidade',
                                     style: TextStyle(
-                                      color: Colors.white.withOpacity(0.5),
+                                      color: Colors.white.withValues(alpha: 0.5),
                                       fontSize: 11,
                                     ),
                                   ),
@@ -313,14 +313,14 @@ class AbrigoDetalheTela extends StatelessWidget {
                           ),
 
 
-                          const SizedBox(height: 18),
+                          SizedBox(height: 18),
 
 
                           // ENDEREÇO
                           Text(
                             'Próximo de você, $endereco.',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontSize: 13,
                             ),
                           ),
@@ -329,7 +329,7 @@ class AbrigoDetalheTela extends StatelessWidget {
                     ),
 
 
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20),
 
 
                     // ========================================================
@@ -423,7 +423,7 @@ class AbrigoDetalheTela extends StatelessWidget {
                     // ========================================================
 
                     if (detalhes.isNotEmpty) ...[
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
 
                       Text(
                         'Detalhes',
@@ -434,12 +434,12 @@ class AbrigoDetalheTela extends StatelessWidget {
                         ),
                       ),
 
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
 
                       Text(
                         detalhes,
                         style: TextStyle(
-                          color: acessibilidade.corPrimaria.withOpacity(0.7),
+                          color: acessibilidade.corPrimaria.withValues(alpha: 0.7),
                           fontSize: 14,
                           height: 1.4,
                         ),
@@ -447,7 +447,7 @@ class AbrigoDetalheTela extends StatelessWidget {
                     ],
 
 
-                    const SizedBox(height: 30),
+                    SizedBox(height: 30),
 
 
                     // ========================================================
@@ -460,15 +460,15 @@ class AbrigoDetalheTela extends StatelessWidget {
                       child: ElevatedButton.icon(
                         onPressed: () => _abrirRotaGoogleMaps(context),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF09162E),
+                          backgroundColor: Theme.of(context).colorScheme.primary,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
                           elevation: 6,
                         ),
-                        icon: const Icon(Icons.directions, size: 24),
-                        label: const Text(
+                        icon: Icon(Icons.directions, size: 24),
+                        label: Text(
                           'Abrir rota no Google Maps',
                           style: TextStyle(
                             fontSize: 16,
@@ -500,17 +500,17 @@ class AbrigoDetalheTela extends StatelessWidget {
     Color? iconColor,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: EdgeInsets.only(bottom: 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
             icon,
             size: 20,
-            color: iconColor ?? acessibilidade.corPrimaria.withOpacity(0.5),
+            color: iconColor ?? acessibilidade.corPrimaria.withValues(alpha: 0.5),
           ),
 
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
 
           Expanded(
             child: Column(
@@ -519,12 +519,12 @@ class AbrigoDetalheTela extends StatelessWidget {
                 Text(
                   label,
                   style: TextStyle(
-                    color: acessibilidade.corPrimaria.withOpacity(0.5),
+                    color: acessibilidade.corPrimaria.withValues(alpha: 0.5),
                     fontSize: 12,
                   ),
                 ),
 
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
 
                 Text(
                   value,

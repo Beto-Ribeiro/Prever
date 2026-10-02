@@ -1,30 +1,15 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// Smoke test: verifica que MyApp instancia sem exceção.
+// O test original era um template Flutter (contador) incompatível com este projeto.
+// Dependências externas (Supabase, Firebase, dotenv) exigem inicialização
+// assíncrona completa, portanto não é possível pump MyApp diretamente em testes
+// de widget. O teste abaixo garante apenas que a classe existe e é importável.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:branch1/main.dart';
+import 'package:prever/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
-
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  test('MyApp é uma classe instanciável (smoke test)', () {
+    const app = MyApp();
+    expect(app, isA<MyApp>());
   });
 }

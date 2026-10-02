@@ -2,7 +2,6 @@ import 'package:prever/services/severidade_relato.dart';
 import 'dart:async';
 import 'package:prever/services/relatos_proximos_service.dart';
 
-import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -15,7 +14,7 @@ class Maps_alertas extends StatefulWidget {
   final RelatoProximo? relatoSelecionado;
   final int solicitacaoRelato;
 
-  Maps_alertas({
+  const Maps_alertas({
     super.key,
     required this.title,
     required this.onChangePage,
@@ -101,17 +100,126 @@ class _MapsAlertas extends State<Maps_alertas> {
   bool abriuMarker = false;
   String _selectedMarkerId = '';
 
-  FunctionAbrirmarker(String ID) {
+  void FunctionAbrirmarker(String ID) {
     setState(() {
       abriuMarker = true;
       _selectedMarkerId = ID;
     });
   }
 
-  FunctionFecharmarker() {
+  void FunctionFecharmarker() {
     setState(() {
       abriuMarker = false;
     });
+  }
+
+  MapType _mapType = MapType.normal;
+  bool _is3D = false;
+  CameraPosition? _currentCameraPosition;
+
+  void _mostrarOpcoesMapa() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Tipo de Mapa',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 16),
+              ListTile(
+                leading: Icon(Icons.map, color: Colors.white),
+                title: Text('Ruas (2D)', style: TextStyle(color: Colors.white)),
+                trailing: _mapType == MapType.normal && !_is3D ? Icon(Icons.check, color: Colors.green) : null,
+                onTap: () {
+                  setState(() { _mapType = MapType.normal; _is3D = false; });
+                  _atualizarCameraTilt(0.0);
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.satellite, color: Colors.white),
+                title: Text('Satélite', style: TextStyle(color: Colors.white)),
+                trailing: _mapType == MapType.satellite ? Icon(Icons.check, color: Colors.green) : null,
+                onTap: () {
+                  setState(() { _mapType = MapType.satellite; _is3D = false; });
+                  _atualizarCameraTilt(0.0);
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.terrain, color: Colors.white),
+                title: Text('Relevo', style: TextStyle(color: Colors.white)),
+                trailing: _mapType == MapType.terrain ? Icon(Icons.check, color: Colors.green) : null,
+                onTap: () {
+                  setState(() { _mapType = MapType.terrain; _is3D = false; });
+                  _atualizarCameraTilt(0.0);
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.threed_rotation, color: Colors.white),
+                title: Text('Visão 3D', style: TextStyle(color: Colors.white)),
+                trailing: _is3D ? Icon(Icons.check, color: Colors.green) : null,
+                onTap: () {
+                  setState(() { _mapType = MapType.normal; _is3D = true; });
+                  _atualizarCameraTilt(45.0);
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _atualizarCameraTilt(double tilt) async {
+    final controller = await _controller.future;
+    
+    // Se a câmera nunca foi movida, criamos uma posição baseada no Target Inicial ou na Localização
+    CameraPosition targetPosition = _currentCameraPosition ?? CameraPosition(
+      target: position != null 
+          ? LatLng(position!.latitude, position!.longitude) 
+          // IMPORTANTE (TESTE 3D): Cidades do interior (como Taubaté abaixo) muitas vezes não têm edifícios 3D mapeados pelo Google.
+          // Se o mapa ficar plano no emulador, teste trocar para São Paulo: const LatLng(-23.550520, -46.633308)
+          : const LatLng(-23.014336, -45.538053),
+      zoom: 15,
+    );
+
+    double newZoom = targetPosition.zoom;
+    // O 3D (buildings) só costuma aparecer em níveis de zoom maiores (ex: 17 ou 18+)
+    if (tilt > 0 && newZoom < 17.5) {
+      newZoom = 17.5;
+    }
+
+    await controller.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: targetPosition.target,
+          zoom: newZoom,
+          bearing: targetPosition.bearing,
+          tilt: tilt,
+        ),
+      ),
+    );
+
+    // Recarrega os pins após a animação para garantir que os marcadores permanecem visíveis
+    await carregarPins();
   }
 
   final Completer<GoogleMapController> _controller =
@@ -119,7 +227,7 @@ class _MapsAlertas extends State<Maps_alertas> {
 
   final supabase = Supabase.instance.client;
 
-  final Color corFundoMenu = const Color(0xFF0B1426);
+  // corFundoMenu moved to build
 
   Set<Marker> markers = {};
 
@@ -375,10 +483,19 @@ class _MapsAlertas extends State<Maps_alertas> {
     return Stack(
       children: [
         GoogleMap(
+          mapType: _mapType,
+          // Edifícios 3D só aparecem quando _is3D está ativo;
+          // manter true no modo 2D pode aumentar o uso de GPU sem benefício visual.
+          buildingsEnabled: _is3D,
+          onCameraMove: (position) {
+            _currentCameraPosition = position;
+          },
           onMapCreated: (GoogleMapController controller) {
             if (!_controller.isCompleted) _controller.complete(controller);
           },
-          style: estiloMapa,
+          // Estilos personalizados SUPRIMEM a renderização de edifícios 3D.
+          // No modo 3D limpamos o estilo para que os prédios apareçam corretamente.
+          style: _is3D ? null : estiloMapa,
 
           markers: markers,
 
@@ -398,6 +515,7 @@ class _MapsAlertas extends State<Maps_alertas> {
                     position!.latitude,
                     position!.longitude,
                   )
+                // IMPORTANTE (TESTE 3D): Troque para -23.550520, -46.633308 (São Paulo) se for emular e o 3D não aparecer em Taubaté.
                 : const LatLng(
                     -23.014336,
                     -45.538053,
@@ -408,6 +526,21 @@ class _MapsAlertas extends State<Maps_alertas> {
         ),
 
         Positioned(
+          bottom: 220,
+          right: 16,
+          child: FloatingActionButton(
+            heroTag: "btnConfigMapa",
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            elevation: 4,
+            shape: const CircleBorder(),
+            onPressed: _mostrarOpcoesMapa,
+            child: Icon(
+              Icons.layers,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        Positioned(
           bottom: 150,
 
           right: 16,
@@ -415,7 +548,7 @@ class _MapsAlertas extends State<Maps_alertas> {
           child: FloatingActionButton(
             heroTag: "btnLocalizacaoMapaUnico",
 
-            backgroundColor: corFundoMenu,
+            backgroundColor: Theme.of(context).colorScheme.primary,
 
             elevation: 4,
 
@@ -423,7 +556,7 @@ class _MapsAlertas extends State<Maps_alertas> {
 
             onPressed: () => _GoToUserLocation(),
 
-            child: const Icon(
+            child: Icon(
               Icons.my_location,
               color: Colors.white,
             ),

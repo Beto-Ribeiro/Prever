@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'exportador_import.dart';
 
 class ChangePassword extends StatefulWidget {
@@ -181,7 +179,7 @@ class _changePassword_State extends State<ChangePassword> {
 
     return Scaffold(
 
-      backgroundColor: Colors.blueGrey[600],
+      
 
       body: Stack(
 
@@ -190,7 +188,11 @@ class _changePassword_State extends State<ChangePassword> {
           // Fundo
           Positioned.fill(
             child: CustomPaint(
-              painter: AbstractBackgroundPainter(),
+              painter: AbstractBackgroundPainter(
+                primaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                secondaryColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
+                tertiaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              ),
             ),
           ),
 
@@ -217,7 +219,7 @@ class _changePassword_State extends State<ChangePassword> {
 
                       Container(
 
-                        padding: const EdgeInsets.fromLTRB(
+                        padding: EdgeInsets.fromLTRB(
                           25,
                           50,
                           25,
@@ -230,7 +232,7 @@ class _changePassword_State extends State<ChangePassword> {
                           minHeight: MediaQuery.of(context).size.height,
                         ),
 
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
 
                           color: Colors.white,
 
@@ -253,7 +255,7 @@ class _changePassword_State extends State<ChangePassword> {
                             // TEXTO
                             // ------------------------------------------------
 
-                            const Text(
+                            Text(
                               'Redefinir senha',
                               style: TextStyle(
                                 fontSize: 24,
@@ -268,7 +270,7 @@ class _changePassword_State extends State<ChangePassword> {
                             ),
 
 
-                            const Text(
+                            Text(
                               'Digite o e-mail associado à sua conta. '
                                   'Enviaremos um link para redefinir sua senha.',
                               textAlign: TextAlign.center,
@@ -279,7 +281,7 @@ class _changePassword_State extends State<ChangePassword> {
                             ),
 
 
-                            const SizedBox(
+                            SizedBox(
                               height: 10,
                             ),
 
@@ -343,13 +345,7 @@ class _changePassword_State extends State<ChangePassword> {
 
                               style: ElevatedButton.styleFrom(
 
-                                backgroundColor:
-                                const Color.fromRGBO(
-                                  24,
-                                  57,
-                                  92,
-                                  1,
-                                ),
+                                backgroundColor: Theme.of(context).colorScheme.primary,
 
                                 minimumSize: const Size(
                                   139,
@@ -362,7 +358,7 @@ class _changePassword_State extends State<ChangePassword> {
                               child: _estaCarregando
 
                               // Carregando
-                                  ? const SizedBox(
+                                  ? SizedBox(
                                 width: 20,
                                 height: 20,
 
@@ -374,7 +370,7 @@ class _changePassword_State extends State<ChangePassword> {
                               )
 
                               // Normal
-                                  : const Text(
+                                  : Text(
                                 'Enviar',
                                 style: TextStyle(
                                   color: Colors.white,
@@ -393,7 +389,7 @@ class _changePassword_State extends State<ChangePassword> {
 
                       Container(
 
-                        margin: const EdgeInsets.fromLTRB(
+                        margin: EdgeInsets.fromLTRB(
                           0,
                           80,
                           0,
@@ -431,7 +427,7 @@ class _changePassword_State extends State<ChangePassword> {
                     style: ElevatedButton.styleFrom(
 
                       backgroundColor:
-                      const Color.fromRGBO(
+                      Color.fromRGBO(
                         228,
                         232,
                         235,
@@ -440,7 +436,7 @@ class _changePassword_State extends State<ChangePassword> {
 
                     ),
 
-                    child: const Icon(
+                    child: Icon(
 
                       Icons.arrow_back,
 

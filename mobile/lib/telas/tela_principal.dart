@@ -2,11 +2,7 @@ import 'dart:async';
 import 'package:prever/services/relatos_proximos_service.dart';
 
 import 'package:prever/telas/login_tela.dart';
-import 'package:prever/services/chatbot_service.dart';
-import 'package:flutter/material.dart';
 import 'exportador_import.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -739,17 +735,17 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
             ocultarNav
 
-                ? const EdgeInsets.only(
+                ? EdgeInsets.only(
               top: 0,
             )
 
                 : _currentIndex == 0
 
-                ? const EdgeInsets.only(
+                ? EdgeInsets.only(
               top: 0,
             )
 
-                : const EdgeInsets.only(
+                : EdgeInsets.only(
               top: 30,
             ),
 
@@ -837,13 +833,13 @@ class _TelaPrincipalState extends State<TelaPrincipal>
                     decoration: BoxDecoration(
 
                       color:
-                      const Color(
+                      Color(
                         0xFF0B1426,
                       ),
 
 
                       borderRadius:
-                      const BorderRadius.only(
+                      BorderRadius.only(
 
                         topLeft:
                         Radius.circular(32),
@@ -863,8 +859,8 @@ class _TelaPrincipalState extends State<TelaPrincipal>
                       border: Border.all(
 
                         color:
-                        Colors.white.withOpacity(
-                          0.15,
+                        Colors.white.withValues(
+                          alpha: 0.15,
                         ),
 
                         width: 2,
@@ -877,8 +873,8 @@ class _TelaPrincipalState extends State<TelaPrincipal>
                         BoxShadow(
 
                           color:
-                          Colors.black.withOpacity(
-                            0.35,
+                          Colors.black.withValues(
+                            alpha: 0.35,
                           ),
 
                           blurRadius: 12,
@@ -899,7 +895,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
                     child: Padding(
 
                       padding:
-                      const EdgeInsets.all(
+                      EdgeInsets.all(
                         8,
                       ),
 
@@ -1008,13 +1004,13 @@ class CustomAnimatedBottomBar
 
 
   final Color corFundoMenu =
-  const Color(
+  Color(
     0xFF0B1426,
   );
 
 
   final Color corIconeInativo =
-  const Color(
+  Color(
     0xFF4A5568,
   );
 
