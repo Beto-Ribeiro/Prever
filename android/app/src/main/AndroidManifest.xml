@@ -1,8 +1,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
         android:label="Prever"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="prever_alertas_urgentes_v1" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_alerta" />
 
         <meta-data android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyBnL7uRbt6ctHAZ9BbA6skZI2_cioCD8Gg"/>
@@ -46,7 +52,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
-         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
+    <!-- Permite consultar aplicativos capazes de processar texto. -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>

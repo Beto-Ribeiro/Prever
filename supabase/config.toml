@@ -1,0 +1,3 @@
+[functions.alerta-web-push]
+# Autenticação feita por x-dispatch-secret, compartilhado apenas com o Vault.
+verify_jwt = false

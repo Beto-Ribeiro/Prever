@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'controle_acessibilidade.dart';
+import 'package:prever/services/notificacoes_service.dart';
 
 class BotaoAcessibilidade extends StatefulWidget {
   /// Chamado quando o usuário toca em "Editar perfil".
@@ -127,6 +128,21 @@ class _BotaoAcessibilidadeState extends State<BotaoAcessibilidade>
                       child: Divider(height: 1),
                     ),
 
+                    if (NotificacoesService.suportado)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(
+                          Icons.notifications_active_outlined,
+                        ),
+                        title: const Text('Cidade dos alertas'),
+                        subtitle: const Text(
+                          'Escolher a cidade ou desativar os avisos',
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          NotificacoesService.instance.configurarCidade();
+                        },
+                      ),
                     // ── Editar perfil ─────────────────────────────────────
                     ListTile(
                       contentPadding: EdgeInsets.zero,
