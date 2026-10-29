@@ -6,11 +6,17 @@ on:
       - main
     paths:
       - "web/**"
+      - "shared/**"
+      - ".github/workflows/web-deploy.yml"
 
 jobs:
   deploy:
     name: Deploy para Vercel
     runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
