@@ -8,7 +8,6 @@ import 'package:geolocator/geolocator.dart';
 import '../controles/controle_acessibilidade.dart';
 import 'abrigo_detalhe_tela.dart';
 
-
 class AbrigosTela extends StatefulWidget {
   final String title;
   final Function(int) onChangePage;
@@ -23,9 +22,7 @@ class AbrigosTela extends StatefulWidget {
   State<AbrigosTela> createState() => _AbrigosTelaState();
 }
 
-
 class _AbrigosTelaState extends State<AbrigosTela> {
-
   // ==========================================================================
   // ESTADO
   // ==========================================================================
@@ -40,7 +37,6 @@ class _AbrigosTelaState extends State<AbrigosTela> {
 
   Position? _posicaoUsuario;
 
-
   // ==========================================================================
   // INIT STATE
   // ==========================================================================
@@ -50,7 +46,6 @@ class _AbrigosTelaState extends State<AbrigosTela> {
     super.initState();
     _carregarDados();
   }
-
 
   // ==========================================================================
   // CARREGA LOCALIZAÇÃO + ABRIGOS
@@ -156,7 +151,6 @@ class _AbrigosTelaState extends State<AbrigosTela> {
     }
   }
 
-
   // ==========================================================================
   // UTILITÁRIOS
   // ==========================================================================
@@ -179,9 +173,12 @@ class _AbrigosTelaState extends State<AbrigosTela> {
     final dLat = _deg2rad(lat2 - lat1);
     final dLon = _deg2rad(lon2 - lon1);
 
-    final a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(_deg2rad(lat1)) * cos(_deg2rad(lat2)) *
-        sin(dLon / 2) * sin(dLon / 2);
+    final a =
+        sin(dLat / 2) * sin(dLat / 2) +
+        cos(_deg2rad(lat1)) *
+            cos(_deg2rad(lat2)) *
+            sin(dLon / 2) *
+            sin(dLon / 2);
 
     final c = 2 * atan2(sqrt(a), sqrt(1 - a));
 
@@ -199,27 +196,13 @@ class _AbrigosTelaState extends State<AbrigosTela> {
   Color _corStatus(String status) {
     switch (status) {
       case 'lotado':
-        return Color(0xFFc60202);
+        return const Color(0xFFc60202);
       case 'quase_lotado':
-        return Color(0xFFff6a00);
+        return const Color(0xFFff6a00);
       default:
-        return Color(0xFF00c000);
+        return const Color(0xFF00c000);
     }
   }
-
-  String _labelStatus(String status) {
-    switch (status) {
-      case 'lotado':
-        return 'Lotado';
-      case 'quase_lotado':
-        return 'Quase lotado';
-      case 'inativo':
-        return 'Inativo';
-      default:
-        return 'Disponível';
-    }
-  }
-
 
   // ==========================================================================
   // BUILD
@@ -234,15 +217,12 @@ class _AbrigosTelaState extends State<AbrigosTela> {
       body: SafeArea(
         child: Column(
           children: [
-
             // Espaço para o ContainerPerfilSuperior
             SizedBox(height: 60),
-
 
             // ================================================================
             // TÍTULO
             // ================================================================
-
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Column(
@@ -274,21 +254,20 @@ class _AbrigosTelaState extends State<AbrigosTela> {
                       'Ordenados pela proximidade da sua localização',
                       style: TextStyle(
                         fontSize: 12,
-                        color: acessibilidade.corPrimaria.withValues(alpha: 0.6),
+                        color: acessibilidade.corPrimaria.withValues(
+                          alpha: 0.6,
+                        ),
                       ),
                     ),
                 ],
               ),
             ),
 
-
             SizedBox(height: 16),
-
 
             // ================================================================
             // CONTEÚDO
             // ================================================================
-
             Expanded(
               child: _carregando
                   ? Center(
@@ -297,64 +276,68 @@ class _AbrigosTelaState extends State<AbrigosTela> {
                       ),
                     )
                   : _erro != null
-                      ? Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                size: 48,
-                                color: acessibilidade.corPrimaria.withValues(alpha: 0.5),
-                              ),
-                              SizedBox(height: 12),
-                              Text(
-                                _erro!,
-                                style: TextStyle(
-                                  color: acessibilidade.corPrimaria,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              SizedBox(height: 16),
-                              ElevatedButton(
-                                onPressed: _carregarDados,
-                                child: Text('Tentar novamente'),
-                              ),
-                            ],
-                          ),
-                        )
-                      : _abrigos.isEmpty
-                          ? Center(
-                              child: Text(
-                                'Nenhum abrigo disponível no momento.',
-                                style: TextStyle(
-                                  color: acessibilidade.corPrimaria,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            )
-                          : RefreshIndicator(
-                              onRefresh: _carregarDados,
-                              color: Theme.of(context).colorScheme.primary,
-                              child: ListView.builder(
-                                padding: EdgeInsets.fromLTRB(
-                                  20, 0, 20, 110,
-                                ),
-                                itemCount: _abrigos.length,
-                                itemBuilder: (context, index) {
-                                  return _buildCardAbrigo(
-                                    _abrigos[index],
-                                    acessibilidade,
-                                  );
-                                },
-                              ),
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: acessibilidade.corPrimaria.withValues(
+                              alpha: 0.5,
                             ),
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            _erro!,
+                            style: TextStyle(
+                              color: acessibilidade.corPrimaria,
+                              fontSize: 16,
+                            ),
+                          ),
+                          SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: _carregarDados,
+                            child: Text('Tentar novamente'),
+                          ),
+                        ],
+                      ),
+                    )
+                  : _abrigos.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Nenhum abrigo disponível no momento.',
+                        style: TextStyle(
+                          color: acessibilidade.corPrimaria,
+                          fontSize: 16,
+                        ),
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _carregarDados,
+                      color: Theme.of(context).colorScheme.primary,
+                      child: ListView.builder(
+                        padding: EdgeInsets.fromLTRB(
+                          20,
+                          0,
+                          20,
+                          110,
+                        ),
+                        itemCount: _abrigos.length,
+                        itemBuilder: (context, index) {
+                          return _buildCardAbrigo(
+                            _abrigos[index],
+                            acessibilidade,
+                          );
+                        },
+                      ),
+                    ),
             ),
           ],
         ),
       ),
     );
   }
-
 
   // ==========================================================================
   // CARD DO ABRIGO
@@ -398,11 +381,9 @@ class _AbrigosTelaState extends State<AbrigosTela> {
           ),
           child: Stack(
             children: [
-
               // ==============================================================
               // ÁREA DE IMAGEM (PLACEHOLDER)
               // ==============================================================
-
               Positioned(
                 top: 12,
                 right: 12,
@@ -423,11 +404,9 @@ class _AbrigosTelaState extends State<AbrigosTela> {
                 ),
               ),
 
-
               // ==============================================================
               // NOME DO ABRIGO
               // ==============================================================
-
               Positioned(
                 top: 22,
                 left: 16,
@@ -445,11 +424,9 @@ class _AbrigosTelaState extends State<AbrigosTela> {
                 ),
               ),
 
-
               // ==============================================================
               // DISTÂNCIA
               // ==============================================================
-
               if (distancia != null)
                 Positioned(
                   bottom: 14,
@@ -476,11 +453,9 @@ class _AbrigosTelaState extends State<AbrigosTela> {
                   ),
                 ),
 
-
               // ==============================================================
               // CAPACIDADE + STATUS
               // ==============================================================
-
               Positioned(
                 bottom: 14,
                 right: 16,

@@ -1,4 +1,4 @@
-﻿import 'package:firebase_ai/firebase_ai.dart';
+import 'package:firebase_ai/firebase_ai.dart';
 import 'package:flutter/foundation.dart';
 
 /// Serviço responsável por toda a comunicação com a IA Gemini

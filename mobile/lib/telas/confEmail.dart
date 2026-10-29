@@ -5,7 +5,6 @@ class ConfEmail extends StatefulWidget {
   final String? email;
   final String? senha;
 
-
   const ConfEmail({
     super.key,
     required this.title,
@@ -30,7 +29,9 @@ class _confEmail_state extends State<ConfEmail> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Erro: e-mail ou senha não foram recebidos. Tente cadastrar novamente."),
+            content: Text(
+              "Erro: e-mail ou senha não foram recebidos. Tente cadastrar novamente.",
+            ),
           ),
         );
       }
@@ -54,7 +55,9 @@ class _confEmail_state extends State<ConfEmail> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Não foi possível iniciar a sessão. Tente novamente."),
+            content: Text(
+              "Não foi possível iniciar a sessão. Tente novamente.",
+            ),
           ),
         );
       }
@@ -64,8 +67,11 @@ class _confEmail_state extends State<ConfEmail> {
       // Supabase returns "Email not confirmed" when email is unverified
       if (e.message.toLowerCase().contains('email not confirmed') ||
           e.message.toLowerCase().contains('email não confirmado')) {
-        mensagem = "E-mail ainda não confirmado. Verifique sua caixa de entrada e spam.";
-      } else if (e.message.toLowerCase().contains('invalid login credentials') ||
+        mensagem =
+            "E-mail ainda não confirmado. Verifique sua caixa de entrada e spam.";
+      } else if (e.message.toLowerCase().contains(
+            'invalid login credentials',
+          ) ||
           e.message.toLowerCase().contains('invalid')) {
         mensagem = "Credenciais inválidas. Tente cadastrar novamente.";
       } else {
@@ -95,16 +101,20 @@ class _confEmail_state extends State<ConfEmail> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
-
       body: Stack(
         children: [
           Positioned.fill(
             child: CustomPaint(
               painter: AbstractBackgroundPainter(
-                primaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                secondaryColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
-                tertiaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                primaryColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.3),
+                secondaryColor: Theme.of(
+                  context,
+                ).colorScheme.secondary.withValues(alpha: 0.3),
+                tertiaryColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -143,14 +153,26 @@ class _confEmail_state extends State<ConfEmail> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           spacing: 35,
                           children: <Widget>[
-                            Text("Confirme seu e-mail de cadastro", style: TextStyle(fontSize: 20, fontWeight: FontWeight(900)),)
+                            Text(
+                              "Confirme seu e-mail de cadastro",
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight(900),
+                              ),
+                            ),
                           ],
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           spacing: 35,
                           children: <Widget>[
-                            Text("para prosseguir", style: TextStyle(fontSize: 20, fontWeight: FontWeight(900)),)
+                            Text(
+                              "para prosseguir",
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight(900),
+                              ),
+                            ),
                           ],
                         ),
                         SizedBox(
@@ -163,7 +185,9 @@ class _confEmail_state extends State<ConfEmail> {
                               ? SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : Text("Já confirmei!"),
                         ),
@@ -193,7 +217,9 @@ class _confEmail_state extends State<ConfEmail> {
                       350,
                     ),
 
-                    child: SvgPicture.asset("gfx/svg/Image/Prever_logo.svg", semanticsLabel: "Logo Prever",
+                    child: SvgPicture.asset(
+                      "gfx/svg/Image/Prever_logo.svg",
+                      semanticsLabel: "Logo Prever",
                       height: 60,
                     ),
                   ),

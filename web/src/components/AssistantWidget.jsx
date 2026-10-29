@@ -1,6 +1,6 @@
 import { captureScreenContext } from '../backend/ai/screenContextService.js'
 import { assistantError, allowedScreens, chatKey, LEGACY_CHAT_KEY, permittedActions } from '../backend/ai/assistantPolicy.js'
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import assistantIcon from '../assets/assistant/assistant-icon.svg'
 import { askSmdnAssistant } from '../backend/ai/assistantService.js'
 import { buildSmdnOperationalContext } from '../backend/ai/smdnContextService.js'
@@ -271,7 +271,7 @@ function AssistantWidgetSession({ currentScreen, setCurrentScreen, compact = fal
 
   const chatStorageKey = chatKey(user)
 
-  function getDefaultPanelPosition() {
+  const getDefaultPanelPosition = useCallback(() => {
     if (typeof window === 'undefined') {
       return { x: compact ? 70 : 210, y: 96 }
     }
@@ -281,7 +281,7 @@ function AssistantWidgetSession({ currentScreen, setCurrentScreen, compact = fal
       x: compact ? 70 : 210,
       y: Math.max(16, window.innerHeight - panelHeight - 64),
     }
-  }
+  }, [compact])
 
   function clampPanelPosition(x, y) {
     if (typeof window === 'undefined') return { x, y }
@@ -334,7 +334,7 @@ function AssistantWidgetSession({ currentScreen, setCurrentScreen, compact = fal
     if (open && !panelPosition) {
       setPanelPosition(getDefaultPanelPosition())
     }
-  }, [open, panelPosition])
+  }, [open, panelPosition, getDefaultPanelPosition])
 
   useEffect(() => {
     const timers = timersRef.current

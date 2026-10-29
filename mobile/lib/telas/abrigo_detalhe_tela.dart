@@ -5,7 +5,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../controles/controle_acessibilidade.dart';
 
-
 class AbrigoDetalheTela extends StatelessWidget {
   final Map<String, dynamic> abrigo;
   final Position? posicaoUsuario;
@@ -15,7 +14,6 @@ class AbrigoDetalheTela extends StatelessWidget {
     required this.abrigo,
     this.posicaoUsuario,
   });
-
 
   // ==========================================================================
   // UTILITÁRIOS
@@ -45,7 +43,6 @@ class AbrigoDetalheTela extends StatelessWidget {
     }
   }
 
-
   // ==========================================================================
   // ABRIR GOOGLE MAPS COM ROTA
   // ==========================================================================
@@ -68,12 +65,14 @@ class AbrigoDetalheTela extends StatelessWidget {
 
     if (posicaoUsuario != null) {
       // Rota da posição atual até o abrigo
-      url = 'https://www.google.com/maps/dir/'
+      url =
+          'https://www.google.com/maps/dir/'
           '${posicaoUsuario!.latitude},${posicaoUsuario!.longitude}/'
           '$destLat,$destLng';
     } else {
       // Sem posição do usuário, abre somente o destino
-      url = 'https://www.google.com/maps/search/?api=1'
+      url =
+          'https://www.google.com/maps/search/?api=1'
           '&query=$destLat,$destLng';
     }
 
@@ -92,7 +91,6 @@ class AbrigoDetalheTela extends StatelessWidget {
       }
     }
   }
-
 
   // ==========================================================================
   // BUILD
@@ -130,11 +128,9 @@ class AbrigoDetalheTela extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-
             // ================================================================
             // HEADER
             // ================================================================
-
             Container(
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary,
@@ -166,25 +162,20 @@ class AbrigoDetalheTela extends StatelessWidget {
               ),
             ),
 
-
             // ================================================================
             // CONTEÚDO
             // ================================================================
-
             Expanded(
               child: SingleChildScrollView(
                 padding: EdgeInsets.fromLTRB(20, 0, 20, 30),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     SizedBox(height: 14),
-
 
                     // ========================================================
                     // CARD PRINCIPAL
                     // ========================================================
-
                     Container(
                       width: double.infinity,
                       padding: EdgeInsets.all(18),
@@ -202,7 +193,6 @@ class AbrigoDetalheTela extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-
                           // NOME + IMAGEM
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,7 +215,9 @@ class AbrigoDetalheTela extends StatelessWidget {
                                 width: 110,
                                 height: 90,
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.secondary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.secondary,
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                                 child: Center(
@@ -239,9 +231,7 @@ class AbrigoDetalheTela extends StatelessWidget {
                             ],
                           ),
 
-
                           SizedBox(height: 18),
-
 
                           // COORDENADOR + CAPACIDADE
                           Row(
@@ -254,19 +244,24 @@ class AbrigoDetalheTela extends StatelessWidget {
                                       Icon(
                                         Icons.person_outline,
                                         size: 18,
-                                        color: Colors.white.withValues(alpha: 0.5),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.5,
+                                        ),
                                       ),
 
                                       SizedBox(width: 6),
 
                                       Flexible(
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               'Responsável:',
                                               style: TextStyle(
-                                                color: Colors.white.withValues(alpha: 0.5),
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.5,
+                                                ),
                                                 fontSize: 11,
                                               ),
                                             ),
@@ -287,7 +282,6 @@ class AbrigoDetalheTela extends StatelessWidget {
                                   ),
                                 ),
 
-
                               // Capacidade
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -303,7 +297,9 @@ class AbrigoDetalheTela extends StatelessWidget {
                                   Text(
                                     'Capacidade',
                                     style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.5),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.5,
+                                      ),
                                       fontSize: 11,
                                     ),
                                   ),
@@ -312,9 +308,7 @@ class AbrigoDetalheTela extends StatelessWidget {
                             ],
                           ),
 
-
                           SizedBox(height: 18),
-
 
                           // ENDEREÇO
                           Text(
@@ -328,14 +322,11 @@ class AbrigoDetalheTela extends StatelessWidget {
                       ),
                     ),
 
-
                     SizedBox(height: 20),
-
 
                     // ========================================================
                     // STATUS
                     // ========================================================
-
                     _buildInfoRow(
                       icon: Icons.circle,
                       iconColor: _corStatus(status),
@@ -344,11 +335,9 @@ class AbrigoDetalheTela extends StatelessWidget {
                       acessibilidade: acessibilidade,
                     ),
 
-
                     // ========================================================
                     // TIPO
                     // ========================================================
-
                     if (tipo.isNotEmpty)
                       _buildInfoRow(
                         icon: Icons.category_outlined,
@@ -357,11 +346,9 @@ class AbrigoDetalheTela extends StatelessWidget {
                         acessibilidade: acessibilidade,
                       ),
 
-
                     // ========================================================
                     // ACESSIBILIDADE
                     // ========================================================
-
                     if (acessibilidadeInfo.isNotEmpty)
                       _buildInfoRow(
                         icon: Icons.accessible_outlined,
@@ -370,11 +357,9 @@ class AbrigoDetalheTela extends StatelessWidget {
                         acessibilidade: acessibilidade,
                       ),
 
-
                     // ========================================================
                     // ACEITA PETS
                     // ========================================================
-
                     if (aceitaPets.isNotEmpty)
                       _buildInfoRow(
                         icon: Icons.pets_outlined,
@@ -383,11 +368,9 @@ class AbrigoDetalheTela extends StatelessWidget {
                         acessibilidade: acessibilidade,
                       ),
 
-
                     // ========================================================
                     // TELEFONE
                     // ========================================================
-
                     if (telefone.isNotEmpty)
                       _buildInfoRow(
                         icon: Icons.phone_outlined,
@@ -404,11 +387,9 @@ class AbrigoDetalheTela extends StatelessWidget {
                         acessibilidade: acessibilidade,
                       ),
 
-
                     // ========================================================
                     // CONTATO COORDENADOR
                     // ========================================================
-
                     if (coordenadorContato.isNotEmpty)
                       _buildInfoRow(
                         icon: Icons.contact_phone_outlined,
@@ -417,11 +398,9 @@ class AbrigoDetalheTela extends StatelessWidget {
                         acessibilidade: acessibilidade,
                       ),
 
-
                     // ========================================================
                     // DETALHES
                     // ========================================================
-
                     if (detalhes.isNotEmpty) ...[
                       SizedBox(height: 12),
 
@@ -439,28 +418,29 @@ class AbrigoDetalheTela extends StatelessWidget {
                       Text(
                         detalhes,
                         style: TextStyle(
-                          color: acessibilidade.corPrimaria.withValues(alpha: 0.7),
+                          color: acessibilidade.corPrimaria.withValues(
+                            alpha: 0.7,
+                          ),
                           fontSize: 14,
                           height: 1.4,
                         ),
                       ),
                     ],
 
-
                     SizedBox(height: 30),
-
 
                     // ========================================================
                     // BOTÃO GOOGLE MAPS
                     // ========================================================
-
                     SizedBox(
                       width: double.infinity,
                       height: 54,
                       child: ElevatedButton.icon(
                         onPressed: () => _abrirRotaGoogleMaps(context),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -487,7 +467,6 @@ class AbrigoDetalheTela extends StatelessWidget {
     );
   }
 
-
   // ==========================================================================
   // WIDGET DE LINHA DE INFORMAÇÃO
   // ==========================================================================
@@ -507,7 +486,8 @@ class AbrigoDetalheTela extends StatelessWidget {
           Icon(
             icon,
             size: 20,
-            color: iconColor ?? acessibilidade.corPrimaria.withValues(alpha: 0.5),
+            color:
+                iconColor ?? acessibilidade.corPrimaria.withValues(alpha: 0.5),
           ),
 
           SizedBox(width: 10),

@@ -1,5 +1,3 @@
-
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -10,17 +8,27 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // dotenv.load() DEVE ser chamado antes de qualquer acesso a dotenv.env
-  await dotenv.load(fileName: ".env");
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (_) {}
 
   // Inicializa o Firebase (necessário para o Nimbo — chatbot IA)
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  final firebaseOptions = DefaultFirebaseOptions.currentPlatform;
+  if (firebaseOptions.apiKey.isNotEmpty) {
+    await Firebase.initializeApp(
+      options: firebaseOptions,
+    );
+  }
 
-  await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL'] ?? 'https://robfgvtnoooivihlnomr.supabase.co',
-    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? 'sb_publishable_eVCeoqzfhoAgkpBnJxzs7w_-PGO0TO9',
-  );
+  final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? '';
+  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+
+  if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
+    await Supabase.initialize(
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
+    );
+  }
 
   runApp(
     ChangeNotifierProvider(

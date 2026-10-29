@@ -125,7 +125,9 @@ class DialogoRelatoSuspeito extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: corPrincipal.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: corPrincipal.withValues(alpha: 0.1)),
+                    border: Border.all(
+                      color: corPrincipal.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: Text(
                     resultado.motivoClassificacao,
@@ -144,12 +146,18 @@ class DialogoRelatoSuspeito extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Color(0xFFC1272D).withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Color(0xFFC1272D).withValues(alpha: 0.2)),
+                    border: Border.all(
+                      color: Color(0xFFC1272D).withValues(alpha: 0.2),
+                    ),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.info_outline, color: Color(0xFFC1272D), size: 18 * escala),
+                      Icon(
+                        Icons.info_outline,
+                        color: Color(0xFFC1272D),
+                        size: 18 * escala,
+                      ),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -180,7 +188,9 @@ class DialogoRelatoSuspeito extends StatelessWidget {
                     onPressed: onCancelar,
                     style: OutlinedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 14),
-                      side: BorderSide(color: corPrincipal.withValues(alpha: 0.5)),
+                      side: BorderSide(
+                        color: corPrincipal.withValues(alpha: 0.5),
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),

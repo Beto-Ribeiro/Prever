@@ -34,7 +34,6 @@ class _Relatos_telaState extends State<Relatos_tela> {
   final TextEditingController _descricaoController = TextEditingController();
 
   // Controle de estado do filtro antifraude
-  final bool _analisandoFraude = false;
   final AntiFraudeService _antiFraudeService = AntiFraudeService();
 
   // Variáveis para o Mapa e Localização
@@ -80,8 +79,15 @@ class _Relatos_telaState extends State<Relatos_tela> {
   // Pega a localização atual do celular
   Future<void> _getCurrentLocation() async {
     try {
-      Position locationData = await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(accuracy: LocationAccuracy.high));
-      LatLng posicaoAtual = LatLng(locationData.latitude, locationData.longitude);
+      Position locationData = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+      LatLng posicaoAtual = LatLng(
+        locationData.latitude,
+        locationData.longitude,
+      );
 
       setState(() {
         localizacaoSelecionada = posicaoAtual;
@@ -148,20 +154,29 @@ class _Relatos_telaState extends State<Relatos_tela> {
 
   String _mapearTipoDesastre(int? tipo) {
     switch (tipo) {
-      case 0: return 'Alagamento';
-      case 1: return 'Tornado';
-      case 2: return 'Desabamento';
-      case 3: return 'Chuva Forte';
-      default: return 'Desconhecido';
+      case 0:
+        return 'Alagamento';
+      case 1:
+        return 'Tornado';
+      case 2:
+        return 'Desabamento';
+      case 3:
+        return 'Chuva Forte';
+      default:
+        return 'Desconhecido';
     }
   }
 
   String _mapearNivelRisco(int? nivel) {
     switch (nivel) {
-      case 0: return 'Leve';
-      case 1: return 'Moderada';
-      case 2: return 'Severa';
-      default: return 'Desconhecida';
+      case 0:
+        return 'Leve';
+      case 1:
+        return 'Moderada';
+      case 2:
+        return 'Severa';
+      default:
+        return 'Desconhecida';
     }
   }
 
@@ -297,10 +312,9 @@ class _Relatos_telaState extends State<Relatos_tela> {
         latitude: localizacaoSelecionada!.latitude,
         longitude: localizacaoSelecionada!.longitude,
         imagemBytes: imagemBytes!,
-        mimeTypeImagem:
-            imagemSelecionada?.extension?.toLowerCase() == 'png'
-                ? 'image/png'
-                : 'image/jpeg',
+        mimeTypeImagem: imagemSelecionada?.extension?.toLowerCase() == 'png'
+            ? 'image/png'
+            : 'image/jpeg',
       );
     } catch (e) {
       resultado = ResultadoAntifraude.erro(e.toString());
@@ -463,21 +477,21 @@ class _Relatos_telaState extends State<Relatos_tela> {
                       child: tipoSelecionado == null
                           ? SizedBox(width: double.infinity)
                           : Container(
-                        width: double.infinity,
-                        margin: EdgeInsets.only(top: 14),
-                        padding: EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.blueGrey.shade50,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          _descricaoTipo(tipoSelecionado),
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
+                              width: double.infinity,
+                              margin: EdgeInsets.only(top: 14),
+                              padding: EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.blueGrey.shade50,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                _descricaoTipo(tipoSelecionado),
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ),
                     ),
                     SizedBox(height: 25),
 
@@ -505,18 +519,18 @@ class _Relatos_telaState extends State<Relatos_tela> {
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: Colors.grey.shade400),
+                          borderSide: BorderSide(color: Colors.grey.shade400),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: Colors.grey.shade300),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                              color: Color(0xFFC1272D), width: 2),
+                            color: Color(0xFFC1272D),
+                            width: 2,
+                          ),
                         ),
                         contentPadding: EdgeInsets.all(14),
                         filled: true,
@@ -554,22 +568,24 @@ class _Relatos_telaState extends State<Relatos_tela> {
                       onPointerDown: (event) {
                         if (event.kind == PointerDeviceKind.touch) {
                           setState(
-                                () => _scrollPhysics =
-                            const NeverScrollableScrollPhysics(),
+                            () => _scrollPhysics =
+                                const NeverScrollableScrollPhysics(),
                           );
                         }
                       },
                       onPointerUp: (event) {
                         if (event.kind == PointerDeviceKind.touch) {
                           setState(
-                                () => _scrollPhysics = const ClampingScrollPhysics(),
+                            () =>
+                                _scrollPhysics = const ClampingScrollPhysics(),
                           );
                         }
                       },
                       onPointerCancel: (event) {
                         if (event.kind == PointerDeviceKind.touch) {
                           setState(
-                                () => _scrollPhysics = const ClampingScrollPhysics(),
+                            () =>
+                                _scrollPhysics = const ClampingScrollPhysics(),
                           );
                         }
                       },
@@ -591,23 +607,23 @@ class _Relatos_telaState extends State<Relatos_tela> {
                           child: _isLoadingMap
                               ? Center(child: CircularProgressIndicator())
                               : GoogleMap(
-                            initialCameraPosition: CameraPosition(
-                              target:
-                              localizacaoSelecionada ??
-                                  const LatLng(-23.5505, -46.6333),
-                              zoom: 15,
-                            ),
-                            onMapCreated: (controller) =>
-                            mapController = controller,
-                            markers: markers,
-                            onTap: (LatLng posicao) {
-                              setState(() {
-                                _utilizarLocalizacaoAtual = false;
-                                localizacaoSelecionada = posicao;
-                                _atualizarMarcador(posicao);
-                              });
-                            },
-                          ),
+                                  initialCameraPosition: CameraPosition(
+                                    target:
+                                        localizacaoSelecionada ??
+                                        const LatLng(-23.5505, -46.6333),
+                                    zoom: 15,
+                                  ),
+                                  onMapCreated: (controller) =>
+                                      mapController = controller,
+                                  markers: markers,
+                                  onTap: (LatLng posicao) {
+                                    setState(() {
+                                      _utilizarLocalizacaoAtual = false;
+                                      localizacaoSelecionada = posicao;
+                                      _atualizarMarcador(posicao);
+                                    });
+                                  },
+                                ),
                         ),
                       ),
                     ),
@@ -721,14 +737,14 @@ class _Relatos_telaState extends State<Relatos_tela> {
               child: imagemBytes == null
                   ? null
                   : ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.memory(
-                  imagemBytes!,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                ),
-              ),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.memory(
+                        imagemBytes!,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                      ),
+                    ),
             ),
           ),
         ),
@@ -804,11 +820,11 @@ class _Relatos_telaState extends State<Relatos_tela> {
   }
 
   Widget _iconDesastre(
-      int valor,
-      String caminhoAsset,
-      String nomeDesastre,
-      IconData iconeFallback,
-      ) {
+    int valor,
+    String caminhoAsset,
+    String nomeDesastre,
+    IconData iconeFallback,
+  ) {
     bool selecionado = tipoSelecionado == valor;
     return GestureDetector(
       onTap: () => setState(() => tipoSelecionado = valor),
@@ -824,7 +840,9 @@ class _Relatos_telaState extends State<Relatos_tela> {
                 shape: BoxShape.circle,
                 color: selecionado ? Colors.blue.shade50 : Colors.white,
                 border: Border.all(
-                  color: selecionado ? Colors.blue.shade700 : Colors.grey.shade300,
+                  color: selecionado
+                      ? Colors.blue.shade700
+                      : Colors.grey.shade300,
                   width: selecionado ? 2.6 : 1.4,
                 ),
               ),
@@ -870,7 +888,9 @@ class _DashedBorderPainter extends CustomPainter {
   const _DashedBorderPainter({
     this.color = Colors.black45,
     this.radius = 12,
-  }) : strokeWidth = 1.4 : dashWidth = 6 : dashSpace = 4;
+  }) : strokeWidth = 1.4,
+       dashWidth = 6,
+       dashSpace = 4;
 
   @override
   void paint(Canvas canvas, Size size) {

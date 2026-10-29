@@ -1,0 +1,13 @@
+graph LR
+    A["Inicializacao do App<br/>(dotenv + Firebase + Supabase)"] --> B["TelaPrincipal / Home<br/>(Modo Visitante ou Autenticado)"]
+    B --> C["Consulta Publica<br/>(Mapa de Alertas, Clima, Abrigos, Guia)"]
+    B --> D{"Acao Restrita?<br/>(Relatar / SOS / Perfil)"}
+    D -- "Sem Sessao" --> E["Fluxo de Autenticacao<br/>(Login / Cadastro / OTP Email)"]
+    E --> F["Sessao Autenticada"]
+    D -- "Autenticado" --> F
+    F --> G["Botao SOS Emergencia<br/>(Confirmacao CPF + Coordenadas GPS)"]
+    F --> H["Envio de Relato<br/>(Foto + Descricao + Coordenadas)"]
+    H --> I["AntiFraudeService<br/>(Gemini 2.5 Flash Lite)"]
+    I -- "Score >= 0.80" --> J["Status: legitimo<br/>(Publicado no Mapa)"]
+    I -- "Score < 0.80 ou Erro" --> K["Status: pendente_revisao<br/>(Fila de Validacao Web)"]
+    F --> L["Chatbot Nimbo IA<br/>(Orientacoes de Seguranca)"]

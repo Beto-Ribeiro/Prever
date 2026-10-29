@@ -1,0 +1,28 @@
+graph TD
+    subgraph Supabase["Supabase Platform (PostgreSQL + Auth + Storage + Edge)"]
+        DB[("PostgreSQL 15 + RLS<br/>(perfis, relatos, alertas, abrigos,<br/>auditoria_logs, solicitacoes_acesso_web)")]
+        SBAuth["Supabase Auth<br/>(JWT / OTP / Invite)"]
+        SBStorage["Supabase Storage<br/>(fotos_relatos / avatars)"]
+        FnApprove["Edge Function:<br/>approve-web-access-request"]
+        FnAI["Edge Function:<br/>smdn-ai"]
+    end
+
+    subgraph GoogleCloud["Google Cloud & Firebase Ecosystem"]
+        FirebaseAI["Firebase AI SDK (Mobile)<br/>Gemini 2.5 Flash / Flash-Lite"]
+        GeminiAPI["Google GenAI API (Serverless)<br/>Gemini 2.5 Flash"]
+        GMaps["Google Maps SDK (Android/iOS)<br/>& @vis.gl/react-google-maps (2D/3D)"]
+    end
+
+    subgraph OpenAPIs["APIs Meteorologicas & Geograficas"]
+        OWM["OpenWeatherMap REST API<br/>(/data/2.5/weather & /forecast)"]
+        OSM["OpenStreetMap Nominatim<br/>(Reverse & Forward Geocoding)"]
+    end
+
+    FnApprove -->|Service Role Key| SBAuth
+    FnApprove -->|Atualiza Perfil & Permissoes| DB
+    FnAI -->|Valida JWT Usuario| SBAuth
+    FnAI -->|Prompt Contextualizado| GeminiAPI
+    FirebaseAI -->|Analise Multimodal de Relatos| DB
+    GMaps -.->|Coordenadas & Camadas| DB
+    OWM -.->|Indicadores Climaticos| FirebaseAI
+    OSM -.->|Enderecamento de Ocorrencias| DB

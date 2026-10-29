@@ -8,10 +8,13 @@ void main() {
 
   test('Logo renderiza o símbolo e as letras no Flutter', () async {
     final picture = await vg.loadPicture(
-      const SvgAssetLoader('gfx/svg/Image/Prever_logo.svg'), null,
+      const SvgAssetLoader('gfx/svg/Image/Prever_logo.svg'),
+      null,
     );
     final image = await picture.picture.toImage(300, 197);
-    final pixels = (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+    final pixels = (await image.toByteData(
+      format: ui.ImageByteFormat.rawRgba,
+    ))!;
     int pixelsVisiveis(int inicio, int fim) {
       var total = 0;
       for (var y = inicio; y < fim; y++) {
@@ -21,11 +24,14 @@ void main() {
       }
       return total;
     }
+
     expect(pixelsVisiveis(0, 135), greaterThan(500));
     expect(pixelsVisiveis(150, 197), greaterThan(500));
     final png = await image.toByteData(format: ui.ImageByteFormat.png);
     await Directory('build').create(recursive: true);
-    await File('build/prever_logo_preview.png').writeAsBytes(png!.buffer.asUint8List());
+    await File(
+      'build/prever_logo_preview.png',
+    ).writeAsBytes(png!.buffer.asUint8List());
     image.dispose();
     picture.picture.dispose();
   });

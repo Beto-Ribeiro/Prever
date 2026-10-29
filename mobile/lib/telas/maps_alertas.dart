@@ -144,9 +144,14 @@ class _MapsAlertas extends State<Maps_alertas> {
               ListTile(
                 leading: Icon(Icons.map, color: Colors.white),
                 title: Text('Ruas (2D)', style: TextStyle(color: Colors.white)),
-                trailing: _mapType == MapType.normal && !_is3D ? Icon(Icons.check, color: Colors.green) : null,
+                trailing: _mapType == MapType.normal && !_is3D
+                    ? Icon(Icons.check, color: Colors.green)
+                    : null,
                 onTap: () {
-                  setState(() { _mapType = MapType.normal; _is3D = false; });
+                  setState(() {
+                    _mapType = MapType.normal;
+                    _is3D = false;
+                  });
                   _atualizarCameraTilt(0.0);
                   Navigator.pop(context);
                 },
@@ -154,9 +159,14 @@ class _MapsAlertas extends State<Maps_alertas> {
               ListTile(
                 leading: Icon(Icons.satellite, color: Colors.white),
                 title: Text('Satélite', style: TextStyle(color: Colors.white)),
-                trailing: _mapType == MapType.satellite ? Icon(Icons.check, color: Colors.green) : null,
+                trailing: _mapType == MapType.satellite
+                    ? Icon(Icons.check, color: Colors.green)
+                    : null,
                 onTap: () {
-                  setState(() { _mapType = MapType.satellite; _is3D = false; });
+                  setState(() {
+                    _mapType = MapType.satellite;
+                    _is3D = false;
+                  });
                   _atualizarCameraTilt(0.0);
                   Navigator.pop(context);
                 },
@@ -164,9 +174,14 @@ class _MapsAlertas extends State<Maps_alertas> {
               ListTile(
                 leading: Icon(Icons.terrain, color: Colors.white),
                 title: Text('Relevo', style: TextStyle(color: Colors.white)),
-                trailing: _mapType == MapType.terrain ? Icon(Icons.check, color: Colors.green) : null,
+                trailing: _mapType == MapType.terrain
+                    ? Icon(Icons.check, color: Colors.green)
+                    : null,
                 onTap: () {
-                  setState(() { _mapType = MapType.terrain; _is3D = false; });
+                  setState(() {
+                    _mapType = MapType.terrain;
+                    _is3D = false;
+                  });
                   _atualizarCameraTilt(0.0);
                   Navigator.pop(context);
                 },
@@ -176,7 +191,10 @@ class _MapsAlertas extends State<Maps_alertas> {
                 title: Text('Visão 3D', style: TextStyle(color: Colors.white)),
                 trailing: _is3D ? Icon(Icons.check, color: Colors.green) : null,
                 onTap: () {
-                  setState(() { _mapType = MapType.normal; _is3D = true; });
+                  setState(() {
+                    _mapType = MapType.normal;
+                    _is3D = true;
+                  });
                   _atualizarCameraTilt(45.0);
                   Navigator.pop(context);
                 },
@@ -190,16 +208,18 @@ class _MapsAlertas extends State<Maps_alertas> {
 
   Future<void> _atualizarCameraTilt(double tilt) async {
     final controller = await _controller.future;
-    
+
     // Se a câmera nunca foi movida, criamos uma posição baseada no Target Inicial ou na Localização
-    CameraPosition targetPosition = _currentCameraPosition ?? CameraPosition(
-      target: position != null 
-          ? LatLng(position!.latitude, position!.longitude) 
-          // IMPORTANTE (TESTE 3D): Cidades do interior (como Taubaté abaixo) muitas vezes não têm edifícios 3D mapeados pelo Google.
-          // Se o mapa ficar plano no emulador, teste trocar para São Paulo: const LatLng(-23.550520, -46.633308)
-          : const LatLng(-23.014336, -45.538053),
-      zoom: 15,
-    );
+    CameraPosition targetPosition =
+        _currentCameraPosition ??
+        CameraPosition(
+          target: position != null
+              ? LatLng(position!.latitude, position!.longitude)
+              // IMPORTANTE (TESTE 3D): Cidades do interior (como Taubaté abaixo) muitas vezes não têm edifícios 3D mapeados pelo Google.
+              // Se o mapa ficar plano no emulador, teste trocar para São Paulo: const LatLng(-23.550520, -46.633308)
+              : const LatLng(-23.014336, -45.538053),
+          zoom: 15,
+        );
 
     double newZoom = targetPosition.zoom;
     // O 3D (buildings) só costuma aparecer em níveis de zoom maiores (ex: 17 ou 18+)

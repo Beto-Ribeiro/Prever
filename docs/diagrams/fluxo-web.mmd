@@ -1,0 +1,12 @@
+graph LR
+    A["Acesso ao Painel Web<br/>(Login / Solicitar Acesso)"] --> B{"Sessao Valida +<br/>getWebAccessForUser?"}
+    B -- "Nao Autorizado" --> C["Bloqueio Fail-Closed +<br/>Mensagem Amigavel"]
+    B -- "Shelter Manager" --> D["ManagerPortal<br/>(Dashboard, Ocupantes, Estoque, Pedidos, Relatorios)"]
+    B -- "Agente / Defesa Civil / Admin" --> E["Painel Tatico Principal<br/>(RBAC por Tela)"]
+    E --> F["Dashboard & MapView 2D/3D<br/>(Ocorrencias, Vitimas SOS, Abrigos)"]
+    E --> G["Validacao Antifraude &<br/>Gestao de Ocorrencias"]
+    E --> H["Disparo de Alertas<br/>Georreferenciados"]
+    E --> I["Relatorios (PDF/XLSX) &<br/>Trilha de Auditoria"]
+    E --> J["AdminPanel & UserList<br/>(Aprovacao de Acesso / Permissoes)"]
+    D --> K["Assistente IA Nimbo<br/>(Contexto Isolado por Perfil)"]
+    E --> K

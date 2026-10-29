@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import ManagerPortal from './screens/manager/ManagerPortal.jsx'
 import Login from './screens/Login.jsx'
 import Dashboard from './screens/Dashboard.jsx'
@@ -59,9 +59,9 @@ export default function App() {
   const canRenderApp = isAuthenticated || devBypassAuth
   const canOpenAdmin = isAdmin || devBypassAdmin
   const isManager = user?.role === 'shelter_manager'
-  const permissions = user?.permissions || {}
 
-  function canOpenScreen(screenId) {
+  const canOpenScreen = useCallback((screenId) => {
+    const permissions = user?.permissions || {}
     if (isManager) return ['dashboard', 'ocupantes', 'estoque', 'pedidos', 'relatorios', 'perfil'].includes(screenId)
     if (screenId === 'perfil') return true
     if (['admin', 'users'].includes(screenId)) return canOpenAdmin
@@ -80,7 +80,7 @@ export default function App() {
 
     const permissionKey = permissionKeyByScreen[screenId]
     return permissionKey ? Boolean(permissions[permissionKey]) : false
-  }
+  }, [isManager, canOpenAdmin, devBypassAuth, user?.permissions, user?.role])
 
   useEffect(() => {
     if (recoveryMode) {
@@ -91,7 +91,7 @@ export default function App() {
     if (!canOpenScreen(currentScreen)) {
       setCurrentScreen(canOpenScreen('dashboard') ? 'dashboard' : 'perfil')
     }
-  }, [currentScreen, isManager, canOpenAdmin, devBypassAuth, recoveryMode, permissions.dashboard, permissions.reportar, permissions.ocorrencias, permissions.relatorios, permissions.validacao, permissions.auditoria, user?.role])
+  }, [currentScreen, recoveryMode, canOpenScreen])
 
   const handleLogin = async ({ email, password }) => {
     await signIn({ email, password })

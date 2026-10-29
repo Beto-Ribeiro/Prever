@@ -88,7 +88,8 @@ class ContainerPerfilSuperior extends StatelessWidget {
 class PinsVisao extends StatefulWidget {
   final Function() FecharPinVisao;
   final String pinID;
-  const PinsVisao({super.key,
+  const PinsVisao({
+    super.key,
     required this.pinID,
     required this.FecharPinVisao,
   });
@@ -171,11 +172,12 @@ class _PinsVisaoState extends State<PinsVisao> {
         MagnitudePinVisao = dados['rel_descricao'];
       });
     } catch (e) {
+      debugPrint('Erro ao carregar dados do pin: $e');
       if (!mounted || ID != widget.pinID) return;
 
       setState(() {
-        TipoDesatrePinVisao = e.toString();
-        MagnitudePinVisao = e.toString();
+        TipoDesatrePinVisao = 'Indisponível';
+        MagnitudePinVisao = 'Indisponível';
       });
     }
   }
@@ -264,7 +266,7 @@ class _PinsVisaoState extends State<PinsVisao> {
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                   color: Colors.grey,
                 ),
-                alignment: AlignmentGeometry.topCenter,
+                alignment: Alignment.topCenter,
                 clipBehavior: Clip.hardEdge,
 
                 child: carregando
@@ -274,7 +276,10 @@ class _PinsVisaoState extends State<PinsVisao> {
                         mainAxisSize: MainAxisSize.max,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.asset("gfx/png/icons/camera-off.png", scale: 2,),
+                          Image.asset(
+                            "gfx/png/icons/camera-off.png",
+                            scale: 2,
+                          ),
                           Text('Nenhuma imagem encontrada'),
                         ],
                       )
@@ -284,7 +289,7 @@ class _PinsVisaoState extends State<PinsVisao> {
                       ),
               ),
               Container(
-                alignment: AlignmentGeometry.centerLeft,
+                alignment: Alignment.centerLeft,
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
                   children: [
@@ -333,107 +338,6 @@ class _PinsVisaoState extends State<PinsVisao> {
           ),
         ),
       ],
-    );
-  }
-}
-
-class PinsMapa {
-  final double latitude;
-  final double longitude;
-
-  Offset screenPosition;
-
-  PinsMapa({
-    required this.latitude,
-    required this.longitude,
-    this.screenPosition = Offset.zero,
-  });
-}
-
-class UltimosRelatosContainer extends StatefulWidget{
- const UltimosRelatosContainer({
-   super.key
-});
-
-  @override
-  State<UltimosRelatosContainer> createState() => _ultimosRelatosContainerState();
-}
-
-class _ultimosRelatosContainerState extends State<UltimosRelatosContainer>{
-
-  final supabase = Supabase.instance.client;
-
-  List<dynamic> relatos = [];
-
-  String? imagemURL;
-  bool carregando = true;
-
-  Future<void> carregarImagem(String id) async {
-    try {
-      // caminho da pasta dentro do bucket
-      final caminhoPasta = 'relatos/$id';
-
-      // lista os arquivos existentes nessa pasta
-      final arquivos = await supabase.storage
-          .from('Fotos_Storage')
-          .list(path: caminhoPasta);
-
-      if (arquivos.isEmpty) {
-        setState(() {
-          imagemURL = null;
-          carregando = false;
-        });
-
-        return;
-      }
-
-      // pega o primeiro arquivo da pasta
-      final nomeArquivo = arquivos.first.name;
-
-      // caminho completo dentro do bucket
-      final caminhoArquivo = '$caminhoPasta/$nomeArquivo';
-
-      // gera URL privada por 1 hora
-      final url = await supabase.storage
-          .from('Fotos_Storage')
-          .createSignedUrl(
-        caminhoArquivo,
-        3600,
-      );
-
-      setState(() {
-        imagemURL = url;
-        carregando = false;
-      });
-    } catch (e) {
-      debugPrint('Erro ao carregar imagem: $e');
-
-      setState(() {
-        imagemURL = null;
-        carregando = false;
-      });
-    }
-  }
-
-  Future<void> BuscarUltimosRelatos() async {
-    final data = await supabase.from('relato').select('rel_id').order('rel_data_hora', ascending: false);
-
-    for(final relato in data){
-      carregarImagem(relato["rel_id"]);
-    }
-
-
-  }
-
-  @override
-  Widget build(BuildContext context){
-    return Container(
-      child: Column(
-        children: [
-          for(final r in relatos)
-            Container()
-      ]
-      ),
     );
   }
 }

@@ -1,7 +1,6 @@
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'exportador_import.dart';
-import 'tela_sobrevivencia.dart';
-import 'package:geolocator/geolocator.dart';
 import '../controles/controle_acessibilidade.dart';
 import 'package:prever/telas/widgets/relatos_proximos.dart';
 import 'package:prever/services/relatos_proximos_service.dart';
@@ -23,8 +22,6 @@ class Home extends StatefulWidget {
   @override
   State<Home> createState() => _Home_State();
 }
-
-
 
 Future<void> Criar_SOS(
   BuildContext context, {
@@ -68,7 +65,9 @@ class _Home_State extends State<Home> {
   final supabase = Supabase.instance.client;
 
   Future<void> ValidarCPF() async {
-    final String cpfDigitadoLimpo = _SOSvalidateController.text.trim().replaceAll(RegExp(r'[^0-9]'), '');
+    final String cpfDigitadoLimpo = _SOSvalidateController.text
+        .trim()
+        .replaceAll(RegExp(r'[^0-9]'), '');
 
     final userId = supabase.auth.currentUser?.id;
 
@@ -79,47 +78,60 @@ class _Home_State extends State<Home> {
     final data = await supabase
         .from('Cidadao')
         .select('cid_cpf')
-        .eq('cid_id', userId).single();
+        .eq('cid_id', userId)
+        .single();
 
     final String cpfCompleto = data['cid_cpf'].toString();
 
     final String cpfLimpo = cpfCompleto.replaceAll(RegExp(r'[^0-9]'), '');
-    if (cpfLimpo == cpfDigitadoLimpo) {
+    final bool cpfValido =
+        cpfDigitadoLimpo.isNotEmpty &&
+        (cpfLimpo == cpfDigitadoLimpo ||
+            (cpfDigitadoLimpo.length == 3 &&
+                cpfLimpo.startsWith(cpfDigitadoLimpo)));
+    if (cpfValido) {
+      if (!mounted) return;
+      setState(() {
+        _sosEnviando = true;
+      });
+
+      Navigator.pop(context);
+
+      if (!mounted) return;
+
+      Position posicao = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+
+      if (!mounted) return;
+
+      final String pontoGeografico =
+          'POINT(${posicao.longitude} ${posicao.latitude})';
+
+      await Criar_SOS(
+        context,
+        usuarioId: Supabase.instance.client.auth.currentUser!.id,
+        localizacao: pontoGeografico,
+        data: DateTime.now().toIso8601String(),
+        origem: 'SOS',
+      );
+
+      // Atualiza estado para animar e
+      // desabilitar
+      if (mounted) {
         setState(() {
-          _sosEnviando = true;
+          _sosEnviado = true;
+          _sosEnviando = false;
         });
-
-        Navigator.pop(context);
-
-        if (!mounted) return;
-
-        Position posicao = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.high,
-          ),
-        );
-
-        if (!mounted) return;
-
-        final String pontoGeografico =
-            'POINT(${posicao.longitude} ${posicao.latitude})';
-
-        await Criar_SOS(
-          context,
-          usuarioId: Supabase.instance.client.auth.currentUser!.id,
-          localizacao: pontoGeografico,
-          data: DateTime.now().toIso8601String(),
-          origem: 'SOS',
-        );
-
-        // Atualiza estado para animar e
-        // desabilitar
-        if (mounted) {
-          setState(() {
-            _sosEnviado = true;
-            _sosEnviando = false;
-          });
-        }
+      }
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('CPF inválido. Confira os dígitos informados.'),
+        ),
+      );
     }
   }
 
@@ -143,16 +155,16 @@ class _Home_State extends State<Home> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  InkWell(
-                    child: Icon(Icons.close),
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                  )
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      InkWell(
+                        child: Icon(Icons.close),
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                      ),
                     ],
                   ),
                   Text.rich(
@@ -190,7 +202,7 @@ class _Home_State extends State<Home> {
                         ),
 
                         TextSpan(
-                          text: " seu CPF",
+                          text: " dígitos do seu CPF",
                         ),
                       ],
                     ),
@@ -198,10 +210,7 @@ class _Home_State extends State<Home> {
                   ),
                   Text(
                     "Precisamos confirmar sua identidade para emitir um alerta SOS",
-                    style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.black
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.black),
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(
@@ -238,7 +247,13 @@ class _Home_State extends State<Home> {
                             debugPrint('Falha ao enviar SOS: $e');
                           }
                         },
-                        child: Text("Enviar", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
+                        child: Text(
+                          "Enviar",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -260,7 +275,6 @@ class _Home_State extends State<Home> {
       body: SafeArea(
         child: Stack(
           children: [
-
             Column(
               mainAxisSize: MainAxisSize.max,
               children: [
@@ -607,10 +621,11 @@ class _Home_State extends State<Home> {
                           ),
                           Padding(
                             padding: EdgeInsets.fromLTRB(18, 0, 18, 24),
-                            child: RelatosProximos(ativa: widget.ativa,
-                              onAbrirRelato: widget.onAbrirRelato),
+                            child: RelatosProximos(
+                              ativa: widget.ativa,
+                              onAbrirRelato: widget.onAbrirRelato,
+                            ),
                           ),
-
                         ],
                       ),
                     ),

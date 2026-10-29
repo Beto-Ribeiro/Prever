@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
@@ -26,7 +25,7 @@ class _ClimaTelaState extends State<ClimaTela> {
   // o código da condição/ícone da API e a previsão horária (lista de mapas).
   final List<Map<String, dynamic>> historicoClima = [];
 
-  final String apiKey = "b5ead541b23bfa3331c7cf3de0678295";
+  String get apiKey => dotenv.env['OPENWEATHER_API_KEY'] ?? '';
 
   // Controla o estado de carregamento do botão de localização,
   // exibindo um spinner e evitando cliques duplicados enquanto
@@ -36,6 +35,12 @@ class _ClimaTelaState extends State<ClimaTela> {
   Future<void> buscarClima() async {
     final cidadeBusca = cidadeController.text.trim();
     if (cidadeBusca.isEmpty) return;
+    if (apiKey.isEmpty) {
+      _mostrarErro(
+        "Chave da API de clima (OPENWEATHER_API_KEY) não configurada.",
+      );
+      return;
+    }
 
     final url =
         "https://api.openweathermap.org/data/2.5/weather?q=${Uri.encodeComponent(cidadeBusca)}&appid=$apiKey&units=metric&lang=pt_br";
@@ -62,6 +67,13 @@ class _ClimaTelaState extends State<ClimaTela> {
   }
 
   Future<void> buscarClimaPorLocalizacao() async {
+    if (apiKey.isEmpty) {
+      _mostrarErro(
+        "Chave da API de clima (OPENWEATHER_API_KEY) não configurada.",
+      );
+      return;
+    }
+
     setState(() => _carregandoLocalizacao = true);
 
     try {
@@ -89,7 +101,9 @@ class _ClimaTelaState extends State<ClimaTela> {
       }
 
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
 
       final url =

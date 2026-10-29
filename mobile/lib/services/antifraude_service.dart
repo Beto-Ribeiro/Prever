@@ -66,7 +66,8 @@ class ResultadoAntifraude {
     return ResultadoAntifraude(
       status: StatusAntifraude.erroAnalise,
       scoreAutenticidade: 0.0,
-      motivoClassificacao: 'Erro na análise: $motivo. '
+      motivoClassificacao:
+          'Erro na análise: $motivo. '
           'Relato marcado para revisão humana por precaução.',
     );
   }
@@ -135,7 +136,6 @@ class AntiFraudeService {
       'IMPORTANTE: Não copie o exemplo abaixo. Gere a sua própria análise com base na imagem e dados recebidos.\n'
       'Exemplo de saída:\n'
       '{"legitimo": false, "score_autenticidade": 0.1, "motivo": "Notamos que a foto que você enviou mostra um ambiente interno e seco, o que não condiz com o relato de rua alagada. Por favor, verifique se enviou a foto correta."}';
-
 
   // ── Inicialização do modelo ─────────────────────────────────────────────────
   Future<void> _initModel() async {
@@ -245,7 +245,7 @@ Retorne o JSON de análise conforme o formato definido.
 
       final double score =
           (dados['score_autenticidade'] as num?)?.toDouble() ?? 0.0;
-      
+
       // Override the boolean returned by the AI with a strict threshold
       final bool legitimo = score >= 0.80;
 
@@ -263,7 +263,8 @@ Retorne o JSON de análise conforme o formato definido.
       debugPrint('[AntiFraudeService] Erro ao parsear JSON: $e');
       debugPrint('[AntiFraudeService] Resposta recebida: $textoResposta');
       return ResultadoAntifraude.erro(
-          'Formato de resposta inválido: $textoResposta');
+        'Formato de resposta inválido: $textoResposta',
+      );
     }
   }
 

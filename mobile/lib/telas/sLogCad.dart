@@ -26,9 +26,15 @@ class _sLogCad_telaState extends State<SLogCad> {
           Positioned.fill(
             child: CustomPaint(
               painter: AbstractBackgroundPainter(
-                primaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                secondaryColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
-                tertiaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                primaryColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.3),
+                secondaryColor: Theme.of(
+                  context,
+                ).colorScheme.secondary.withValues(alpha: 0.3),
+                tertiaryColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -65,25 +71,29 @@ class _sLogCad_telaState extends State<SLogCad> {
                       spacing: 35,
                       children: <Widget>[
                         ElevatedButton(
-                          onPressed: () {widget.onChangePage(8);},
+                          onPressed: () {
+                            widget.onChangePage(8);
+                          },
                           style: ElevatedButton.styleFrom(
-                              backgroundColor: Color.fromRGBO(24, 57, 92, 1),
-                              minimumSize: Size(139, 40)
+                            backgroundColor: Color.fromRGBO(24, 57, 92, 1),
+                            minimumSize: Size(139, 40),
                           ),
                           child: Text(
                             'Entrar',
-                              style: TextStyle(color: Colors.white)
+                            style: TextStyle(color: Colors.white),
                           ),
                         ),
                         ElevatedButton(
-                          onPressed: () {widget.onChangePage(5);},
+                          onPressed: () {
+                            widget.onChangePage(5);
+                          },
                           style: ElevatedButton.styleFrom(
-                              backgroundColor: Color.fromRGBO(24, 57, 92, 1),
-                              minimumSize: Size(139, 40)
+                            backgroundColor: Color.fromRGBO(24, 57, 92, 1),
+                            minimumSize: Size(139, 40),
                           ),
                           child: Text(
                             'Registrar',
-                              style: TextStyle(color: Colors.white)
+                            style: TextStyle(color: Colors.white),
                           ),
                         ),
                       ],
@@ -91,7 +101,9 @@ class _sLogCad_telaState extends State<SLogCad> {
                   ),
                   Expanded(
                     child: Center(
-                      child: SvgPicture.asset("gfx/svg/Image/Prever_logo.svg", semanticsLabel: "Logo Prever",
+                      child: SvgPicture.asset(
+                        "gfx/svg/Image/Prever_logo.svg",
+                        semanticsLabel: "Logo Prever",
                         height: 120,
                       ),
                     ),
@@ -99,7 +111,6 @@ class _sLogCad_telaState extends State<SLogCad> {
                 ],
               ),
             ),
-
           ),
         ],
       ),

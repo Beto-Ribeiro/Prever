@@ -7,6 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test": "node --test --experimental-test-module-mocks tests/*.test.js",
+    "contracts:generate": "node ../scripts/generate-shared-contracts.mjs",
+    "contracts:check": "node ../scripts/generate-shared-contracts.mjs --check",
     "preview": "vite preview"
   },
   "dependencies": {

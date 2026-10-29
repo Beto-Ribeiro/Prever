@@ -1,152 +1,56 @@
-// @ts-nocheck
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
-
-const GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') || 'gemini-3.5-flash'
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') || Deno.env.get('GOOGLE_API_KEY')
-const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
-
-function json(payload: Record<string, unknown>, status = 200) {
-  return new Response(JSON.stringify(payload), {
-    status,
-    headers: {
-      ...corsHeaders,
-      'Content-Type': 'application/json; charset=utf-8',
-    },
-  })
-}
-
-function sanitizeText(value: unknown, maxLength = 4000) {
-  return String(value || '').trim().slice(0, maxLength)
-}
-
-function normalizeHistory(history: unknown) {
-  if (!Array.isArray(history)) return ''
-
-  return history
-    .slice(-8)
-    .map((item) => {
-      const role = item?.role === 'assistant' ? 'IA PREVER' : 'Usuário'
-      const text = sanitizeText(item?.text, 1200)
-      return text ? `${role}: ${text}` : ''
-    })
-    .filter(Boolean)
-    .join('\n')
-}
-
-function buildPrompt(body: Record<string, unknown>) {
-  const screenTitle = sanitizeText(body.screenTitle || body.currentScreen || 'PREVER', 120)
-  const screenIntro = sanitizeText(body.screenIntro, 500)
-  const history = normalizeHistory(body.history)
-  const message = sanitizeText(body.message, 2000)
-
-  return [
-    `Tela atual: ${screenTitle}`,
-    screenIntro ? `Contexto da tela: ${screenIntro}` : '',
-    history ? `Histórico recente:\n${history}` : '',
-    `Pergunta do usuário:\n${message}`,
-  ]
-    .filter(Boolean)
-    .join('\n\n')
-}
-
-function extractGeminiText(payload: Record<string, unknown>) {
-  const candidates = Array.isArray(payload?.candidates) ? payload.candidates : []
-  const parts = candidates[0]?.content?.parts
-
-  if (!Array.isArray(parts)) return ''
-
-  return parts
-    .map((part) => typeof part?.text === 'string' ? part.text : '')
-    .filter(Boolean)
-    .join('\n')
-    .trim()
-}
-
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
-
-  if (req.method !== 'POST') {
-    return json({ error: 'Método não permitido.' }, 405)
-  }
-
+import { createClient } from 'npm:@supabase/supabase-js@2.108.1'
+const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' }
+const reply = (status: number, body: object) => new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
+Deno.serve(async req => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
+  if (req.method !== 'POST') return reply(405, { ok: false, message: 'Método não permitido.' })
   try {
-    if (!GEMINI_API_KEY) {
-      return json({
-        error: 'A IA ainda não está configurada. Defina GEMINI_API_KEY nos secrets do Supabase.',
-      }, 500)
+    const authorization = req.headers.get('Authorization') || ''
+    if (!authorization.startsWith('Bearer ')) return reply(401, { ok: false, message: 'Sua sessão expirou. Entre novamente.' })
+    const url = Deno.env.get('SUPABASE_URL')!
+    const client = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: authorization } }, auth: { persistSession: false } })
+    const { data: auth, error: authError } = await client.auth.getUser(authorization.slice(7))
+    if (authError || !auth.user) return reply(401, { ok: false, message: 'Sua sessão expirou. Entre novamente.' })
+    const { data: admin, error: roleError } = await client.rpc('is_web_admin')
+    if (roleError || !admin) return reply(403, { ok: false, message: 'Acesso não autorizado.' })
+    const { requestId, profileType, shelterId } = await req.json()
+    if (!/^[0-9a-f-]{36}$/i.test(requestId || '') || !['funcionario', 'instituicao', 'gerente_abrigo'].includes(profileType)) return reply(400, { ok: false, message: 'Selecione uma solicitação e um perfil válidos.' })
+    const { data: request, error } = await client.from('Solicitacao_Acesso_Web').select('*').eq('saw_id', requestId).single()
+    if (error || !request) return reply(404, { ok: false, message: 'Solicitação não encontrada.' })
+    if (request.saw_status === 'aprovado') return reply(200, { ok: true, message: 'Esta solicitação já foi aprovada.' })
+    if (request.saw_status !== 'pendente') return reply(409, { ok: false, message: 'Esta solicitação já foi analisada.' })
+    if (profileType === 'gerente_abrigo') {
+      const { data: shelter } = await client.from('Abrigo').select('abr_id').eq('abr_id', shelterId).maybeSingle()
+      if (!shelter) return reply(400, { ok: false, message: 'Selecione um abrigo válido.' })
     }
-
-    const body = await req.json().catch(() => ({}))
-    const message = sanitizeText(body.message, 2000)
-
-    if (!message) {
-      return json({ error: 'Digite uma mensagem para a IA.' }, 400)
+    const server = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } })
+    const lookup = () => server.rpc('web_request_auth_user', { p_email: request.saw_email })
+    const found = await lookup()
+    if (found.error) throw found.error
+    let targetId = found.data
+    let invited = false
+    if (!targetId) {
+      // Uses the project's configured Site URL, never an untrusted redirect URL.
+      const invitation = await server.auth.admin.inviteUserByEmail(request.saw_email, { data: { prf_nome: request.saw_nome, prf_tipo: 'pendente' } })
+      if (invitation.error) {
+        // A simultaneous approval may have created the account. Retry lookup, not the email.
+        const retry = await lookup()
+        if (!retry.error) targetId = retry.data
+        if (!targetId) {
+          console.error('access_invitation_failed', invitation.error.code)
+          return reply(503, { ok: false, message: 'Não foi possível enviar o convite. A solicitação continua pendente. Tente novamente mais tarde.' })
+        }
+      } else { targetId = invitation.data.user?.id; invited = true }
     }
-
-    const prompt = buildPrompt(body)
-
-    const response = await fetch(`${GEMINI_ENDPOINT}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              {
-                text: prompt,
-              },
-            ],
-          },
-        ],
-        systemInstruction: {
-          parts: [
-            {
-              text: [
-                'Você é a IA PREVER, assistente operacional da Plataforma de Resiliência e Vigilância de Eventos de Risco.',
-                'Responda sempre em português do Brasil.',
-                'Ajude agentes públicos a entender telas, priorizar ocorrências, revisar alertas, interpretar relatórios e consultar auditoria.',
-                'Não invente dados do sistema.',
-                'Use apenas o contexto recebido na pergunta.',
-                'Em emergência real, oriente seguir protocolos oficiais da Defesa Civil, Bombeiros, SAMU ou autoridade competente.',
-                'Nunca substitua a decisão técnica da autoridade responsável.',
-              ].join(' '),
-            },
-          ],
-        },
-        generationConfig: {
-          temperature: 0.4,
-          topP: 0.9,
-          maxOutputTokens: 1600,
-        },
-      }),
-    })
-
-    const payload = await response.json().catch(() => ({}))
-
-    if (!response.ok) {
-      return json({
-        error: payload?.error?.message || 'Não foi possível consultar a IA agora.',
-      }, response.status)
+    if (!targetId) throw new Error('Missing target user')
+    const { data: approved, error: approvalError } = await client.rpc('approve_web_access', { request_id: requestId, target_id: targetId, profile_type: profileType, shelter_id: shelterId || null })
+    if (approvalError || !approved?.ok) {
+      console.error('access_approval_failed', approvalError?.code)
+      return reply(409, { ok: false, message: 'Não foi possível concluir a aprovação. Atualize a lista e tente novamente.' })
     }
-
-    const text = extractGeminiText(payload) || 'Não consegui gerar uma resposta agora.'
-
-    return json({
-      text,
-      model: GEMINI_MODEL,
-    })
+    return reply(200, { ok: true, message: invited ? 'Acesso aprovado. Um convite foi enviado por e-mail para definir a senha.' : 'Acesso aprovado. O usuário pode entrar com sua conta; se necessário, use “Esqueci minha senha”.' })
   } catch (error) {
-    return json({
-      error: error?.message || 'Erro inesperado ao consultar a IA.',
-    }, 500)
+    console.error('access_request_error', error instanceof Error ? error.name : 'unknown')
+    return reply(500, { ok: false, message: 'Erro interno no banco de dados.' })
   }
 })

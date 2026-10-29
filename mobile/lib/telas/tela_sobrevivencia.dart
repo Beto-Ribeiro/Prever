@@ -78,7 +78,9 @@ class _TelaSobrevivenciaState extends State<TelaSobrevivencia> {
                     child: Container(
                       padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: acessibilidade.corPrimaria.withValues(alpha: 0.1),
+                        color: acessibilidade.corPrimaria.withValues(
+                          alpha: 0.1,
+                        ),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -246,8 +248,7 @@ class _TelaSobrevivenciaState extends State<TelaSobrevivencia> {
                                       ],
                                     ),
                                   );
-                                })
-                                ,
+                                }),
                           ],
                         ],
                       ),

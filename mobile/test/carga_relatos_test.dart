@@ -108,11 +108,12 @@ Future<Map<String, dynamic>> _executarCarga(
   final resultados = await Future.wait(futuros);
   sw.stop();
 
-  final tempos = resultados
-      .where((r) => r['ok'] == true)
-      .map((r) => r['ms'] as int)
-      .toList()
-    ..sort();
+  final tempos =
+      resultados
+          .where((r) => r['ok'] == true)
+          .map((r) => r['ms'] as int)
+          .toList()
+        ..sort();
 
   final falhas = resultados.where((r) => r['ok'] == false).length;
 
@@ -198,13 +199,43 @@ void main() {
 
     test('Filtro de relatos próximos: exclui SOS e coordenadas inválidas', () {
       final dados = [
-        {'latitude': -23.55, 'longitude': -46.63, 'rel_tipo_desastre': 'Alagamento', 'rel_descricao': 'Moderada'},
-        {'latitude': -23.55, 'longitude': -46.63, 'rel_tipo_desastre': 'SOS', 'rel_descricao': 'Leve'},
-        {'latitude': null,   'longitude': -46.63, 'rel_tipo_desastre': 'Tornado',    'rel_descricao': 'Severa'},
-        {'latitude': 91,     'longitude': -46.63, 'rel_tipo_desastre': 'Chuva Forte','rel_descricao': 'Leve'},
-        {'latitude': -23.551,'longitude': -46.631,'rel_tipo_desastre': 'Desabamento','rel_descricao': 'Severa'},
+        {
+          'latitude': -23.55,
+          'longitude': -46.63,
+          'rel_tipo_desastre': 'Alagamento',
+          'rel_descricao': 'Moderada',
+        },
+        {
+          'latitude': -23.55,
+          'longitude': -46.63,
+          'rel_tipo_desastre': 'SOS',
+          'rel_descricao': 'Leve',
+        },
+        {
+          'latitude': null,
+          'longitude': -46.63,
+          'rel_tipo_desastre': 'Tornado',
+          'rel_descricao': 'Severa',
+        },
+        {
+          'latitude': 91,
+          'longitude': -46.63,
+          'rel_tipo_desastre': 'Chuva Forte',
+          'rel_descricao': 'Leve',
+        },
+        {
+          'latitude': -23.551,
+          'longitude': -46.631,
+          'rel_tipo_desastre': 'Desabamento',
+          'rel_descricao': 'Severa',
+        },
       ];
-      final resultado = filtrarRelatosProximos(dados, -23.55, -46.63, raioMetros: 500);
+      final resultado = filtrarRelatosProximos(
+        dados,
+        -23.55,
+        -46.63,
+        raioMetros: 500,
+      );
       expect(resultado.map((r) => r.tipo), ['Alagamento', 'Desabamento']);
     });
 
@@ -237,9 +268,13 @@ void main() {
         _print(r);
       }
       // ignore: avoid_print
-      print('\n  Latências: IA ≈200ms | DB ≈150ms | Total série: ~350ms/relato');
+      print(
+        '\n  Latências: IA ≈200ms | DB ≈150ms | Total série: ~350ms/relato',
+      );
       // ignore: avoid_print
-      print('  Em paralelo o tempo total converge para ~350ms independente de N.');
+      print(
+        '  Em paralelo o tempo total converge para ~350ms independente de N.',
+      );
       // ignore: avoid_print
       print('══════════════════════════════════════════════════════\n');
     });
@@ -249,10 +284,18 @@ void main() {
         final r = await _executarCarga(n);
         relatorio.add(r);
         _print(r);
-        expect(r['falhas'], 0, reason: '${r['falhas']} relatos falharam com n=$n');
+        expect(
+          r['falhas'],
+          0,
+          reason: '${r['falhas']} relatos falharam com n=$n',
+        );
         // Em paralelismo real, todo o lote deve concluir em < 2× a latência de 1 relato
-        expect(r['tempoTotalMs'], lessThan(1500),
-            reason: 'Paralelismo falhou: ${r['tempoTotalMs']}ms > 1500ms para n=$n');
+        expect(
+          r['tempoTotalMs'],
+          lessThan(1500),
+          reason:
+              'Paralelismo falhou: ${r['tempoTotalMs']}ms > 1500ms para n=$n',
+        );
       });
     }
   });
@@ -268,8 +311,11 @@ void main() {
       _print(r);
       expect(r['falhas'], 0);
       // Com paralelismo real, 10 relatos com 1200ms cada devem concluir em < 3s total
-      expect(r['tempoTotalMs'], lessThan(3000),
-          reason: 'Paralelismo não funcionou: ${r['tempoTotalMs']}ms > 3s');
+      expect(
+        r['tempoTotalMs'],
+        lessThan(3000),
+        reason: 'Paralelismo não funcionou: ${r['tempoTotalMs']}ms > 3s',
+      );
     });
   });
 }

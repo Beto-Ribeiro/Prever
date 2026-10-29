@@ -1,0 +1,26 @@
+graph TD
+    Root["/ (Raiz do Monorepo PREVER)"]
+    Root --> Mobile["/mobile (App Cidadao Flutter)"]
+    Root --> Web["/web (Painel Tatico React + Vite)"]
+    Root --> Shared["/shared (Contratos, Constantes e Validadores)"]
+    Root --> Supabase["/supabase (Migrations SQL, RLS e Edge Functions)"]
+    Root --> Docs["/docs (Arquitetura e Diagramas Mermaid)"]
+    Root --> Scripts["/scripts (Automacao de Qualidade e CI)"]
+    Root --> Github["/.github (Workflows CI/CD GitHub Actions)"]
+    Root --> Readme["/README.md & /.env.example"]
+
+    Mobile --> MobileLib["lib/ (main, controles, services, telas)"]
+    Mobile --> MobileAssets["assets/ (images, icons)"]
+    Mobile --> MobileTest["test/ (unit, widget, load tests)"]
+
+    Web --> WebSrc["src/ (backend, components, context, hooks, screens, utils)"]
+    Web --> WebPublic["public/ (assets estaticos)"]
+    Web --> WebTests["tests/ (30 testes automatizados de seguranca/dominio)"]
+
+    Shared --> SharedTypes["types/ (domain.d.ts)"]
+    Shared --> SharedConst["constants/ (domain.js)"]
+    Shared --> SharedUtils["utils/ (validators.js)"]
+    Shared --> SharedServices["services/ (supabaseContracts.js)"]
+
+    Docs --> DocsDiag["diagrams/ (*.mmd)"]
+    Docs --> DocsArch["architecture/ (*.md)"]

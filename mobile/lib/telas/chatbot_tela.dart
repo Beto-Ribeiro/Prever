@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:prever/services/chatbot_service.dart';
 import 'package:prever/controles/controle_acessibilidade.dart';
@@ -308,7 +308,8 @@ class _WelcomeView extends StatelessWidget {
             'gfx/png/Image/nimbo_icon.png',
             height: 260,
             semanticLabel: 'Mascote Nimbo',
-            errorBuilder: (context, error, stackTrace) => _NimboFallback(navyDark: navyDark),
+            errorBuilder: (context, error, stackTrace) =>
+                _NimboFallback(navyDark: navyDark),
           ),
         ),
         const Spacer(flex: 2),

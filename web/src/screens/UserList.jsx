@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Modal from '../components/Modal'
 import { useAuth } from '../hooks/useAuth.js'
 import { toFriendlyMessage } from '../utils/friendlyMessages.js'
@@ -213,7 +213,7 @@ export default function UserList() {
     }
   }
 
-  async function loadSelectedActivities(userId) {
+  const loadSelectedActivities = useCallback(async (userId) => {
     if (!userId) return
     try {
       const data = await listUserActivities(userId, 30)
@@ -222,7 +222,16 @@ export default function UserList() {
       console.warn('Não foi possível carregar histórico do usuário:', err.message)
       setSelectedActivities([])
     }
-  }
+  }, [])
+
+  const openEdit = useCallback((user) => {
+    setSelectedUser(user)
+    setForm(makeForm(user))
+    setSelectedActivities([])
+    setError('')
+    setMessage('')
+    loadSelectedActivities(user.prf_id)
+  }, [loadSelectedActivities])
 
   useEffect(() => {
     loadUsers()
@@ -277,16 +286,7 @@ export default function UserList() {
     return () => {
       window.removeEventListener('smdn-ai-users-action', handleAiUserAction)
     }
-  }, [users])
-
-  function openEdit(user) {
-    setSelectedUser(user)
-    setForm(makeForm(user))
-    setSelectedActivities([])
-    setError('')
-    setMessage('')
-    loadSelectedActivities(user.prf_id)
-  }
+  }, [users, openEdit])
 
   function closeEdit() {
     setSelectedUser(null)

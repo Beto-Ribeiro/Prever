@@ -87,16 +87,20 @@ class _SLoginState extends State<SLogin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
-
       body: Stack(
         children: [
           Positioned.fill(
             child: CustomPaint(
               painter: AbstractBackgroundPainter(
-                primaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                secondaryColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
-                tertiaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                primaryColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.3),
+                secondaryColor: Theme.of(
+                  context,
+                ).colorScheme.secondary.withValues(alpha: 0.3),
+                tertiaryColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -148,7 +152,9 @@ class _SLoginState extends State<SLogin> {
                                 style: TextStyle(
                                   fontSize: 30,
                                   fontWeight: FontWeight.w700,
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                               ),
                               SizedBox(
@@ -219,7 +225,9 @@ class _SLoginState extends State<SLogin> {
 
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primary,
                                   minimumSize: Size(350, 45),
                                 ),
 
@@ -252,7 +260,9 @@ class _SLoginState extends State<SLogin> {
                             80,
                           ),
 
-                          child: SvgPicture.asset("gfx/svg/Image/Prever_logo.svg", semanticsLabel: "Logo Prever",
+                          child: SvgPicture.asset(
+                            "gfx/svg/Image/Prever_logo.svg",
+                            semanticsLabel: "Logo Prever",
                             height: 120,
                           ),
                         ),

@@ -35,7 +35,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
 
   final _ConSenhaController = TextEditingController();
 
-  final cpfMask = MaskTextInputFormatter(mask: '###.###.###-##'); 
+  final cpfMask = MaskTextInputFormatter(mask: '###.###.###-##');
 
   final rgMask = MaskTextInputFormatter(mask: '##.###.###-#');
 
@@ -102,7 +102,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
         return;
       }
 
-      if (!validarTel(tel)){
+      if (!validarTel(tel)) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -118,7 +118,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
         return;
       }
 
-      if (!validarRG(rg)){
+      if (!validarRG(rg)) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -140,13 +140,21 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
             content: Text('E-mail inválido.'),
           ),
         );
-        setState(() { _estaCarregando = false; });
+        setState(() {
+          _estaCarregando = false;
+        });
         return;
       }
 
       if (senha.length < 6) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('A senha deve ter pelo menos 6 caracteres.')));
-        setState(() { _estaCarregando = false; });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('A senha deve ter pelo menos 6 caracteres.'),
+          ),
+        );
+        setState(() {
+          _estaCarregando = false;
+        });
         return;
       }
 
@@ -179,7 +187,6 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
         },
       );
 
-      
       if (authResponse.session != null) {
         widget.onChangePage(0);
       } else if (authResponse.user != null) {
@@ -196,18 +203,16 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
       //      ),
       //    ),
       //  );
-//
+      //
       //  setState(() {
       //    _estaCarregando = false;
       //  });
-//
+      //
       //  return;
       //}
       //else {
       //  widget.onChangePage(0);
       //}
-
-
 
       _NomeController.clear();
       _CPFController.clear();
@@ -226,7 +231,6 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
           ),
         );
       }
-
     } catch (e) {
       debugPrint('Erro no cadastro: $e');
       if (mounted) {
@@ -241,7 +245,6 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
         _estaCarregando = false;
       });
     }
-
   }
 
   bool pickedDate = false;
@@ -270,18 +273,21 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-      
-
       body: Stack(
         children: [
           Positioned.fill(
             child: CustomPaint(
               painter: AbstractBackgroundPainter(
-                primaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                secondaryColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
-                tertiaryColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                primaryColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.3),
+                secondaryColor: Theme.of(
+                  context,
+                ).colorScheme.secondary.withValues(alpha: 0.3),
+                tertiaryColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -441,7 +447,9 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
 
                                     children: [
                                       Text(
-                                        pickedDate?"${_dateTime.day}/${_dateTime.month}/${_dateTime.year}":"${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}" ,
+                                        pickedDate
+                                            ? "${_dateTime.day}/${_dateTime.month}/${_dateTime.year}"
+                                            : "${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}",
                                         style: TextStyle(color: Colors.black),
                                       ),
                                     ],
@@ -484,8 +492,10 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
                             ElevatedButton(
                               onPressed: _estaCarregando ? null : _enviarDados,
                               style: ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(context).colorScheme.primary,
-                                  minimumSize: Size(139, 40)
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary,
+                                minimumSize: Size(139, 40),
                               ),
 
                               child: _estaCarregando
@@ -498,7 +508,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
                                     )
                                   : Text(
                                       'Enviar',
-                                        style: TextStyle(color: Colors.white)
+                                      style: TextStyle(color: Colors.white),
                                     ),
                             ),
                           ],
@@ -513,7 +523,9 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
                           80,
                         ),
 
-                        child: SvgPicture.asset("gfx/svg/Image/Prever_logo.svg", semanticsLabel: "Logo Prever",
+                        child: SvgPicture.asset(
+                          "gfx/svg/Image/Prever_logo.svg",
+                          semanticsLabel: "Logo Prever",
                           height: 120,
                         ),
                       ),
@@ -567,13 +579,13 @@ bool validarCPF(String cpf) {
   return true;
 }
 
-bool validarTel (String tel) {
+bool validarTel(String tel) {
   tel = tel.replaceAll(RegExp(r'[^0-9]'), '');
   if (tel.length < 10 || tel.length > 11) return false;
   return true;
 }
 
-bool validarRG (String rg) {
+bool validarRG(String rg) {
   rg = rg.replaceAll(RegExp(r'[^0-9]'), '');
   if (rg.length < 7 || rg.length > 9) return false;
   return true;

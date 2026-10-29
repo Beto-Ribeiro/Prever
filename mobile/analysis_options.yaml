@@ -24,6 +24,9 @@ linter:
   # `// ignore_for_file: name_of_lint` syntax on the line or in the file
   # producing the lint.
   rules:
+    file_names: false
+    camel_case_types: false
+    non_constant_identifier_names: false
 analyzer:
   exclude:
     - build/**

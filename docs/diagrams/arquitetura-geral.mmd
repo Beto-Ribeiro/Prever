@@ -1,0 +1,39 @@
+graph TD
+    subgraph Clientes["Camada de Apresentacao (Clientes)"]
+        Mobile["App Mobile Cidadao<br/>(Flutter 3.9 / Dart)"]
+        Web["Painel Operacional & Admin<br/>(React 19 / Vite 8 / Tailwind)"]
+    end
+
+    subgraph Shared["Camada Compartilhada (/shared)"]
+        Contracts["Contratos de Dominio, Constantes,<br/>Validadores e Schemas Supabase"]
+    end
+
+    subgraph BaaS["Camada de Backend & Dados (Supabase)"]
+        Auth["Supabase Auth<br/>(JWT / Recuperacao / Convites)"]
+        PostgREST["Supabase PostgREST + Realtime<br/>(PostgreSQL + Row Level Security)"]
+        Storage["Supabase Storage<br/>(Buckets: fotos_relatos, avatars)"]
+        EdgeFn["Supabase Edge Functions (Deno)<br/>approve-web-access-request | smdn-ai"]
+    end
+
+    subgraph External["Servicos Externos & IA"]
+        Gemini["Google Gemini AI<br/>(gemini-2.5-flash / flash-lite)"]
+        Maps["Google Maps Platform + Nominatim<br/>(Mapas 2D/3D, Geocoding, Alertas)"]
+        Weather["OpenWeatherMap API<br/>(Clima Atual e Previsao Horaria)"]
+    end
+
+    Mobile -.->|Contratos| Contracts
+    Web -.->|Contratos| Contracts
+
+    Mobile -->|Auth / Relatos / SOS / Abrigos| Auth
+    Mobile -->|CRUD + Realtime| PostgREST
+    Mobile -->|Upload Evidencias / Avatar| Storage
+    Mobile -->|Antifraude Multimodal & Nimbo Chat| Gemini
+    Mobile -->|Mapas & Geolocalizacao| Maps
+    Mobile -->|Consulta Meteorologica| Weather
+
+    Web -->|Auth + RBAC Multi-conta| Auth
+    Web -->|Dashboard / Ocorrencias / Abrigos / Auditoria| PostgREST
+    Web -->|Upload Avatar / Evidencias| Storage
+    Web -->|Aprovacao Admin & Assistente Nimbo| EdgeFn
+    Web -->|Mapa Tatico 2D/3D & Geocoding| Maps
+    EdgeFn -->|Inferencia Contextual Segura| Gemini

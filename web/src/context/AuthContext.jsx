@@ -1,4 +1,4 @@
-import { createContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../backend/supabase/client.js'
 import { signInWithEmailAndPassword, signOutFromSupabase } from '../backend/auth/authService.js'
 import { getWebAccessForUser } from '../backend/auth/webAccessService.js'
@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
   const [recoveryMode, setRecoveryMode] = useState(() => new URLSearchParams(window.location.hash.slice(1)).get('type') === 'invite')
   const [savedAccounts, setSavedAccounts] = useState(() => readSavedAccounts())
 
-  async function applySession(nextSession, { signOutWhenUnauthorized = true } = {}) {
+  const applySession = useCallback(async (nextSession, { signOutWhenUnauthorized = true } = {}) => {
     if (!nextSession?.user) {
       setSession(null)
       setUser(null)
@@ -107,7 +107,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     return access
-  }
+  }, [])
 
   useEffect(() => {
     let mounted = true
@@ -163,9 +163,9 @@ export const AuthProvider = ({ children }) => {
       mounted = false
       subscription.unsubscribe()
     }
-  }, [])
+  }, [applySession])
 
-  async function signIn({ email, password }) {
+  const signIn = useCallback(async ({ email, password }) => {
     setAccessError('')
 
     const data = await signInWithEmailAndPassword({ email, password })
@@ -180,9 +180,9 @@ export const AuthProvider = ({ children }) => {
     })
 
     return data
-  }
+  }, [applySession])
 
-  async function signOut() {
+  const signOut = useCallback(async () => {
     const currentUserId = session?.user?.id || user?.id
     await signOutFromSupabase()
     if (currentUserId) {
@@ -192,9 +192,9 @@ export const AuthProvider = ({ children }) => {
     setUser(null)
     setAccessError('')
     setRecoveryMode(false)
-  }
+  }, [session?.user?.id, user?.id])
 
-  async function startAddAccount() {
+  const startAddAccount = useCallback(async () => {
     if (session?.user && user) {
       const savedAccount = publicAccountData(session, user)
       if (savedAccount) setSavedAccounts(upsertSavedAccount(savedAccount))
@@ -205,9 +205,9 @@ export const AuthProvider = ({ children }) => {
     setUser(null)
     setAccessError('')
     setRecoveryMode(false)
-  }
+  }, [session, user])
 
-  async function switchAccount(accountId) {
+  const switchAccount = useCallback(async (accountId) => {
     const account = readSavedAccounts().find((item) => item.id === accountId)
 
     if (!account) {
@@ -230,16 +230,16 @@ export const AuthProvider = ({ children }) => {
     }
 
     return applySession(data.session, { signOutWhenUnauthorized: false })
-  }
+  }, [applySession])
 
-  async function refreshUser() {
+  const refreshUser = useCallback(async () => {
     const { data, error } = await supabase.auth.getSession()
     if (error) throw error
 
     return applySession(data?.session ?? session, {
       signOutWhenUnauthorized: false,
     })
-  }
+  }, [applySession, session])
 
   const value = useMemo(
     () => ({
@@ -259,7 +259,7 @@ export const AuthProvider = ({ children }) => {
       signOut,
       refreshUser,
     }),
-    [session, user, loading, accessError, recoveryMode, savedAccounts]
+    [session, user, loading, accessError, recoveryMode, savedAccounts, switchAccount, startAddAccount, signIn, signOut, refreshUser]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

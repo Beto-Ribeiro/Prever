@@ -1,0 +1,45 @@
+name: Monorepo Quality Gate
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  verify:
+    name: Verify Shared Contracts, Web & Mobile
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://example.supabase.co' }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'example-anon-key' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.x"
+          channel: "stable"
+          cache: true
+
+      - name: Instalar dependências Web (/web)
+        run: npm ci
+        working-directory: ./web
+
+      - name: Instalar dependências Mobile (/mobile)
+        run: flutter pub get
+        working-directory: ./mobile
+
+      - name: Executar Gate Unificado do Monorepo (verify-monorepo.sh)
+        run: bash ./scripts/verify-monorepo.sh

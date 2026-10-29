@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PREVER (SMDN) Canonical Domain Schema",
+  "version": "1.0.0",
+  "enums": {
+    "UserRole": [
+      { "key": "ADMIN", "value": "admin" },
+      { "key": "ADMINISTRADOR", "value": "administrador" },
+      { "key": "DEFESA_CIVIL", "value": "defesa_civil" },
+      { "key": "BOMBEIROS", "value": "bombeiros" },
+      { "key": "FUNCIONARIO", "value": "funcionario" },
+      { "key": "AGENTE", "value": "agente" },
+      { "key": "INSTITUICAO", "value": "instituicao" },
+      { "key": "SHELTER_MANAGER", "value": "shelter_manager" },
+      { "key": "CIDADAO", "value": "cidadao" },
+      { "key": "PENDENTE", "value": "pendente" }
+    ],
+    "SeverityLevel": [
+      { "key": "CRITICO", "value": "Crítico" },
+      { "key": "GRAVE", "value": "Grave" },
+      { "key": "MODERADO", "value": "Moderado" }
+    ],
+    "ShelterStatus": [
+      { "key": "DISPONIVEL", "value": "disponivel" },
+      { "key": "QUASE_LOTADO", "value": "quase_lotado" },
+      { "key": "LOTADO", "value": "lotado" },
+      { "key": "INATIVO", "value": "inativo" }
+    ],
+    "OccurrenceValidationStatus": [
+      { "key": "LEGITIMO", "value": "legitimo" },
+      { "key": "PENDENTE_REVISAO", "value": "pendente_revisao" },
+      { "key": "REJEITADO", "value": "rejeitado" }
+    ]
+  },
+  "constants": {
+    "severityVisualTokens": {
+      "Crítico": {
+        "color": "#c60202",
+        "colorBlindSafe": "#005cab",
+        "radiusMeters": 3000,
+        "opacity": 0.24,
+        "shape": "critical",
+        "label": "Crítico"
+      },
+      "Grave": {
+        "color": "#ff6a00",
+        "colorBlindSafe": "#d95f02",
+        "radiusMeters": 2300,
+        "opacity": 0.2,
+        "shape": "severe",
+        "label": "Grave"
+      },
+      "Moderado": {
+        "color": "#cab900",
+        "colorBlindSafe": "#7570b3",
+        "radiusMeters": 1700,
+        "opacity": 0.18,
+        "shape": "regular",
+        "label": "Moderado"
+      }
+    },
+    "defaultWebPermissions": {
+      "dashboard": true,
+      "reportar": false,
+      "ocorrencias": true,
+      "relatorios": false,
+      "validacao": false,
+      "auditoria": false
+    },
+    "antifraudConfig": {
+      "minLegitimateScore": 0.8,
+      "modelName": "gemini-2.5-flash-lite",
+      "fallbackStatus": "pendente_revisao"
+    }
+  },
+  "supabase": {
+    "tables": {
+      "PERFIS": "perfis",
+      "RELATOS": "relatos",
+      "ALERTAS": "alertas",
+      "ABRIGOS": "abrigos",
+      "ABRIGO_OCUPANTES": "abrigo_ocupantes",
+      "ABRIGO_ESTOQUE": "abrigo_estoque",
+      "ABRIGO_PEDIDOS": "abrigo_pedidos",
+      "SOLICITACOES_ACESSO_WEB": "solicitacoes_acesso_web",
+      "AUDITORIA_LOGS": "auditoria_logs",
+      "ATIVIDADES_USUARIO": "atividades_usuario",
+      "TIPOS_DESASTRE": "tipos_desastre"
+    },
+    "storageBuckets": {
+      "FOTOS_RELATOS": "fotos_relatos",
+      "AVATARS": "avatars"
+    },
+    "edgeFunctions": {
+      "APPROVE_WEB_ACCESS_REQUEST": "approve-web-access-request",
+      "SMDN_AI": "smdn-ai"
+    },
+    "rpcs": {
+      "ADMIN_UPDATE_USER_PROFILE": "admin_update_user_profile",
+      "ADMIN_RESET_USER_PROFILE": "admin_reset_user_profile",
+      "REGISTER_USER_ACTIVITY": "registrar_atividade_usuario"
+    }
+  },
+  "dtos": {
+    "PerfilUsuarioDto": {
+      "description": "DTO canônico de perfil de usuário (tabela perfis).",
+      "fields": [
+        { "name": "prf_id", "type": "string", "required": true, "default": "''" },
+        { "name": "prf_nome", "type": "string", "required": true, "default": "''" },
+        { "name": "prf_cpf", "type": "string", "required": false },
+        { "name": "prf_rg", "type": "string", "required": false },
+        { "name": "prf_telefone", "type": "string", "required": false },
+        { "name": "prf_email_contato", "type": "string", "required": false },
+        { "name": "prf_tipo", "type": "string", "tsType": "UserRole", "required": true, "default": "'cidadao'" },
+        { "name": "prf_instituicao", "type": "string", "required": false },
+        { "name": "prf_acesso_web", "type": "boolean", "required": true, "default": "false" },
+        { "name": "prf_admin_web", "type": "boolean", "required": true, "default": "false" },
+        { "name": "prf_avatar_url", "type": "string", "required": false },
+        { "name": "prf_abrigo_id", "type": "string", "required": false },
+        { "name": "prf_ultimo_login_web", "type": "string", "required": false },
+        { "name": "created_at", "type": "string", "required": false }
+      ]
+    },
+    "OcorrenciaRelatoDto": {
+      "description": "DTO canônico de relato/ocorrência georreferenciada (tabela relatos).",
+      "fields": [
+        { "name": "rel_id", "type": "string", "required": true, "default": "''" },
+        { "name": "prf_id", "type": "string", "required": true, "default": "''" },
+        { "name": "rel_tipo", "type": "string", "required": true, "default": "''" },
+        { "name": "rel_gravidade", "type": "string", "tsType": "SeverityLevel", "required": true, "default": "'Moderado'" },
+        { "name": "rel_descricao", "type": "string", "required": false },
+        { "name": "rel_latitude", "type": "double", "required": true, "default": "0.0" },
+        { "name": "rel_longitude", "type": "double", "required": true, "default": "0.0" },
+        { "name": "rel_foto_url", "type": "string", "required": false },
+        { "name": "rel_data_hora", "type": "string", "required": true, "default": "''" },
+        { "name": "rel_status", "type": "string", "required": false },
+        { "name": "rel_score_antifraude", "type": "double", "required": false },
+        { "name": "rel_status_validacao", "type": "string", "tsType": "OccurrenceValidationStatus", "required": false },
+        { "name": "rel_motivo_antifraude", "type": "string", "required": false }
+      ]
+    },
+    "AbrigoEmergenciaDto": {
+      "description": "DTO canônico de abrigo humanitário (tabela abrigos).",
+      "fields": [
+        { "name": "abr_id", "type": "string", "required": true, "default": "''" },
+        { "name": "abr_nome", "type": "string", "required": true, "default": "''" },
+        { "name": "abr_cidade", "type": "string", "required": true, "default": "''" },
+        { "name": "abr_endereco", "type": "string", "required": true, "default": "''" },
+        { "name": "abr_latitude", "type": "double", "required": true, "default": "0.0" },
+        { "name": "abr_longitude", "type": "double", "required": true, "default": "0.0" },
+        { "name": "abr_capacidade", "type": "int", "required": true, "default": "0" },
+        { "name": "abr_ocupacao", "type": "int", "required": true, "default": "0" },
+        { "name": "abr_status", "type": "string", "tsType": "ShelterStatus", "required": true, "default": "'disponivel'" },
+        { "name": "abr_telefone", "type": "string", "required": false },
+        { "name": "abr_responsavel", "type": "string", "required": false }
+      ]
+    },
+    "AlertaDefesaCivilDto": {
+      "description": "DTO canônico de alerta público da Defesa Civil (tabela alertas).",
+      "fields": [
+        { "name": "ale_id", "type": "string", "required": true, "default": "''" },
+        { "name": "ale_titulo", "type": "string", "required": true, "default": "''" },
+        { "name": "ale_mensagem", "type": "string", "required": true, "default": "''" },
+        { "name": "ale_severidade", "type": "string", "tsType": "SeverityLevel", "required": true, "default": "'Moderado'" },
+        { "name": "ale_cidade", "type": "string", "required": false },
+        { "name": "ale_bairro", "type": "string", "required": false },
+        { "name": "ale_latitude", "type": "double", "required": false },
+        { "name": "ale_longitude", "type": "double", "required": false },
+        { "name": "ale_raio_km", "type": "double", "required": false },
+        { "name": "ale_ativo", "type": "boolean", "required": true, "default": "true" },
+        { "name": "created_at", "type": "string", "required": true, "default": "''" }
+      ]
+    }
+  }
+}

@@ -4,6 +4,7 @@ import disparoIcon from '../assets/menu/ativo/flag.svg'
 import relatoriosIcon from '../assets/menu/ativo/pie-chart.svg'
 import logoClaro from '../assets/logo-claro.svg'
 import logoEscuro from '../assets/logo.svg'
+import mapBg from '../assets/map-bg.png'
 import SettingsPanel from '../components/SettingsPanel.jsx'
 import { useSmdnSettings } from '../hooks/useSmdnSettings.js'
 import { toFriendlyMessage } from '../utils/friendlyMessages.js'
@@ -71,7 +72,7 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
       </div>
       <div
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/src/assets/map-bg.png')", filter: 'blur(2px) brightness(0.7)' }}
+        style={{ backgroundImage: `url(${mapBg})`, filter: 'blur(2px) brightness(0.7)' }}
       />
       <div className="absolute inset-0 bg-bg-sidebar/30" />
 

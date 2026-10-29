@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, forwardRef, useImperativeHandle, useCallback, Fragment } from 'react'
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle, Fragment } from 'react'
 import { Map, AdvancedMarker, InfoWindow, useMap, Pin } from '@vis.gl/react-google-maps'
 import { Map3D, Marker3D, Popover, useMap3D } from '@vis.gl/react-google-maps/3d'
 
@@ -182,8 +182,8 @@ function Circle2D({ center, radius, color, fillOpacity }) {
   const circleRef = useRef(null);
 
   useEffect(() => {
-    if (!map) return;
-    circleRef.current = new google.maps.Circle({
+    if (!map || !window.google?.maps) return;
+    circleRef.current = new window.google.maps.Circle({
       map,
       center,
       radius,
@@ -197,7 +197,7 @@ function Circle2D({ center, radius, color, fillOpacity }) {
     return () => {
       if (circleRef.current) circleRef.current.setMap(null);
     }
-  }, [map, center.lat, center.lng, radius, color, fillOpacity]);
+  }, [map, center, radius, color, fillOpacity]);
 
   return null;
 }
@@ -215,7 +215,7 @@ function Map3DController({ center, zoom }) {
           heading: 0
         }
       });
-    } catch (err) {
+    } catch {
       map3D.center = { lat: center.lat, lng: center.lng, altitude };
     }
   }, [map3D, center.lat, center.lng, zoom]);

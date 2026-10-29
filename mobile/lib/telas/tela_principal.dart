@@ -1,11 +1,8 @@
 import 'dart:async';
-import 'package:prever/services/relatos_proximos_service.dart';
-
-import 'package:prever/telas/login_tela.dart';
-import 'exportador_import.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
-
+import 'package:prever/services/relatos_proximos_service.dart';
+import 'exportador_import.dart';
 
 class TelaPrincipal extends StatefulWidget {
   const TelaPrincipal({super.key});
@@ -14,10 +11,8 @@ class TelaPrincipal extends StatefulWidget {
   State<TelaPrincipal> createState() => _TelaPrincipalState();
 }
 
-
 class _TelaPrincipalState extends State<TelaPrincipal>
     with SingleTickerProviderStateMixin {
-
   // ==========================================================================
   // SUPABASE
   // ==========================================================================
@@ -25,7 +20,6 @@ class _TelaPrincipalState extends State<TelaPrincipal>
   final supabase = Supabase.instance.client;
 
   StreamSubscription<AuthState>? _authSubscription;
-
 
   // ==========================================================================
   // DADOS DO USUÁRIO
@@ -38,7 +32,6 @@ class _TelaPrincipalState extends State<TelaPrincipal>
   String tipoUsuario = '';
 
   bool estalogado = false;
-
 
   // ==========================================================================
   // NAVEGAÇÃO
@@ -61,7 +54,6 @@ class _TelaPrincipalState extends State<TelaPrincipal>
     });
   }
 
-
   // ==========================================================================
   // CADASTRO
   // ==========================================================================
@@ -69,7 +61,6 @@ class _TelaPrincipalState extends State<TelaPrincipal>
   String? emailCadastro;
 
   String? senhaCadastro;
-
 
   // ==========================================================================
   // ANIMAÇÃO DO BOTÃO NIMBO
@@ -79,7 +70,6 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
   late final Animation<double> _nimboScaleAnim;
 
-
   final List<IconData> _icones = [
     Icons.warning_amber_rounded,
     Icons.location_on_outlined,
@@ -88,7 +78,6 @@ class _TelaPrincipalState extends State<TelaPrincipal>
     Icons.home_outlined,
   ];
 
-
   // ==========================================================================
   // INIT STATE
   // ==========================================================================
@@ -96,7 +85,6 @@ class _TelaPrincipalState extends State<TelaPrincipal>
   @override
   void initState() {
     super.initState();
-
 
     // ------------------------------------------------------------------------
     // DEFINE QUAL SERÁ A PRIMEIRA TELA
@@ -108,11 +96,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
     // índice 0 = Home
     // ------------------------------------------------------------------------
 
-    _currentIndex =
-    supabase.auth.currentUser == null
-        ? 6
-        : 0;
-
+    _currentIndex = supabase.auth.currentUser == null ? 6 : 0;
 
     // ------------------------------------------------------------------------
     // ANIMAÇÃO DO BOTÃO NIMBO
@@ -129,20 +113,17 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
     _nimboScaleAnim = _nimboAnimController;
 
-
     // ------------------------------------------------------------------------
     // PRIMEIRO CRIA TODAS AS TELAS
     // ------------------------------------------------------------------------
 
     _inicializarTelas();
 
-
     // ------------------------------------------------------------------------
     // COMEÇA A ESCUTAR EVENTOS DE AUTENTICAÇÃO DO SUPABASE
     // ------------------------------------------------------------------------
 
     _ouvirAutenticacao();
-
 
     // ------------------------------------------------------------------------
     // PEDE PERMISSÃO DE LOCALIZAÇÃO
@@ -151,13 +132,11 @@ class _TelaPrincipalState extends State<TelaPrincipal>
     _pedirPermissao();
   }
 
-
   // ==========================================================================
   // ESCUTA EVENTOS DO SUPABASE
   // ==========================================================================
 
   void _ouvirAutenticacao() {
-
     // ------------------------------------------------------------------------
     // SE O APP JÁ ABRIU COM USUÁRIO LOGADO,
     // CARREGA OS DADOS
@@ -167,294 +146,220 @@ class _TelaPrincipalState extends State<TelaPrincipal>
       carregarDados();
     }
 
-
     // ------------------------------------------------------------------------
     // LISTENER DE AUTENTICAÇÃO
     // ------------------------------------------------------------------------
 
-    _authSubscription =
-        supabase.auth.onAuthStateChange.listen(
+    _authSubscription = supabase.auth.onAuthStateChange.listen(
+      (data) {
+        if (!mounted) {
+          return;
+        }
 
-              (data) {
+        // ====================================================================
+        // RECUPERAÇÃO DE SENHA
+        // ====================================================================
+        //
+        // Esse evento acontece quando:
+        //
+        // 1. Usuário pediu recuperação
+        // 2. Recebeu o e-mail
+        // 3. Clicou no link
+        // 4. Supabase validou o link
+        // 5. O deep link abriu o aplicativo
+        //
+        // ====================================================================
 
-            if (!mounted) {
-              return;
-            }
+        if (data.event == AuthChangeEvent.passwordRecovery) {
+          debugPrint(
+            '=== RECUPERAÇÃO DE SENHA DETECTADA ===',
+          );
 
+          setState(() {
+            // ---------------------------------------------------------------
+            // ÍNDICE 12:
+            // WriteChangedPassword
+            // ---------------------------------------------------------------
 
-            // ====================================================================
-            // RECUPERAÇÃO DE SENHA
-            // ====================================================================
-            //
-            // Esse evento acontece quando:
-            //
-            // 1. Usuário pediu recuperação
-            // 2. Recebeu o e-mail
-            // 3. Clicou no link
-            // 4. Supabase validou o link
-            // 5. O deep link abriu o aplicativo
-            //
-            // ====================================================================
+            _currentIndex = 12;
+          });
 
-            if (data.event == AuthChangeEvent.passwordRecovery) {
+          return;
+        }
 
-              debugPrint(
-                '=== RECUPERAÇÃO DE SENHA DETECTADA ===',
-              );
+        // ====================================================================
+        // EXISTE UMA SESSÃO
+        // ====================================================================
 
-              setState(() {
+        if (data.session != null) {
+          // Evita ficar consultando o perfil desnecessariamente
+          // em eventos como tokenRefreshed.
 
-                // ---------------------------------------------------------------
-                // ÍNDICE 12:
-                // WriteChangedPassword
-                // ---------------------------------------------------------------
+          if (data.event == AuthChangeEvent.initialSession ||
+              data.event == AuthChangeEvent.signedIn ||
+              data.event == AuthChangeEvent.userUpdated) {
+            carregarDados();
+          }
+        }
+      },
 
-                _currentIndex = 12;
-
-              });
-
-              return;
-            }
-
-
-            // ====================================================================
-            // EXISTE UMA SESSÃO
-            // ====================================================================
-
-            if (data.session != null) {
-
-              // Evita ficar consultando o perfil desnecessariamente
-              // em eventos como tokenRefreshed.
-
-              if (
-              data.event == AuthChangeEvent.initialSession ||
-                  data.event == AuthChangeEvent.signedIn ||
-                  data.event == AuthChangeEvent.userUpdated
-              ) {
-
-                carregarDados();
-
-              }
-
-            }
-
-          },
-
-
-          // ======================================================================
-          // ERRO NO STREAM DE AUTENTICAÇÃO
-          // ======================================================================
-
-          onError: (error, stackTrace) {
-
-            debugPrint(
-              'Erro no Auth do Supabase: $error',
-            );
-
-          },
-
+      // ======================================================================
+      // ERRO NO STREAM DE AUTENTICAÇÃO
+      // ======================================================================
+      onError: (error, stackTrace) {
+        debugPrint(
+          'Erro no Auth do Supabase: $error',
         );
+      },
+    );
   }
-
 
   // ==========================================================================
   // CARREGA DADOS DO USUÁRIO
   // ==========================================================================
 
   Future<void> carregarDados() async {
-
     try {
-
       final userId = supabase.auth.currentUser?.id;
 
       debugPrint(
         '=== USER ID: $userId ===',
       );
 
-
       // ----------------------------------------------------------------------
       // USUÁRIO NÃO ENCONTRADO
       // ----------------------------------------------------------------------
 
       if (userId == null) {
-
         debugPrint(
           '=== USUÁRIO NULO ===',
         );
 
         if (mounted) {
-
           setState(() {
             carregando = false;
           });
-
         }
 
         return;
       }
-
 
       // ======================================================================
       // PERFIL
       // ======================================================================
 
       try {
-
         final perfil = await supabase
             .from('Perfis')
             .select()
             .eq(
-          'prf_id',
-          userId,
-        )
+              'prf_id',
+              userId,
+            )
             .limit(1)
             .single();
-
 
         debugPrint(
           '=== PERFIL OK: $perfil ===',
         );
 
-
         if (!mounted) {
           return;
         }
 
-
         setState(() {
+          nome = perfil['prf_nome'] ?? '';
 
-          nome =
-              perfil['prf_nome'] ?? '';
-
-          tipoUsuario =
-              perfil['prf_tipo'] ?? '';
+          tipoUsuario = perfil['prf_tipo'] ?? '';
 
           carregando = false;
-
         });
-
-      }
-
-      catch (e) {
-
+      } catch (e) {
         debugPrint(
           '=== ERRO PERFIL: $e ===',
         );
 
-
         if (mounted) {
-
           setState(() {
             carregando = false;
           });
-
         }
-
       }
-
-    }
-
-    catch (e) {
-
+    } catch (e) {
       debugPrint(
         '=== ERRO AO CARREGAR DADOS: $e ===',
       );
 
-
       if (mounted) {
-
         setState(() {
           carregando = false;
         });
-
       }
-
     }
   }
-
 
   // ==========================================================================
   // INICIALIZA TODAS AS TELAS
   // ==========================================================================
 
   void _inicializarTelas() {
-
     _telas = [
-
       // ======================================================================
       // 0 - HOME / SOS
       // ======================================================================
-
       Home(
         title: "SOS",
         onChangePage: changePage,
       ),
 
-
       // ======================================================================
       // 1 - MAPA DE ALERTAS
       // ======================================================================
-
       Maps_alertas(
         title: "SOS",
         onChangePage: changePage,
       ),
 
-
       // ======================================================================
       // 2 - RELATOS
       // ======================================================================
-
       Relatos_tela(
         title: "Relato",
         onChangePage: changePage,
       ),
 
-
       // ======================================================================
       // 3 - CLIMA
       // ======================================================================
-
-      ClimaTela(),
-
+      ClimaTela(
+        onChangePage: changePage,
+      ),
 
       // ======================================================================
       // 4 - ABRIGOS
       // ======================================================================
-
       AbrigosTela(
         title: 'Abrigos',
         onChangePage: changePage,
       ),
 
-
       // ======================================================================
       // 5 - CADASTRO
       // ======================================================================
-
       Cadastro_tela(
-
         title: "Cadastro",
 
         onChangePage: changePage,
 
         onCadastroPendente: (email, senha) {
-
           debugPrint(
             "RECEBI EMAIL NA TELA PRINCIPAL: $email",
           );
 
-          debugPrint(
-            "RECEBI SENHA NA TELA PRINCIPAL: $senha",
-          );
-
-
           setState(() {
-
             emailCadastro = email;
 
             senhaCadastro = senha;
-
 
             // ---------------------------------------------------------------
             // Abre confirmação de e-mail
@@ -462,14 +367,12 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
             _currentIndex = 7;
 
-
             // ---------------------------------------------------------------
             // Recria somente a tela 7 com os dados
             // que acabaram de chegar.
             // ---------------------------------------------------------------
 
             _telas[7] = ConfEmail(
-
               title: "Confirmação",
 
               onChangePage: changePage,
@@ -477,32 +380,23 @@ class _TelaPrincipalState extends State<TelaPrincipal>
               email: emailCadastro,
 
               senha: senhaCadastro,
-
             );
-
           });
-
         },
-
       ),
-
 
       // ======================================================================
       // 6 - LANDING PAGE LOGIN/CADASTRO
       // ======================================================================
-
       SLogCad(
         title: "Landing Page",
         onChangePage: changePage,
       ),
 
-
       // ======================================================================
       // 7 - CONFIRMAÇÃO DE E-MAIL
       // ======================================================================
-
       ConfEmail(
-
         title: "Confirmação",
 
         onChangePage: changePage,
@@ -510,51 +404,41 @@ class _TelaPrincipalState extends State<TelaPrincipal>
         email: emailCadastro,
 
         senha: senhaCadastro,
-
       ),
-
 
       // ======================================================================
       // 8 - LOGIN
       // ======================================================================
-
       SLogin(
         title: "Login",
         onChangePage: changePage,
       ),
 
-
       // ======================================================================
       // 9 - PERFIL
       // ======================================================================
-
       TelaPerfil(
         title: "Perfil",
         onChangePage: changePage,
       ),
 
-
       // ======================================================================
       // 10 - NIMBO
       // ======================================================================
-
       ChatbotTela(
         title: 'Nimbo',
         onChangePage: changePage,
       ),
-
 
       // ======================================================================
       // 11 - SOLICITAR REDEFINIÇÃO DE SENHA
       //
       // Aqui o usuário digita o e-mail.
       // ======================================================================
-
       ChangePassword(
         title: 'Change Password',
         onChangePage: changePage,
       ),
-
 
       // ======================================================================
       // 12 - ESCREVER A NOVA SENHA
@@ -562,74 +446,49 @@ class _TelaPrincipalState extends State<TelaPrincipal>
       // Essa é a tela aberta depois que o usuário
       // clica no link recebido no e-mail.
       // ======================================================================
-
       WriteChangedPassword(
         onChangePage: changePage,
       ),
 
       //=======================================================================
       //13 - EDITAR PERFIL
-
-      EditarPerfilTela(title: 'editar', onChangePage: changePage)
+      EditarPerfilTela(title: 'editar', onChangePage: changePage),
     ];
   }
-
 
   // ==========================================================================
   // PERMISSÃO DE LOCALIZAÇÃO
   // ==========================================================================
 
   Future<void> _pedirPermissao() async {
-
-    PermissionStatus status =
-    await Permission.location.request();
-
+    PermissionStatus status = await Permission.location.request();
 
     if (status.isGranted) {
-
-      Position position =
-      await Geolocator.getCurrentPosition();
-
+      Position position = await Geolocator.getCurrentPosition();
 
       debugPrint(
         'Localização obtida: '
-            '${position.latitude}, '
-            '${position.longitude}',
+        '${position.latitude}, '
+        '${position.longitude}',
       );
-
-    }
-
-    else if (
-    status.isDenied ||
-        status.isPermanentlyDenied
-    ) {
-
+    } else if (status.isDenied || status.isPermanentlyDenied) {
       debugPrint(
         'Permissão de localização negada pelo usuário.',
       );
-
     }
-
   }
-
 
   // ==========================================================================
   // TROCA DE PÁGINA
   // ==========================================================================
 
   void changePage(int index) {
-
     if (!mounted) {
       return;
     }
 
-
     // Proteção contra índices inválidos
-    if (
-    index < 0 ||
-        index >= _telas.length
-    ) {
-
+    if (index < 0 || index >= _telas.length) {
       debugPrint(
         'Índice de tela inválido: $index',
       );
@@ -637,24 +496,25 @@ class _TelaPrincipalState extends State<TelaPrincipal>
       return;
     }
 
-
     setState(() {
-
       _currentIndex = index;
 
       // O IndexedStack preserva o estado: recarrega os dados ao abrir o perfil.
       if (index == 9) {
-        _telas[9] = TelaPerfil(key: UniqueKey(), title: 'Perfil',
-            onChangePage: changePage);
+        _telas[9] = TelaPerfil(
+          key: UniqueKey(),
+          title: 'Perfil',
+          onChangePage: changePage,
+        );
       } else if (index == 13) {
-        _telas[13] = EditarPerfilTela(key: UniqueKey(), title: 'Editar perfil',
-            onChangePage: changePage);
+        _telas[13] = EditarPerfilTela(
+          key: UniqueKey(),
+          title: 'Editar perfil',
+          onChangePage: changePage,
+        );
       }
-
     });
-
   }
-
 
   // ==========================================================================
   // DISPOSE
@@ -662,13 +522,11 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
   @override
   void dispose() {
-
     // ------------------------------------------------------------------------
     // PARA DE ESCUTAR EVENTOS DE AUTENTICAÇÃO
     // ------------------------------------------------------------------------
 
     _authSubscription?.cancel();
-
 
     // ------------------------------------------------------------------------
     // DESTROI ANIMAÇÃO
@@ -676,10 +534,8 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
     _nimboAnimController.dispose();
 
-
     super.dispose();
   }
-
 
   // ==========================================================================
   // BUILD
@@ -687,7 +543,6 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
   @override
   Widget build(BuildContext context) {
-
     // ========================================================================
     // ESCONDE A BARRA NAS TELAS FORA DA NAVEGAÇÃO PRINCIPAL
     //
@@ -700,298 +555,197 @@ class _TelaPrincipalState extends State<TelaPrincipal>
     // recuperação de senha etc.
     // ========================================================================
 
-    final bool ocultarNav =
-        _currentIndex >= 5;
-
+    final bool ocultarNav = _currentIndex >= 5;
 
     // ========================================================================
     // VERIFICA SE ESTÁ NO NIMBO
     // ========================================================================
 
-    final bool noNimbo =
-        _currentIndex == 10;
-
+    final bool noNimbo = _currentIndex == 10;
 
     return Scaffold(
-
       extendBody: true,
-
 
       // ======================================================================
       // BODY
       // ======================================================================
-
       body: Stack(
-
         children: [
-
           // ==================================================================
           // CONTEÚDO PRINCIPAL
           // ==================================================================
-
           Padding(
-
-            padding:
-
-            ocultarNav
-
+            padding: ocultarNav
                 ? EdgeInsets.only(
-              top: 0,
-            )
-
+                    top: 0,
+                  )
                 : _currentIndex == 0
-
                 ? EdgeInsets.only(
-              top: 0,
-            )
-
+                    top: 0,
+                  )
                 : EdgeInsets.only(
-              top: 30,
-            ),
-
+                    top: 30,
+                  ),
 
             child: IndexedStack(
-
               index: _currentIndex,
 
               children: [
-                Home(title: 'SOS', onChangePage: changePage,
-                    onAbrirRelato: _abrirRelatoNoMapa,
-                    ativa: _currentIndex == 0),
+                Home(
+                  title: 'SOS',
+                  onChangePage: changePage,
+                  onAbrirRelato: _abrirRelatoNoMapa,
+                  ativa: _currentIndex == 0,
+                ),
                 ..._telas.skip(1),
               ],
-
             ),
-
           ),
-
 
           // ==================================================================
           // BOTÃO FLUTUANTE NIMBO
           //
           // Só aparece nas telas principais.
           // ==================================================================
-
           if (!ocultarNav && !noNimbo)
-
             Positioned(
-
               bottom: 80,
 
               right: 20,
 
-
               child: ScaleTransition(
-
                 scale: _nimboScaleAnim,
 
-
                 child: GestureDetector(
-
                   // ----------------------------------------------------------
                   // PRESSIONOU
                   // ----------------------------------------------------------
-
                   onTapDown: (_) {
-
                     _nimboAnimController.reverse();
-
                   },
-
 
                   // ----------------------------------------------------------
                   // SOLTOU
                   // ----------------------------------------------------------
-
                   onTapUp: (_) {
-
                     _nimboAnimController.forward();
 
                     changePage(10);
-
                   },
-
 
                   // ----------------------------------------------------------
                   // CANCELOU
                   // ----------------------------------------------------------
-
                   onTapCancel: () {
-
                     _nimboAnimController.forward();
-
                   },
 
-
                   child: Container(
-
                     width: 64,
 
                     height: 64,
 
-
                     decoration: BoxDecoration(
-
-                      color:
-                      Color(
+                      color: Color(
                         0xFF0B1426,
                       ),
 
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(32),
 
-                      borderRadius:
-                      BorderRadius.only(
+                        topRight: Radius.circular(32),
 
-                        topLeft:
-                        Radius.circular(32),
+                        bottomLeft: Radius.circular(32),
 
-                        topRight:
-                        Radius.circular(32),
-
-                        bottomLeft:
-                        Radius.circular(32),
-
-                        bottomRight:
-                        Radius.circular(4),
-
+                        bottomRight: Radius.circular(4),
                       ),
 
-
                       border: Border.all(
-
-                        color:
-                        Colors.white.withValues(
+                        color: Colors.white.withValues(
                           alpha: 0.15,
                         ),
 
                         width: 2,
-
                       ),
 
-
                       boxShadow: [
-
                         BoxShadow(
-
-                          color:
-                          Colors.black.withValues(
+                          color: Colors.black.withValues(
                             alpha: 0.35,
                           ),
 
                           blurRadius: 12,
 
-                          offset:
-                          const Offset(
+                          offset: const Offset(
                             0,
                             4,
                           ),
-
                         ),
-
                       ],
-
                     ),
 
-
                     child: Padding(
-
-                      padding:
-                      EdgeInsets.all(
+                      padding: EdgeInsets.all(
                         8,
                       ),
 
-
                       child: Image.asset(
-
                         'gfx/png/Image/nimbo_icon.png',
 
                         fit: BoxFit.contain,
 
                         isAntiAlias: true,
-
                       ),
-
                     ),
-
                   ),
-
                 ),
-
               ),
-
             ),
-
 
           // ==================================================================
           // PERFIL SUPERIOR
           // ==================================================================
-
           if (!ocultarNav)
-
             SafeArea(
-
               child: ContainerPerfilSuperior(
-
                 onChangePage: changePage,
 
                 nome: nome,
-
               ),
-
             ),
-
         ],
-
       ),
-
 
       // ======================================================================
       // BOTTOM NAVIGATION
       // ======================================================================
-
-      bottomNavigationBar:
-
-      ocultarNav || noNimbo
-
+      bottomNavigationBar: ocultarNav || noNimbo
           ? null
-
           : CustomAnimatedBottomBar(
+              currentIndex: _currentIndex,
 
-        currentIndex:
-        _currentIndex,
+              icones: _icones,
 
-        icones:
-        _icones,
-
-
-        onTap: (index) {
-
-          changePage(index);
-
-        },
-
-      ),
-
+              onTap: (index) {
+                changePage(index);
+              },
+            ),
     );
   }
 }
-
 
 // ============================================================================
 // WIDGET CUSTOMIZADO: BARRA INFERIOR ANIMADA
 // ============================================================================
 
-class CustomAnimatedBottomBar
-    extends StatelessWidget {
-
+class CustomAnimatedBottomBar extends StatelessWidget {
   final int currentIndex;
 
   final List<IconData> icones;
 
   final Function(int) onTap;
 
-
   const CustomAnimatedBottomBar({
-
     super.key,
 
     required this.currentIndex,
@@ -999,320 +753,193 @@ class CustomAnimatedBottomBar
     required this.icones,
 
     required this.onTap,
-
   });
 
-
-  final Color corFundoMenu =
-  Color(
+  final Color corFundoMenu = const Color(
     0xFF0B1426,
   );
 
-
-  final Color corIconeInativo =
-  Color(
+  final Color corIconeInativo = const Color(
     0xFF4A5568,
   );
 
-
   @override
   Widget build(BuildContext context) {
-
     return SizedBox(
-
       height: 90,
 
-
       child: TweenAnimationBuilder<double>(
-
         tween: Tween<double>(
+          begin: currentIndex.toDouble(),
 
-          begin:
-          currentIndex.toDouble(),
-
-          end:
-          currentIndex.toDouble(),
-
+          end: currentIndex.toDouble(),
         ),
 
-
-        duration:
-        const Duration(
+        duration: const Duration(
           milliseconds: 350,
         ),
 
-
-        curve:
-        Curves.easeInOutBack,
-
+        curve: Curves.easeInOutBack,
 
         builder:
             (
-            context,
-            value,
-            child,
+              context,
+              value,
+              child,
             ) {
+              final double segmentWidth =
+                  MediaQuery.of(context).size.width / icones.length;
 
-          final double segmentWidth =
-              MediaQuery.of(context)
-                  .size
-                  .width /
-                  icones.length;
+              final double buttonLeftOffset =
+                  (segmentWidth * value) + (segmentWidth / 2) - 28;
 
+              return Stack(
+                children: [
+                  // ==============================================================
+                  // BARRA
+                  // ==============================================================
+                  Positioned(
+                    bottom: 0,
 
-          final double buttonLeftOffset =
-              (segmentWidth * value) +
-                  (segmentWidth / 2) -
-                  28;
+                    left: 0,
 
+                    right: 0,
 
-          return Stack(
-
-            children: [
-
-              // ==============================================================
-              // BARRA
-              // ==============================================================
-
-              Positioned(
-
-                bottom: 0,
-
-                left: 0,
-
-                right: 0,
-
-
-                child: ClipPath(
-
-                  clipper: MenuClipper(
-
-                    value,
-
-                    icones.length,
-
-                  ),
-
-
-                  child: Container(
-
-                    height: 70,
-
-                    color:
-                    corFundoMenu,
-
-
-                    child: Row(
-
-                      mainAxisAlignment:
-                      MainAxisAlignment
-                          .spaceAround,
-
-
-                      children:
-                      List.generate(
+                    child: ClipPath(
+                      clipper: MenuClipper(
+                        value,
 
                         icones.length,
+                      ),
+
+                      child: Container(
+                        height: 70,
+
+                        color: corFundoMenu,
+
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+
+                          children: List.generate(
+                            icones.length,
 
                             (index) {
+                              return GestureDetector(
+                                behavior: HitTestBehavior.opaque,
 
-                          return GestureDetector(
+                                onTap: () {
+                                  onTap(
+                                    index,
+                                  );
+                                },
 
-                            behavior:
-                            HitTestBehavior
-                                .opaque,
+                                child: SizedBox(
+                                  width: segmentWidth,
 
+                                  height: 70,
 
-                            onTap: () {
+                                  child: Icon(
+                                    icones[index],
 
-                              onTap(
-                                index,
+                                    color: currentIndex == index
+                                        ? Colors.transparent
+                                        : corIconeInativo,
+
+                                    size: 28,
+                                  ),
+                                ),
                               );
-
                             },
-
-
-                            child:
-                            SizedBox(
-
-                              width:
-                              segmentWidth,
-
-                              height:
-                              70,
-
-
-                              child:
-                              Icon(
-
-                                icones[
-                                index],
-
-                                color:
-                                currentIndex ==
-                                    index
-
-                                    ? Colors
-                                    .transparent
-
-                                    : corIconeInativo,
-
-                                size: 28,
-
-                              ),
-
-                            ),
-
-                          );
-
-                        },
-
+                          ),
+                        ),
                       ),
-
                     ),
-
                   ),
 
-                ),
+                  // ==============================================================
+                  // BOTÃO CENTRAL ANIMADO
+                  // ==============================================================
+                  Positioned(
+                    top: 0,
 
-              ),
+                    left: buttonLeftOffset,
 
+                    child: GestureDetector(
+                      onTap: () {
+                        onTap(
+                          currentIndex,
+                        );
+                      },
 
-              // ==============================================================
-              // BOTÃO CENTRAL ANIMADO
-              // ==============================================================
+                      child: Container(
+                        width: 56,
 
-              Positioned(
+                        height: 56,
 
-                top: 0,
+                        decoration: BoxDecoration(
+                          color: corFundoMenu,
 
-                left:
-                buttonLeftOffset,
+                          shape: BoxShape.circle,
 
+                          border: Border.all(
+                            color: Colors.white,
 
-                child:
-                GestureDetector(
+                            width: 3.5,
+                          ),
+                        ),
 
-                  onTap: () {
+                        child: Icon(
+                          icones[currentIndex < icones.length
+                              ? currentIndex
+                              : 0],
 
-                    onTap(
-                      currentIndex,
-                    );
+                          color: Colors.white,
 
-                  },
-
-
-                  child:
-                  Container(
-
-                    width: 56,
-
-                    height: 56,
-
-
-                    decoration:
-                    BoxDecoration(
-
-                      color:
-                      corFundoMenu,
-
-                      shape:
-                      BoxShape.circle,
-
-                      border:
-                      Border.all(
-
-                        color:
-                        Colors.white,
-
-                        width: 3.5,
-
+                          size: 28,
+                        ),
                       ),
-
                     ),
-
-
-                    child:
-                    Icon(
-
-                      icones[currentIndex < icones.length ? currentIndex : 0],
-
-                      color:
-                      Colors.white,
-
-                      size: 28,
-
-                    ),
-
                   ),
-
-                ),
-
-              ),
-
-            ],
-
-          );
-
-        },
-
+                ],
+              );
+            },
       ),
-
     );
   }
 }
-
 
 // ============================================================================
 // MATEMÁTICA DO RECORTE (NOTCH)
 // ============================================================================
 
-class MenuClipper
-    extends CustomClipper<Path> {
-
+class MenuClipper extends CustomClipper<Path> {
   final double position;
 
   final int segments;
 
-
   MenuClipper(
-      this.position,
-      this.segments,
-      );
-
+    this.position,
+    this.segments,
+  );
 
   @override
   Path getClip(Size size) {
+    final path = Path();
 
-    final path =
-    Path();
+    final double width = size.width;
 
+    final double height = size.height;
 
-    final double width =
-        size.width;
+    final double segmentWidth = width / segments;
 
-
-    final double height =
-        size.height;
-
-
-    final double segmentWidth =
-        width / segments;
-
-
-    final double notchCenter =
-        (segmentWidth * position) +
-            (segmentWidth / 2);
-
+    final double notchCenter = (segmentWidth * position) + (segmentWidth / 2);
 
     path.lineTo(
       notchCenter - 45,
       0,
     );
 
-
     path.cubicTo(
-
       notchCenter - 20,
 
       0,
@@ -1324,12 +951,9 @@ class MenuClipper
       notchCenter,
 
       45,
-
     );
 
-
     path.cubicTo(
-
       notchCenter + 30,
 
       45,
@@ -1341,38 +965,30 @@ class MenuClipper
       notchCenter + 45,
 
       0,
-
     );
-
 
     path.lineTo(
       width,
       0,
     );
 
-
     path.lineTo(
       width,
       height,
     );
 
-
     path.lineTo(
       0,
       height,
     );
-
 
     path.close();
-
 
     return path;
   }
 
-
   @override
   bool shouldReclip(
-      covariant CustomClipper<Path> oldClipper,
-      ) =>
-      true;
+    covariant CustomClipper<Path> oldClipper,
+  ) => true;
 }
