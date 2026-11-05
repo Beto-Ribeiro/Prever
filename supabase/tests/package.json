@@ -1,0 +1,14 @@
+{
+  "name": "prever-alertas-push-tests",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test push.test.mjs validar-alertas.mjs",
+    "test:unit": "node --test push.test.mjs",
+    "test:sql": "node validar-alertas.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.15"
+  }
+}

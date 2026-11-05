@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prever/services/alertas_notificacao_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'exportador_import.dart';
 
@@ -148,6 +149,7 @@ class _WriteChangedPasswordState extends State<WriteChangedPassword> {
 
 
       // Encerra a sessão criada para recuperação
+      await AlertasNotificacaoService.instance.prepararSaida();
       await supabase.auth.signOut();
 
       if (!mounted) return;

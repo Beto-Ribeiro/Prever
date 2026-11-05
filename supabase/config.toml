@@ -1,0 +1,4 @@
+# Esta função é chamada pelo banco com x-webhook-secret (validado no handler).
+# O segredo nunca deve estar no aplicativo Flutter.
+[functions.enviar-alertas-web]
+verify_jwt = false

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'controle_acessibilidade.dart';
+import 'package:prever/services/alertas_notificacao_service.dart';
 
 class BotaoAcessibilidade extends StatefulWidget {
   /// Chamado quando o usuário toca em "Editar perfil".
@@ -60,6 +61,7 @@ class _BotaoAcessibilidadeState extends State<BotaoAcessibilidade>
     );
 
     if (confirmou == true) {
+      await AlertasNotificacaoService.instance.prepararSaida();
       await Supabase.instance.client.auth.signOut();
       widget.onLogout?.call();
     }

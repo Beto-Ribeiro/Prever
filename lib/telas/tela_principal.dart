@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:prever/services/alertas_notificacao_service.dart';
 import 'package:prever/services/relatos_proximos_service.dart';
 
 import 'package:prever/telas/login_tela.dart';
@@ -8,7 +9,6 @@ import 'exportador_import.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 
 class TelaPrincipal extends StatefulWidget {
@@ -573,36 +573,20 @@ class _TelaPrincipalState extends State<TelaPrincipal>
   // ==========================================================================
 
   Future<void> _pedirPermissao() async {
-
-    PermissionStatus status =
-    await Permission.location.request();
-
-
-    if (status.isGranted) {
-
-      Position position =
-      await Geolocator.getCurrentPosition();
-
-
-      debugPrint(
-        'Localização obtida: '
-            '${position.latitude}, '
-            '${position.longitude}',
-      );
-
+    try {
+      final permissao = await Geolocator.checkPermission();
+      if (permissao == LocationPermission.denied) {
+        await Geolocator.requestPermission();
+      }
+    } catch (_) {
+      debugPrint('Localização indisponível neste dispositivo.');
     }
-
-    else if (
-    status.isDenied ||
-        status.isPermanentlyDenied
-    ) {
-
-      debugPrint(
-        'Permissão de localização negada pelo usuário.',
-      );
-
-    }
-
+    if (!mounted) return;
+    await AlertasNotificacaoService.instance.iniciar(
+      abrirMapa: () {
+        if (mounted) changePage(1);
+      },
+    );
   }
 
 
@@ -661,6 +645,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
     // ------------------------------------------------------------------------
 
     _authSubscription?.cancel();
+    unawaited(AlertasNotificacaoService.instance.dispose());
 
 
     // ------------------------------------------------------------------------

@@ -341,7 +341,7 @@ class _MapsAlertas extends State<Maps_alertas> {
   final estiloMapa = '''
     [
       {
-        "featureType": "poi.business",
+         "featureType": "poi.business",
         "elementType": "all",
         "stylers": [
           {
