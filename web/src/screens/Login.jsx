@@ -19,6 +19,7 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
   const [role, setRole] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [passwordConfirm, setPasswordConfirm] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -26,7 +27,7 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
 
   const normalizedEmail = email.trim().toLowerCase()
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
-  const isRegisterValid = Boolean(institution.trim() && name.trim() && role.trim() && isValidEmail)
+  const isRegisterValid = Boolean(institution.trim() && name.trim() && role.trim() && isValidEmail && password.length >= 6 && password === passwordConfirm)
   const isLoginValid = Boolean(normalizedEmail && password)
 
   const handleSubmit = async () => {
@@ -36,12 +37,16 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
     try {
       if (isRegister) {
         if (!isRegisterValid) return
-        await onRegister?.({ institution: institution.trim(), name: name.trim(), email: normalizedEmail, role: role.trim() })
+        if (password.length < 6) { setError('A senha precisa ter pelo menos 6 caracteres.'); return }
+        if (password !== passwordConfirm) { setError('As senhas não conferem.'); return }
+        await onRegister?.({ institution: institution.trim(), name: name.trim(), email: normalizedEmail, role: role.trim(), password })
         setShowSuccess(true)
         setInstitution('')
         setName('')
         setRole('')
         setEmail('')
+        setPassword('')
+        setPasswordConfirm('')
         return
       }
 
@@ -170,6 +175,33 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
                 onKeyDown={handleKeyDown}
                 className="w-full px-4 py-3 border border-border-soft rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-text-main/40 bg-bg-main/80"
               />
+            )}
+
+            {isRegister && (
+              <>
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  aria-label="Senha desejada"
+                  placeholder="Crie sua senha (mínimo de 6 caracteres)"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="w-full px-4 py-3 border border-border-soft rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-text-main/40 bg-bg-main/80"
+                />
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  aria-label="Confirme sua senha"
+                  placeholder="Confirme sua senha"
+                  value={passwordConfirm}
+                  onChange={(e) => setPasswordConfirm(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="w-full px-4 py-3 border border-border-soft rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-text-main/40 bg-bg-main/80"
+                />
+                {password && password.length < 6 && <p className="text-xs text-red-600">A senha precisa ter pelo menos 6 caracteres.</p>}
+                {passwordConfirm && password !== passwordConfirm && <p className="text-xs text-red-600">As senhas não conferem.</p>}
+              </>
             )}
 
             {isRegister && (

@@ -97,8 +97,8 @@ export default function App() {
     await signIn({ email, password })
   }
 
-  const handleRegister = async ({ institution, name, email, role, documentNumber }) => {
-    await createWebAccessRequest({ institution, name, email, role, documentNumber })
+  const handleRegister = async ({ institution, name, email, role, documentNumber, password }) => {
+    await createWebAccessRequest({ institution, name, email, role, documentNumber, password })
   }
 
   const handleLogout = async () => {

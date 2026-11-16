@@ -175,7 +175,7 @@ export async function getWebAccessForUser(authUser) {
   }
 }
 
-export async function createWebAccessRequest({ institution, name, email, role, agentType, documentNumber }) {
+export async function createWebAccessRequest({ institution, name, email, role, agentType, documentNumber, password }) {
   const payload = {
     saw_nome: name?.trim(),
     saw_email: email?.trim().toLowerCase(),
@@ -186,31 +186,42 @@ export async function createWebAccessRequest({ institution, name, email, role, a
     saw_status: 'pendente',
   }
 
-  if (!payload.saw_nome || !payload.saw_email || !payload.saw_instituicao || !payload.saw_cargo) {
-    throw new Error('Preencha todos os campos obrigatórios antes de solicitar acesso.')
+  if (!payload.saw_nome || !payload.saw_email || !payload.saw_instituicao || !payload.saw_cargo || String(password || '').length < 6) {
+    throw new Error('Preencha todos os campos obrigatórios e informe uma senha com pelo menos 6 caracteres.')
   }
 
-  // Importante: visitantes/anon têm permissão para INSERIR solicitações, mas não para
-  // LER a tabela. Usar `.select()` depois do insert faz o PostgREST exigir uma política
-  // SELECT e derruba o fluxo com erro de RLS, mesmo quando a solicitação foi criada.
+  // A senha é cadastrada pelo Supabase Auth (hash gerenciado pelo próprio serviço),
+  // nunca é gravada na tabela pública de solicitações.
+  const { data: signup, error: signupError } = await supabase.auth.signUp({
+    email: payload.saw_email,
+    password: String(password),
+    options: { data: { prf_nome: payload.saw_nome, prf_tipo: 'pendente' } },
+  })
+
+  if (signupError || !signup?.user) {
+    throw new Error('Não foi possível criar a conta com esse e-mail. Se você já possui uma conta, entre nela ou recupere sua senha.')
+  }
+
+  // Quando a confirmação de e-mail está desativada, signUp pode criar uma sessão.
+  // A conta continua sem permissão web até a aprovação administrativa.
+  if (signup.session) {
+    await supabase.auth.signOut()
+  }
+
   const { error } = await supabase
     .from('Solicitacao_Acesso_Web')
     .insert(payload, { returning: 'minimal' })
 
   if (error) {
     if (isMissingRelationError(error)) {
-      throw new Error(
-        'A solicitação de acesso ainda não está disponível. Avise o responsável pelo painel.'
-      )
+      throw new Error('A solicitação de acesso ainda não está disponível. Avise o responsável pelo painel.')
     }
-
     const message = String(error.message || '').toLowerCase()
     if (message.includes('row level security') || message.includes('policy')) {
       throw new Error('Erro interno no banco de dados.')
     }
-
     throw error
   }
 
-  return { ...payload, created: true }
+  return { created: true }
 }

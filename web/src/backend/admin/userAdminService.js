@@ -313,3 +313,32 @@ export async function resetUserProfileByAdmin(user) {
 
   return true
 }
+
+
+export async function setUserPasswordByAdmin(userId, password) {
+  const cleanPassword = String(password || '')
+  if (!userId) throw new Error('Usuário não encontrado para trocar a senha.')
+  if (cleanPassword.length < 6) throw new Error('A senha precisa ter pelo menos 6 caracteres.')
+
+  const { error } = await supabase.rpc('admin_set_user_password', {
+    p_user_id: userId,
+    p_new_password: cleanPassword,
+  })
+  if (error) {
+    throw new Error('Não foi possível trocar a senha. Verifique se a migração SQL de senha administrativa foi aplicada.')
+  }
+
+  const actorUserId = await getCurrentUserId()
+  const { error: auditError } = await supabase.from('Audit_Log').insert({
+    actor_user_id: actorUserId,
+    action: 'admin_changed_user_password',
+    entity_type: 'Perfis',
+    entity_id: userId,
+    detail: 'Senha de usuário alterada pelo painel administrativo.',
+    metadata: { targetUserId: userId },
+  })
+  if (auditError && !isMissingRelationError(auditError)) {
+    console.warn('Senha alterada, mas não foi possível registrar auditoria:', auditError.message)
+  }
+  return true
+}
