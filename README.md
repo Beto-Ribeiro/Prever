@@ -72,8 +72,8 @@ Durante crises climáticas e eventos extremos, órgãos de proteção civil enfr
 ### Backend Serverless & Banco de Dados (`/supabase`)
 - **PostgreSQL 15+ com Row Level Security (RLS)**: Políticas de segurança em nível de linha em todas as tabelas operacionais (`perfis`, `relatos`, `alertas`, `abrigos`, `abrigo_ocupantes`, `abrigo_estoque`, `abrigo_pedidos`, `solicitacoes_acesso_web`, `auditoria_logs`, `atividades_usuario`).
 - **Supabase Edge Functions (Deno / TypeScript)**:
-  - [`approve-web-access-request`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/supabase/functions/approve-web-access-request/index.ts): Fluxo administrativo seguro de aprovação/rejeição de solicitações de acesso ao painel web e envio de convites.
-  - [`smdn-ai`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/supabase/functions/smdn-ai/index.ts): Proxy autenticado para inferência no Google Gemini (`gemini-2.5-flash`) sem expor chaves de IA no navegador.
+  - [`approve-web-access-request`](supabase/functions/approve-web-access-request/index.ts): Fluxo administrativo seguro de aprovação/rejeição de solicitações de acesso ao painel web e envio de convites.
+  - [`smdn-ai`](supabase/functions/smdn-ai/index.ts): Proxy autenticado para inferência no Google Gemini (`gemini-2.5-flash`) sem expor chaves de IA no navegador.
 - **Integrações Externas**:
   - **OpenWeatherMap API**: Clima atual e previsão horária por cidade ou coordenadas GPS.
   - **OpenStreetMap Nominatim API**: Geocodificação e busca reversa de endereços/bairros.
@@ -261,9 +261,7 @@ graph TD
 │   │   ├── telas/                          # Telas da aplicação, formatadores e widgets
 │   │   ├── firebase_options.dart           # Configuração multiplataforma do Firebase via .env
 │   │   └── main.dart                       # Entrypoint da aplicação Mobile
-│   ├── src/                                # Índice de documentação arquitetural do código-fonte
 │   ├── test/                               # Suíte executável do Flutter Test (unit, widget e carga)
-│   ├── tests/                              # Índice da suíte de testes mobile
 │   ├── .env.example                        # Template de variáveis de ambiente do Mobile
 │   └── pubspec.yaml                        # Manifesto de dependências e assets do Flutter
 │
@@ -289,7 +287,6 @@ graph TD
 │   │   ├── utils/                          # Tratamento amigável de erros e formatação de telefone
 │   │   ├── App.jsx                         # Roteador de telas protegido por RBAC
 │   │   └── main.jsx                        # Entrypoint React
-│   ├── supabase/                           # Espelho local de funções e SQL do painel web
 │   ├── tests/                              # Suíte de 30 testes automatizados (node:test)
 │   ├── .env.example                        # Template de variáveis de ambiente do Web
 │   └── package.json                        # Scripts e dependências NPM
@@ -368,13 +365,13 @@ graph TD
    ```
 
 5. **Provisionamento do Banco de Dados Supabase (`/supabase`):**
-   Execute no **SQL Editor** do seu projeto Supabase os scripts em [`supabase/sql/`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/supabase/sql) na ordem numérica (ou execute [`00_master_setup.sql`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/supabase/sql/00_master_setup.sql) seguido das migrações incrementais `01` a `18`).
+   Execute no **SQL Editor** do seu projeto Supabase os scripts em [`supabase/sql/`](supabase/sql) na ordem numérica (ou execute [`00_master_setup.sql`](supabase/sql/00_master_setup.sql) seguido das migrações incrementais `01` a `21`).
 
 ---
 
 ## 7. Configuração e Variáveis de Ambiente
 
-Todas as credenciais são injetadas via variáveis de ambiente. Consulte [`.env.example`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/.env.example), [`web/.env.example`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/web/.env.example) e [`mobile/.env.example`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/mobile/.env.example):
+Todas as credenciais são injetadas via variáveis de ambiente. Consulte [`.env.example`](.env.example), [`web/.env.example`](web/.env.example) e [`mobile/.env.example`](mobile/.env.example):
 
 | Variável | Escopo | Obrigatória | Descrição |
 | :--- | :--- | :---: | :--- |
@@ -431,19 +428,19 @@ bash ./scripts/verify-monorepo.sh
 
 ### Testes do Painel Web (`/web/tests`)
 O painel web conta com **30 testes automatizados** executados via `npm test` (`node --test --experimental-test-module-mocks tests/*.test.js`), cobrindo:
-- [`accessibility-preferences.test.js`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/web/tests/accessibility-preferences.test.js): Contraste WCAG nas 8 combinações de tema/contraste/daltonismo e persistência de preferências.
-- [`nimbo-context.test.js`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/web/tests/nimbo-context.test.js): Isolamento de contexto do assistente IA por perfil, bloqueio contra escalonamento de privilégios por gerentes de abrigo e sanitização de erros.
-- [`screen-context.test.js`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/web/tests/screen-context.test.js): Exclusão estrita de campos de senha/segredos na captura de tela do assistente e proteção contra leitura de sessão alheia.
-- [`shelter-manager-access.test.js`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/web/tests/shelter-manager-access.test.js): Regras RBAC de acesso para gerentes de abrigo e preservação de perfis canônicos.
-- [`shelter-occupants-stats.test.js`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/web/tests/shelter-occupants-stats.test.js), [`shelter-Report-export.test.js`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/web/tests/shelter-Report-export.test.js), [`shelter-Reports-period.test.js`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/web/tests/shelter-Reports-period.test.js): Cálculos estatísticos de ocupantes e exportação de relatórios por período.
-- [`friendly-messages.test.js`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/web/tests/friendly-messages.test.js) e [`profile-activity.test.js`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/web/tests/profile-activity.test.js): Sanitização de mensagens de erro técnicas e formatação de trilha de atividades.
+- [`accessibility-preferences.test.js`](web/tests/accessibility-preferences.test.js): Contraste WCAG nas 8 combinações de tema/contraste/daltonismo e persistência de preferências.
+- [`nimbo-context.test.js`](web/tests/nimbo-context.test.js): Isolamento de contexto do assistente IA por perfil, bloqueio contra escalonamento de privilégios por gerentes de abrigo e sanitização de erros.
+- [`screen-context.test.js`](web/tests/screen-context.test.js): Exclusão estrita de campos de senha/segredos na captura de tela do assistente e proteção contra leitura de sessão alheia.
+- [`shelter-manager-access.test.js`](web/tests/shelter-manager-access.test.js): Regras RBAC de acesso para gerentes de abrigo e preservação de perfis canônicos.
+- [`shelter-occupants-stats.test.js`](web/tests/shelter-occupants-stats.test.js), [`shelter-Report-export.test.js`](web/tests/shelter-Report-export.test.js), [`shelter-Reports-period.test.js`](web/tests/shelter-Reports-period.test.js): Cálculos estatísticos de ocupantes e exportação de relatórios por período.
+- [`friendly-messages.test.js`](web/tests/friendly-messages.test.js) e [`profile-activity.test.js`](web/tests/profile-activity.test.js): Sanitização de mensagens de erro técnicas e formatação de trilha de atividades.
 
 ### Testes do Aplicativo Mobile (`/mobile/test`)
 O aplicativo mobile conta com **26 casos de teste** executados via `flutter test`, cobrindo:
-- [`carga_relatos_test.dart`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/mobile/test/carga_relatos_test.dart): Regras de negócio de severidade, limiar antifraude (`score >= 0.80`), fallback de precaução e simulação de carga concorrente (1, 5, 10, 25 e 50 relatos simultâneos).
-- [`login_tela_test.dart`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/mobile/test/login_tela_test.dart): Fluxos de login/logout repetidos e responsividade em telas compactas com escala de fonte ampliada.
-- [`relatos_proximos_test.dart`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/mobile/test/relatos_proximos_test.dart): Carregamento de relatos próximos, retry de geolocalização e tratamento de falha de miniatura.
-- [`prever_logo_test.dart`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/mobile/test/prever_logo_test.dart) e [`widget_test.dart`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/mobile/test/widget_test.dart): Testes de renderização de componentes e smoke test.
+- [`carga_relatos_test.dart`](mobile/test/carga_relatos_test.dart): Regras de negócio de severidade, limiar antifraude (`score >= 0.80`), fallback de precaução e simulação de carga concorrente (1, 5, 10, 25 e 50 relatos simultâneos).
+- [`login_tela_test.dart`](mobile/test/login_tela_test.dart): Fluxos de login/logout repetidos e responsividade em telas compactas com escala de fonte ampliada.
+- [`relatos_proximos_test.dart`](mobile/test/relatos_proximos_test.dart): Carregamento de relatos próximos, retry de geolocalização e tratamento de falha de miniatura.
+- [`prever_logo_test.dart`](mobile/test/prever_logo_test.dart) e [`widget_test.dart`](mobile/test/widget_test.dart): Testes de renderização de componentes e smoke test.
 
 ---
 
@@ -473,18 +470,18 @@ flutter build ipa --release
 
 ## 11. Deploy e CI/CD
 
-O repositório possui pipelines automatizados no GitHub Actions em [`.github/workflows/`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/.github/workflows):
+O repositório possui pipelines automatizados no GitHub Actions em [`.github/workflows/`](.github/workflows):
 
-1. **Gate Unificado do Monorepo ([`.github/workflows/monorepo-ci.yml`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/.github/workflows/monorepo-ci.yml))**:
+1. **Gate Unificado do Monorepo ([`.github/workflows/monorepo-ci.yml`](.github/workflows/monorepo-ci.yml))**:
    - Acionado em todo `pull_request` e `push` na branch `main`.
-   - Executa [`scripts/verify-monorepo.sh`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/scripts/verify-monorepo.sh), validando a sincronização dos DTOs de `/shared` (`generate-shared-contracts.mjs --check`), lint, testes e build de produção de `/web`, além de formatação, `flutter analyze --fatal-infos --fatal-warnings` e `flutter test` de `/mobile`.
+   - Executa [`scripts/verify-monorepo.sh`](scripts/verify-monorepo.sh), validando a sincronização dos DTOs de `/shared` (`generate-shared-contracts.mjs --check`), lint, testes e build de produção de `/web`, além de formatação, `flutter analyze --fatal-infos --fatal-warnings` e `flutter test` de `/mobile`.
 
-2. **Painel Web ([`.github/workflows/web-deploy.yml`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/.github/workflows/web-deploy.yml))**:
+2. **Painel Web ([`.github/workflows/web-deploy.yml`](.github/workflows/web-deploy.yml))**:
    - Acionado em `push` e `pull_request` na branch `main` quando arquivos em `web/**` são alterados.
    - Executa build e publicação automatizada na **Vercel** utilizando `VERCEL_TOKEN`, `VERCEL_ORG_ID` e `VERCEL_PROJECT_ID`.
-   - Configuração de roteamento SPA (`rewrites` para `/index.html`) definida em [`web/vercel.json`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/web/vercel.json).
+   - Configuração de roteamento SPA (`rewrites` para `/index.html`) definida em [`web/vercel.json`](web/vercel.json).
 
-3. **Aplicativo Mobile ([`.github/workflows/mobile-ci.yml`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/.github/workflows/mobile-ci.yml))**:
+3. **Aplicativo Mobile ([`.github/workflows/mobile-ci.yml`](.github/workflows/mobile-ci.yml))**:
    - Acionado em `push` e `pull_request` na branch `main` para alterações em `mobile/**`.
    - Executa `flutter pub get`, verificação estrita de formatação (`dart format --output=none --set-exit-if-changed .`), análise estática (`flutter analyze`), suíte de testes (`flutter test`) e compilação do APK (`flutter build apk --release`).
 
@@ -533,7 +530,7 @@ As seguintes práticas de segurança (alinhadas ao **OWASP Top 10**) estão impl
 - [ ] **Notificações Push Georreferenciadas (FCM / APNs)**: Envio automático de alertas críticos em segundo plano para dispositivos móveis dentro do raio de impacto.
 - [ ] **Modo Offline-First para Relatos em Campo**: Armazenamento local criptografado (SQLite/Hive) para sincronização automática de relatos e SOS quando a conectividade for restabelecida.
 - [ ] **Integração com Sensores Hidrometeorológicos e CEMADEN**: Ingestão automatizada de pluviômetros e radares meteorológicos oficiais no mapa tático.
-- [x] **Unificação de Pacote de Contratos via Workspace**: Geração automatizada de código para Dart e TypeScript/ESM a partir de [`shared/schema/domain.schema.json`](file:///c:/Users/TAUBATE-URBANOALVESD/.gemini/antigravity-ide/scratch/Prever/shared/schema/domain.schema.json).
+- [x] **Unificação de Pacote de Contratos via Workspace**: Geração automatizada de código para Dart e TypeScript/ESM a partir de [`shared/schema/domain.schema.json`](shared/schema/domain.schema.json).
 
 ---
 

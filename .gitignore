@@ -148,3 +148,7 @@ mobile/ios/Runner/GeneratedPluginRegistrant.*
 Thumbs.db
 **/Thumbs.db
 Icon?
+
+# Arquivos "env" sem ponto (evita commit acidental)
+env
+**/env
