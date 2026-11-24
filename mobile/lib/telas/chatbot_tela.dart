@@ -72,7 +72,7 @@ class _ChatbotTelaState extends State<ChatbotTela>
     _typingAnim = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
-    )..repeat();
+    );
   }
 
   @override
@@ -90,6 +90,7 @@ class _ChatbotTelaState extends State<ChatbotTela>
     if (text.isEmpty || _isLoading) return;
 
     _textController.clear();
+    _typingAnim.repeat();
 
     setState(() {
       _messages.add(
@@ -104,6 +105,7 @@ class _ChatbotTelaState extends State<ChatbotTela>
     try {
       final reply = await _service.sendMessage(text);
       if (!mounted) return;
+      _typingAnim.stop();
       setState(() {
         _messages.add(
           ChatMessage(text: reply, isUser: false, timestamp: DateTime.now()),
@@ -113,12 +115,10 @@ class _ChatbotTelaState extends State<ChatbotTela>
       _scrollToBottom();
     } catch (e) {
       if (!mounted) return;
-      final msg = e.toString().length > 120
-          ? '${e.toString().substring(0, 120)}…'
-          : e.toString();
+      _typingAnim.stop();
       setState(() {
         _isLoading = false;
-        _errorMessage = msg;
+        _errorMessage = ChatbotService.friendlyError(e);
       });
     }
   }

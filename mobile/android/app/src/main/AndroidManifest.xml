@@ -4,6 +4,13 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="alertas_web_v2" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_alerta" />
+
         <meta-data android:name="com.google.android.geo.API_KEY"
             android:value="${GOOGLE_MAPS_API_KEY}"/>
 
@@ -26,6 +33,7 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
 
+            <!-- Deep link da recuperação de senha -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -36,8 +44,10 @@
                     android:scheme="prever"
                     android:host="redefinir-senha" />
             </intent-filter>
+            <!-- Deep link de login Google OAuth e confirmação de e-mail -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
@@ -54,11 +64,11 @@
     </application>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
-    <!-- Required to query activities that can process text, see:
-         https://developer.android.com/training/package-visibility and
-         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
-         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
+    <!-- Required by Flutter's ProcessTextPlugin. -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>

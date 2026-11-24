@@ -1,18 +1,25 @@
 import { assistantError, boundedContext } from './assistantPolicy.js'
+import { supabase } from '../supabase/client.js'
 import { initializeApp, getApp, getApps } from 'firebase/app'
 import { getAI, getGenerativeModel, VertexAIBackend } from 'firebase/ai'
+import { initializeAppCheck, ReCaptchaEnterpriseProvider, ReCaptchaV3Provider } from 'firebase/app-check'
 
 function getEnv(name, fallback = '') {
-  return String(import.meta.env[name] || fallback).trim()
+  return String(import.meta.env?.[name] || fallback).trim()
 }
 
-const firebaseConfig = {
-  apiKey: getEnv('VITE_FIREBASE_API_KEY'),
-  authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN'),
-  projectId: getEnv('VITE_FIREBASE_PROJECT_ID'),
-  storageBucket: getEnv('VITE_FIREBASE_STORAGE_BUCKET'),
-  messagingSenderId: getEnv('VITE_FIREBASE_MESSAGING_SENDER_ID'),
-  appId: getEnv('VITE_FIREBASE_APP_ID'),
+const DEFAULT_TIMEOUT_MS = 25000
+const DEFAULT_RETRY_DELAY_MS = 800
+
+function getFirebaseConfig() {
+  return {
+    apiKey: getEnv('VITE_FIREBASE_API_KEY'),
+    authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN'),
+    projectId: getEnv('VITE_FIREBASE_PROJECT_ID'),
+    storageBucket: getEnv('VITE_FIREBASE_STORAGE_BUCKET'),
+    messagingSenderId: getEnv('VITE_FIREBASE_MESSAGING_SENDER_ID'),
+    appId: getEnv('VITE_FIREBASE_APP_ID'),
+  }
 }
 
 const AVAILABLE_SCREENS = [
@@ -38,18 +45,35 @@ const ALLOWED_ACTIONS = new Set([
   'filter_audit',
 ])
 
-function validateFirebaseConfig() {
-  const missing = Object.entries(firebaseConfig)
-    .filter(([, value]) => !value)
-    .map(([key]) => key)
+let appCheckInitialized = false
 
-  if (missing.length > 0) {
-    throw new Error(`Configuração Firebase incompleta no .env: ${missing.join(', ')}`)
-  }
+function hasCompleteFirebaseConfig(config = getFirebaseConfig()) {
+  return Object.values(config).every(Boolean)
 }
 
 function getFirebaseApp() {
-  return getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
+  const config = getFirebaseConfig()
+  const app = getApps().length > 0 ? getApp() : initializeApp(config)
+
+  if (!appCheckInitialized && typeof window !== 'undefined') {
+    const siteKey = getEnv('VITE_FIREBASE_APP_CHECK_SITE_KEY')
+    const providerMode = getEnv('VITE_FIREBASE_APP_CHECK_PROVIDER', 'enterprise').toLowerCase()
+    if (siteKey) {
+      try {
+        const provider =
+          providerMode === 'v3'
+            ? new ReCaptchaV3Provider(siteKey)
+            : new ReCaptchaEnterpriseProvider(siteKey)
+        initializeAppCheck(app, { provider, isTokenAutoRefreshEnabled: true })
+        appCheckInitialized = true
+      } catch {
+        // Ignora caso já tenha sido inicializado na sessão atual.
+        appCheckInitialized = true
+      }
+    }
+  }
+
+  return app
 }
 
 function sanitizeText(value, maxLength = 4000) {
@@ -73,7 +97,7 @@ function normalizeHistory(history = []) {
     .join('\n')
 }
 
-function buildPrompt({ message, currentScreen, screenTitle, screenIntro, history, operationalContext }) {
+export function buildPrompt({ message, currentScreen, screenTitle, screenIntro, history, operationalContext }) {
   return [
     'Você é Nimbo, assistente de consulta do PREVER. Responda em português do Brasil, com linguagem simples, cordial e objetiva. Pode falar em primeira pessoa.',
     'Responda SOMENTE JSON válido: {"answer":"texto em Markdown simples", "actions":[]}.',
@@ -117,8 +141,6 @@ function createVertexBackend(location) {
 }
 
 function createGenerativeModel() {
-  validateFirebaseConfig()
-
   const app = getFirebaseApp()
   const location = getEnv('VITE_FIREBASE_VERTEX_LOCATION', 'global')
   const modelName = getEnv('VITE_FIREBASE_VERTEX_MODEL', 'gemini-2.5-flash')
@@ -127,12 +149,13 @@ function createGenerativeModel() {
     backend: createVertexBackend(location),
   })
 
+  // maxOutputTokens elevado (4096) evita truncamento do JSON em modelos com thinking tokens (gemini-2.5-flash).
   const model = getGenerativeModel(ai, {
     model: modelName,
     generationConfig: {
       temperature: 0.15,
       topP: 0.8,
-      maxOutputTokens: 1000,
+      maxOutputTokens: 4096,
       responseMimeType: 'application/json',
     },
   })
@@ -286,7 +309,7 @@ function parseJsonPayload(text) {
 
 function extractLooseAnswer(text) {
   const cleaned = stripMarkdownFence(text)
-  const answerMatch = cleaned.match(/["']answer["']\s*:\s*["']([\s\S]*?)["']\s*,\s*["']actions["']/i)
+  const answerMatch = cleaned.match(/["']answer["']\s*:\s*["']([\s\S]*?)["']\s*(?:,\s*["']actions["']|\s*\})/i)
 
   if (answerMatch?.[1]) {
     return answerMatch[1]
@@ -295,11 +318,28 @@ function extractLooseAnswer(text) {
       .trim()
   }
 
+  // Recupera respostas truncadas por limite de tokens antes do fechamento do JSON.
+  const partialMatch = cleaned.match(/["']answer["']\s*:\s*"((?:[^"\\]|\\.)*)/i)
+  if (partialMatch?.[1]) {
+    return partialMatch[1]
+      .replace(/\\"/g, '"')
+      .replace(/\\n/g, '\n')
+      .replace(/\\\\/g, '\\')
+      .trim()
+  }
+
   if (cleaned.includes('"answer"')) return ''
   return cleaned
 }
 
-function parseAssistantPayload(rawText) {
+export function parseAssistantPayload(rawText) {
+  if (rawText && typeof rawText === 'object') {
+    return {
+      text: normalizeVisibleAnswer(rawText.answer || rawText.text),
+      actions: normalizeActions(rawText.actions),
+    }
+  }
+
   const parsed = parseJsonPayload(rawText)
 
   if (parsed && typeof parsed === 'object') {
@@ -315,6 +355,124 @@ function parseAssistantPayload(rawText) {
   }
 }
 
+function isTransientAiError(error) {
+  const text = `${error?.status || ''} ${error?.code || ''} ${error?.message || error || ''}`.toLowerCase()
+  return /429|503|504|quota|resource-exhausted|resource_exhausted|timeout|timed out|aborted|temporarily unavailable/.test(text)
+}
+
+function isSessionExpiredError(error) {
+  const text = `${error?.status || ''} ${error?.code || ''} ${error?.message || error || ''}`.toLowerCase()
+  return /401|sessão expirou|sessão inválida|jwt expired|faça login/.test(text)
+}
+
+function withTimeout(promise, timeoutMs = DEFAULT_TIMEOUT_MS) {
+  let timer = null
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new Error('timeout'))
+    }, timeoutMs)
+  })
+
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    if (timer) clearTimeout(timer)
+  })
+}
+
+async function runWithRetry(fn, { retries = 1, retryDelayMs = DEFAULT_RETRY_DELAY_MS } = {}) {
+  let lastError
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      return await fn()
+    } catch (error) {
+      lastError = error
+      if (attempt < retries && isTransientAiError(error)) {
+        await new Promise((resolve) => setTimeout(resolve, retryDelayMs * (attempt + 1)))
+        continue
+      }
+      throw error
+    }
+  }
+  throw lastError
+}
+
+async function callFirebaseVertexTransport(payload, timeoutMs) {
+  if (!hasCompleteFirebaseConfig()) {
+    throw new Error('Configuração Firebase incompleta no .env')
+  }
+  const { model, modelName } = createGenerativeModel()
+  const result = await withTimeout(model.generateContent(buildPrompt(payload)), timeoutMs)
+  const rawText = extractText(result)
+  const parsed = parseAssistantPayload(rawText)
+  return {
+    text: parsed.text,
+    actions: parsed.actions,
+    model: modelName,
+  }
+}
+
+async function callVercelApiTransport(payload, timeoutMs) {
+  if (typeof fetch !== 'function') {
+    throw new Error('Fetch indisponível para /api/smdn-ai')
+  }
+  const { data: sessionData } = await supabase.auth.getSession()
+  const accessToken = sessionData?.session?.access_token
+  if (!accessToken) {
+    throw new Error('Sessão inválida ou expirada. Entre novamente.')
+  }
+
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+
+  try {
+    const response = await fetch('/api/smdn-ai', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    })
+
+    const body = await response.json().catch(() => ({}))
+    if (!response.ok) {
+      const err = new Error(body?.error || `HTTP ${response.status}`)
+      err.status = response.status
+      throw err
+    }
+
+    const parsed = parseAssistantPayload(body)
+    return {
+      text: parsed.text,
+      actions: body?.actions ? normalizeActions(body.actions) : parsed.actions,
+      model: body?.model || 'gemini-2.5-flash',
+    }
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+async function callSupabaseEdgeTransport(payload, timeoutMs) {
+  const invokePromise = supabase.functions.invoke('smdn-ai', {
+    body: payload,
+  })
+  const { data, error } = await withTimeout(invokePromise, timeoutMs)
+
+  if (error) {
+    throw error
+  }
+  if (data?.error) {
+    throw new Error(data.error)
+  }
+
+  const parsed = parseAssistantPayload(data)
+  return {
+    text: parsed.text,
+    actions: data?.actions ? normalizeActions(data.actions) : parsed.actions,
+    model: data?.model || 'gemini-2.5-flash',
+  }
+}
+
 export async function askSmdnAssistant({
   message,
   currentScreen,
@@ -322,37 +480,56 @@ export async function askSmdnAssistant({
   screenIntro,
   history,
   operationalContext,
+  options = {},
 }) {
-
   const cleanMessage = sanitizeText(message, 2500)
 
   if (!cleanMessage) {
     throw new Error('Digite uma mensagem para a IA.')
   }
 
-  try {
-    const { model, modelName } = createGenerativeModel()
+  const timeoutMs = Number(options.timeoutMs) > 0 ? Number(options.timeoutMs) : DEFAULT_TIMEOUT_MS
+  const retryDelayMs = Number(options.retryDelayMs) >= 0 ? Number(options.retryDelayMs) : DEFAULT_RETRY_DELAY_MS
+  const retries = Number.isInteger(options.retries) ? options.retries : 1
 
-    const result = await model.generateContent(
-      buildPrompt({
-        message: cleanMessage,
-        currentScreen,
-        screenTitle,
-        screenIntro,
-        history,
-        operationalContext,
-      })
-    )
-
-    const rawText = extractText(result)
-    const parsed = parseAssistantPayload(rawText)
-
-    return {
-      text: parsed.text || 'Nimbo não conseguiu gerar uma resposta clara agora. Tente reformular a pergunta.',
-      actions: parsed.actions,
-      model: modelName,
-    }
-  } catch (error) {
-    throw new Error(assistantError(error), { cause: error })
+  const requestPayload = {
+    message: cleanMessage,
+    currentScreen,
+    screenTitle,
+    screenIntro,
+    history,
+    operationalContext,
   }
+
+  const pipeline = Array.isArray(options.transports) && options.transports.length > 0
+    ? options.transports
+    : [
+        ...(hasCompleteFirebaseConfig() ? [callFirebaseVertexTransport] : []),
+        callVercelApiTransport,
+        callSupabaseEdgeTransport,
+      ]
+
+  let lastError = null
+
+  for (const transport of pipeline) {
+    try {
+      const response = await runWithRetry(
+        () => transport(requestPayload, timeoutMs),
+        { retries, retryDelayMs }
+      )
+      return {
+        text: response.text || 'Nimbo não conseguiu gerar uma resposta clara agora. Tente reformular a pergunta.',
+        actions: Array.isArray(response.actions) ? response.actions : [],
+        model: response.model || 'gemini-2.5-flash',
+      }
+    } catch (error) {
+      lastError = error
+      // Se a sessão do usuário expirou, não tenta outros provedores sem autenticação válida.
+      if (isSessionExpiredError(error)) {
+        break
+      }
+    }
+  }
+
+  throw new Error(assistantError(lastError), { cause: lastError })
 }

@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:prever/services/alertas_notificacao_service.dart';
 import 'package:prever/services/relatos_proximos_service.dart';
 import 'exportador_import.dart';
 
@@ -419,25 +419,12 @@ class _TelaPrincipalState extends State<TelaPrincipal>
         onChangePage: changePage,
 
         onCadastroPendente: (email, senha) {
-          debugPrint(
-            "RECEBI EMAIL NA TELA PRINCIPAL: $email",
-          );
-
           setState(() {
             emailCadastro = email;
 
             senhaCadastro = senha;
 
-            // ---------------------------------------------------------------
-            // Abre confirmação de e-mail
-            // ---------------------------------------------------------------
-
             _currentIndex = 7;
-
-            // ---------------------------------------------------------------
-            // Recria somente a tela 7 com os dados
-            // que acabaram de chegar.
-            // ---------------------------------------------------------------
 
             _telas[7] = ConfEmail(
               title: "Confirmação",
@@ -499,8 +486,6 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
       // ======================================================================
       // 11 - SOLICITAR REDEFINIÇÃO DE SENHA
-      //
-      // Aqui o usuário digita o e-mail.
       // ======================================================================
       ChangePassword(
         title: 'Change Password',
@@ -509,9 +494,6 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
       // ======================================================================
       // 12 - ESCREVER A NOVA SENHA
-      //
-      // Essa é a tela aberta depois que o usuário
-      // clica no link recebido no e-mail.
       // ======================================================================
       WriteChangedPassword(
         onChangePage: changePage,
@@ -524,25 +506,24 @@ class _TelaPrincipalState extends State<TelaPrincipal>
   }
 
   // ==========================================================================
-  // PERMISSÃO DE LOCALIZAÇÃO
+  // PERMISSÃO DE LOCALIZAÇÃO E ALERTAS PUSH
   // ==========================================================================
 
   Future<void> _pedirPermissao() async {
-    PermissionStatus status = await Permission.location.request();
-
-    if (status.isGranted) {
-      Position position = await Geolocator.getCurrentPosition();
-
-      debugPrint(
-        'Localização obtida: '
-        '${position.latitude}, '
-        '${position.longitude}',
-      );
-    } else if (status.isDenied || status.isPermanentlyDenied) {
-      debugPrint(
-        'Permissão de localização negada pelo usuário.',
-      );
+    try {
+      final permissao = await Geolocator.checkPermission();
+      if (permissao == LocationPermission.denied) {
+        await Geolocator.requestPermission();
+      }
+    } catch (_) {
+      debugPrint('Localização indisponível neste dispositivo.');
     }
+    if (!mounted) return;
+    await AlertasNotificacaoService.instance.iniciar(
+      abrirMapa: () {
+        if (mounted) changePage(1);
+      },
+    );
   }
 
   // ==========================================================================
@@ -589,15 +570,8 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
   @override
   void dispose() {
-    // ------------------------------------------------------------------------
-    // PARA DE ESCUTAR EVENTOS DE AUTENTICAÇÃO
-    // ------------------------------------------------------------------------
-
     _authSubscription?.cancel();
-
-    // ------------------------------------------------------------------------
-    // DESTROI ANIMAÇÃO
-    // ------------------------------------------------------------------------
+    unawaited(AlertasNotificacaoService.instance.dispose());
 
     _nimboAnimController.dispose();
 

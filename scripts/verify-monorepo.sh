@@ -18,9 +18,13 @@ npm run build
 
 echo "==> [5/5] Executando formatacao, analise estatica e testes do App Mobile (/mobile)..."
 cd "$ROOT_DIR/mobile"
+CREATED_ENV=0
 if [ ! -f .env ]; then
   cp .env.example .env
+  CREATED_ENV=1
 fi
+trap '[ "$CREATED_ENV" -eq 1 ] && rm -f "$ROOT_DIR/mobile/.env"' EXIT
+flutter pub get
 dart format --output=none --set-exit-if-changed .
 flutter analyze --fatal-infos --fatal-warnings
 flutter test
