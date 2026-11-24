@@ -1,20 +1,21 @@
-import { useCallback, useEffect, useState } from 'react'
-import ManagerPortal from './screens/manager/ManagerPortal.jsx'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import Login from './screens/Login.jsx'
-import Dashboard from './screens/Dashboard.jsx'
-import Reportar from './screens/Reportar.jsx'
-import Abrigos from './screens/Abrigos.jsx'
-import Ocorrencias from './screens/Ocorrencias.jsx'
-import Relatorios from './screens/Relatorios.jsx'
-import Auditoria from './screens/Auditoria.jsx'
-import Perfil from './screens/Perfil.jsx'
-import AdminPanel from './screens/AdminPanel.jsx'
-import UserList from './screens/UserList.jsx'
-import ValidacaoAntifraude from './screens/ValidacaoAntifraude.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import { APIProvider } from '@vis.gl/react-google-maps'
 import { useAuth } from './hooks/useAuth.js'
 import { createWebAccessRequest } from './backend/auth/webAccessService.js'
+
+const Dashboard = lazy(() => import('./screens/Dashboard.jsx'))
+const Reportar = lazy(() => import('./screens/Reportar.jsx'))
+const Abrigos = lazy(() => import('./screens/Abrigos.jsx'))
+const Ocorrencias = lazy(() => import('./screens/Ocorrencias.jsx'))
+const Relatorios = lazy(() => import('./screens/Relatorios.jsx'))
+const ValidacaoAntifraude = lazy(() => import('./screens/ValidacaoAntifraude.jsx'))
+const Auditoria = lazy(() => import('./screens/Auditoria.jsx'))
+const Perfil = lazy(() => import('./screens/Perfil.jsx'))
+const AdminPanel = lazy(() => import('./screens/AdminPanel.jsx'))
+const UserList = lazy(() => import('./screens/UserList.jsx'))
+const ManagerPortal = lazy(() => import('./screens/manager/ManagerPortal.jsx'))
 
 function AdminHomeScreen() {
   return <AdminPanel initialTab="all" />
@@ -31,6 +32,16 @@ const SCREENS = {
   perfil: Perfil,
   admin: AdminHomeScreen,
   users: UserList,
+}
+
+function ScreenFallback() {
+  return (
+    <div className="flex h-full w-full items-center justify-center p-8" role="status" aria-live="polite">
+      <div className="rounded-2xl bg-bg-surface px-6 py-4 shadow-sm border border-border-soft text-center">
+        <p className="text-sm font-semibold text-slate-700">Carregando módulo…</p>
+      </div>
+    </div>
+  )
 }
 
 function getDevBypassFlags() {
@@ -51,7 +62,7 @@ function getDevBypassFlags() {
 }
 
 export default function App() {
-  const { isAuthenticated, loading, isAdmin, user, recoveryMode, signIn, signOut } = useAuth()
+  const { isAuthenticated, loading, isAdmin, user, recoveryMode, accessError, signIn, signOut } = useAuth()
   const [currentScreen, setCurrentScreen] = useState('dashboard')
   const [loginView, setLoginView] = useState('login')
 
@@ -93,8 +104,8 @@ export default function App() {
     }
   }, [currentScreen, recoveryMode, canOpenScreen])
 
-  const handleLogin = async ({ email, password }) => {
-    await signIn({ email, password })
+  const handleLogin = async ({ email, password, rememberMe }) => {
+    await signIn({ email, password, rememberMe })
   }
 
   const handleRegister = async ({ institution, name, email, role, documentNumber, password }) => {
@@ -128,6 +139,7 @@ export default function App() {
         setView={setLoginView}
         onLogin={handleLogin}
         onRegister={handleRegister}
+        initialError={accessError}
       />
     )
   }
@@ -140,7 +152,9 @@ export default function App() {
         <a href="#main-content" className="skip-link">Ir para o conteúdo</a>
         <Sidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} onLogout={handleLogout} />
         <main id="main-content" tabIndex={-1} data-nimbo-account={user?.id} data-nimbo-screen={currentScreen} className="flex-1 min-w-0 h-full overflow-y-auto">
-          {isManager ? <ManagerPortal key={user.id} screen={canOpenScreen(currentScreen) ? currentScreen : 'dashboard'} /> : <ActiveScreen />}
+          <Suspense fallback={<ScreenFallback />}>
+            {isManager ? <ManagerPortal key={user.id} screen={canOpenScreen(currentScreen) ? currentScreen : 'dashboard'} /> : <ActiveScreen />}
+          </Suspense>
         </main>
       </div>
     </APIProvider>

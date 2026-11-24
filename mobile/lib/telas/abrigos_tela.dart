@@ -51,6 +51,23 @@ class _AbrigosTelaState extends State<AbrigosTela> {
   // CARREGA LOCALIZAÇÃO + ABRIGOS
   // ==========================================================================
 
+  Future<Position?> _obterLocalizacaoRapida() async {
+    try {
+      final ultima = await Geolocator.getLastKnownPosition();
+      if (ultima != null) {
+        return ultima;
+      }
+      return await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+        ),
+      ).timeout(const Duration(seconds: 6));
+    } catch (_) {
+      debugPrint('Não foi possível obter localização do usuário');
+      return null;
+    }
+  }
+
   Future<void> _carregarDados() async {
     setState(() {
       _carregando = true;
@@ -58,28 +75,22 @@ class _AbrigosTelaState extends State<AbrigosTela> {
     });
 
     try {
-      // Tenta obter a localização do usuário
-      try {
-        _posicaoUsuario = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.high,
-          ),
-        );
-      } catch (_) {
-        // Se falhar, continua sem distância
-        debugPrint('Não foi possível obter localização do usuário');
-      }
+      // Executa localização e consulta ao Supabase em paralelo.
+      final resultados = await Future.wait<dynamic>([
+        _obterLocalizacaoRapida(),
+        supabase
+            .from('Abrigo')
+            .select(
+              'abr_id, abr_nome, abr_tipo, abr_capacidade, abr_ocupacao, '
+              'abr_coordenador, abr_coordenador_contato, abr_cidade, abr_bairro, '
+              'abr_lat, abr_lng, abr_status, abr_acessibilidade, abr_aceita_pets, '
+              'abr_telefone_principal, abr_telefone_secundario, abr_detalhes',
+            )
+            .neq('abr_status', 'inativo'),
+      ]);
 
-      // Busca abrigos do Supabase
-      final response = await supabase
-          .from('Abrigo')
-          .select(
-            'abr_id, abr_nome, abr_tipo, abr_capacidade, abr_ocupacao, '
-            'abr_coordenador, abr_coordenador_contato, abr_cidade, abr_bairro, '
-            'abr_lat, abr_lng, abr_status, abr_acessibilidade, abr_aceita_pets, '
-            'abr_telefone_principal, abr_telefone_secundario, abr_detalhes',
-          )
-          .neq('abr_status', 'inativo');
+      _posicaoUsuario = resultados[0] as Position?;
+      final response = resultados[1] as List<dynamic>;
 
       final List<Map<String, dynamic>> abrigos = [];
 

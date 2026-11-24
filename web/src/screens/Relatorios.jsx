@@ -18,10 +18,7 @@ import { getRelatoriosData, subscribeRelatoriosChanges } from '../backend/relato
 import { toFriendlyMessage } from '../utils/friendlyMessages.js'
 import { useSmdnSettings } from '../hooks/useSmdnSettings.js'
 
-// ─── Dependências de exportação ──────────────────────────────────────────────
-// Se ainda não instalou: npm install html2canvas jspdf xlsx
-import html2canvas from 'html2canvas'
-import jsPDF from 'jspdf'
+// ─── Dependências de exportação carregadas sob demanda (code splitting) ──────
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HOOK DE DADOS REAIS
@@ -116,6 +113,10 @@ function useReportData(period) {
  * Usa html2canvas para renderizar o conteúdo e jsPDF para empacotar.
  */
 async function exportToPDF(element, period) {
+  const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+    import('html2canvas'),
+    import('jspdf'),
+  ])
   // Esconde temporariamente os botões de exportação dentro da área capturada
   const exportBar = element.querySelector('[data-export-bar]')
   if (exportBar) exportBar.style.visibility = 'hidden'

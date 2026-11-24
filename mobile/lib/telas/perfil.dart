@@ -64,62 +64,58 @@ class _TelaPerfilState extends State<TelaPerfil> {
 
   Future<void> carregarDados() async {
     try {
-      final userId = supabase.auth.currentUser?.id;
+      final currentUser = supabase.auth.currentUser;
+      final userId = currentUser?.id;
       if (userId == null) {
         if (mounted) setState(() => carregando = false);
         return;
       }
 
-      try {
-        final perfil = await supabase
+      final resultados = await Future.wait<Map<String, dynamic>?>([
+        supabase
             .from('Perfis')
             .select()
             .eq('prf_id', userId)
-            .limit(1)
-            .single();
-        if (!mounted) return;
-        setState(() {
-          nome = perfil['prf_nome'] ?? '';
-          tipoUsuario = perfil['prf_tipo'] ?? '';
-        });
-      } catch (e) {
-        debugPrint('Erro silencioso: $e');
-      }
-
-      try {
-        final cidadao = await supabase
+            .maybeSingle()
+            .catchError((_) => null),
+        supabase
             .from('Cidadao')
             .select()
             .eq('cid_id', userId)
-            .limit(1)
-            .single();
-        if (!mounted) return;
-        setState(() {
-          cpf = cidadao['cid_cpf'] ?? '';
-        });
-      } catch (e) {
-        debugPrint('Erro silencioso: $e');
-      }
-
-      try {
-        final historico = await supabase
+            .maybeSingle()
+            .catchError((_) => null),
+        supabase
             .from('Historico_Medicacao_Cidadao')
             .select()
             .eq('hmc_cid_id', userId)
-            .limit(1)
-            .single();
-        if (!mounted) return;
-        setState(() {
-          tipoSanguineo = historico['hmc_tipo_sanguineo'] ?? '';
-          alergias = historico['hmc_alergias'] ?? '';
-          observacoes = historico['hmc_doencas_cronicas'] ?? '';
-        });
-      } catch (e) {
-        debugPrint('Erro silencioso: $e');
-      }
+            .maybeSingle()
+            .catchError((_) => null),
+      ]);
 
-      if (mounted) setState(() => carregando = false);
-    } catch (e) {
+      if (!mounted) return;
+
+      final perfil = resultados[0];
+      final cidadao = resultados[1];
+      final historico = resultados[2];
+      final metadata = currentUser?.userMetadata ?? const <String, dynamic>{};
+      final fallbackNome =
+          (metadata['prf_nome'] ??
+                  metadata['full_name'] ??
+                  metadata['name'] ??
+                  currentUser?.email?.split('@').first ??
+                  '')
+              .toString();
+
+      setState(() {
+        nome = (perfil?['prf_nome'] ?? fallbackNome).toString();
+        tipoUsuario = (perfil?['prf_tipo'] ?? 'cidadao').toString();
+        cpf = (cidadao?['cid_cpf'] ?? '').toString();
+        tipoSanguineo = (historico?['hmc_tipo_sanguineo'] ?? '').toString();
+        alergias = (historico?['hmc_alergias'] ?? '').toString();
+        observacoes = (historico?['hmc_doencas_cronicas'] ?? '').toString();
+        carregando = false;
+      });
+    } catch (_) {
       if (mounted) setState(() => carregando = false);
     }
   }

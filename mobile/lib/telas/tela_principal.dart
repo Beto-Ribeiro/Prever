@@ -40,6 +40,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
   late List<Widget> _telas;
 
   late int _currentIndex;
+  late final Set<int> _telasVisitadas;
   int _solicitacaoRelato = 0;
 
   void _abrirRelatoNoMapa(RelatoProximo relato) {
@@ -50,6 +51,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
         relatoSelecionado: relato,
         solicitacaoRelato: ++_solicitacaoRelato,
       );
+      _telasVisitadas.add(1);
       _currentIndex = 1;
     });
   }
@@ -86,17 +88,8 @@ class _TelaPrincipalState extends State<TelaPrincipal>
   void initState() {
     super.initState();
 
-    // ------------------------------------------------------------------------
-    // DEFINE QUAL SERÁ A PRIMEIRA TELA
-    //
-    // Sem usuário:
-    // índice 5 = Landing Page
-    //
-    // Com usuário:
-    // índice 0 = Home
-    // ------------------------------------------------------------------------
-
     _currentIndex = supabase.auth.currentUser == null ? 6 : 0;
+    _telasVisitadas = <int>{_currentIndex};
 
     // ------------------------------------------------------------------------
     // ANIMAÇÃO DO BOTÃO NIMBO
@@ -176,11 +169,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
           );
 
           setState(() {
-            // ---------------------------------------------------------------
-            // ÍNDICE 12:
-            // WriteChangedPassword
-            // ---------------------------------------------------------------
-
+            _telasVisitadas.add(12);
             _currentIndex = 12;
           });
 
@@ -213,6 +202,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
               // Redireciona para a Home quando o retorno de OAuth/confirmação
               // ocorre a partir das telas de entrada/cadastro/confirmação.
               if (_currentIndex >= 5 && _currentIndex <= 8) {
+                _telasVisitadas.add(0);
                 _currentIndex = 0;
               }
             });
@@ -424,6 +414,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
             senhaCadastro = senha;
 
+            _telasVisitadas.add(7);
             _currentIndex = 7;
 
             _telas[7] = ConfEmail(
@@ -545,6 +536,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
     }
 
     setState(() {
+      _telasVisitadas.add(index);
       _currentIndex = index;
 
       // O IndexedStack preserva o estado: recarrega os dados ao abrir o perfil.
@@ -584,23 +576,7 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
   @override
   Widget build(BuildContext context) {
-    // ========================================================================
-    // ESCONDE A BARRA NAS TELAS FORA DA NAVEGAÇÃO PRINCIPAL
-    //
-    // 0 = Home
-    // 1 = Mapas
-    // 2 = Relatos
-    // 3 = Clima
-    //
-    // 4 em diante = Cadastro, Login, Perfil, Nimbo,
-    // recuperação de senha etc.
-    // ========================================================================
-
     final bool ocultarNav = _currentIndex >= 5;
-
-    // ========================================================================
-    // VERIFICA SE ESTÁ NO NIMBO
-    // ========================================================================
 
     final bool noNimbo = _currentIndex == 10;
 
@@ -613,33 +589,32 @@ class _TelaPrincipalState extends State<TelaPrincipal>
       body: Stack(
         children: [
           // ==================================================================
-          // CONTEÚDO PRINCIPAL
+          // CONTEÚDO PRINCIPAL (MONTAGEM LAZY SOB DEMANDA)
           // ==================================================================
           Padding(
             padding: ocultarNav
-                ? EdgeInsets.only(
-                    top: 0,
-                  )
+                ? const EdgeInsets.only(top: 0)
                 : _currentIndex == 0
-                ? EdgeInsets.only(
-                    top: 0,
-                  )
-                : EdgeInsets.only(
-                    top: 30,
-                  ),
+                ? const EdgeInsets.only(top: 0)
+                : const EdgeInsets.only(top: 30),
 
             child: IndexedStack(
               index: _currentIndex,
 
-              children: [
-                Home(
-                  title: 'SOS',
-                  onChangePage: changePage,
-                  onAbrirRelato: _abrirRelatoNoMapa,
-                  ativa: _currentIndex == 0,
-                ),
-                ..._telas.skip(1),
-              ],
+              children: List<Widget>.generate(_telas.length, (i) {
+                if (!_telasVisitadas.contains(i)) {
+                  return const SizedBox.shrink();
+                }
+                if (i == 0) {
+                  return Home(
+                    title: 'SOS',
+                    onChangePage: changePage,
+                    onAbrirRelato: _abrirRelatoNoMapa,
+                    ativa: _currentIndex == 0,
+                  );
+                }
+                return _telas[i];
+              }),
             ),
           ),
 

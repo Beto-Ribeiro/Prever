@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, forwardRef, useImperativeHandle, Fragment } from 'react'
+import { useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle, Fragment, memo } from 'react'
 import { Map, AdvancedMarker, InfoWindow, useMap, Pin } from '@vis.gl/react-google-maps'
 import { Map3D, Marker3D, Popover, useMap3D } from '@vis.gl/react-google-maps/3d'
 
@@ -26,7 +26,7 @@ function isValidCoord(value) {
   return typeof value === 'number' && Number.isFinite(value)
 }
 
-function OccurrenceMarker({ item, colorBlind, onOccurrenceDetails, is3D }) {
+const OccurrenceMarker = memo(function OccurrenceMarker({ item, colorBlind, onOccurrenceDetails, is3D }) {
   const [open, setOpen] = useState(false)
   const style = getSeverityStyle(item.severidade, colorBlind)
   
@@ -68,9 +68,9 @@ function OccurrenceMarker({ item, colorBlind, onOccurrenceDetails, is3D }) {
       {open && <InfoWindow position={{ lat: item.lat, lng: item.lng }} onCloseClick={() => setOpen(false)}>{popupContent}</InfoWindow>}
     </>
   )
-}
+})
 
-function ShelterMarker({ item, isSelected, onShelterSelect, is3D }) {
+const ShelterMarker = memo(function ShelterMarker({ item, isSelected, onShelterSelect, is3D }) {
   const [open, setOpen] = useState(isSelected)
   const meta = getShelterMeta(item.status)
   
@@ -113,9 +113,9 @@ function ShelterMarker({ item, isSelected, onShelterSelect, is3D }) {
       {open && <InfoWindow position={{ lat: item.lat, lng: item.lng }} onCloseClick={() => setOpen(false)}>{popupContent}</InfoWindow>}
     </>
   )
-}
+})
 
-function VictimMarker({ item, onVictimAssistance, savingVictimId, is3D }) {
+const VictimMarker = memo(function VictimMarker({ item, onVictimAssistance, savingVictimId, is3D }) {
   const [open, setOpen] = useState(false)
   const attended = item.assistanceStatus === 'atendida'
   
@@ -161,7 +161,7 @@ function VictimMarker({ item, onVictimAssistance, savingVictimId, is3D }) {
       {open && <InfoWindow position={{ lat: item.lat, lng: item.lng }} onCloseClick={() => setOpen(false)}>{popupContent}</InfoWindow>}
     </>
   )
-}
+})
 
 function CircleOutline({ center, radius, is3D, color = '#44769b', fillOpacity = 0.12 }) {
   if (is3D) {
@@ -233,9 +233,18 @@ const MapView = forwardRef(function MapView(
   const [center, setCenter] = useState({ lat: -23.5505, lng: -46.6333 })
   const [zoom, setZoom] = useState(10)
 
-  const validOccurrences = ocorrencias.filter((item) => isValidCoord(item.lat) && isValidCoord(item.lng))
-  const validVictims = vitimas.filter((item) => isValidCoord(item.lat) && isValidCoord(item.lng))
-  const validShelters = abrigos.filter((item) => isValidCoord(item.lat) && isValidCoord(item.lng))
+  const validOccurrences = useMemo(
+    () => ocorrencias.filter((item) => isValidCoord(item.lat) && isValidCoord(item.lng)),
+    [ocorrencias]
+  )
+  const validVictims = useMemo(
+    () => vitimas.filter((item) => isValidCoord(item.lat) && isValidCoord(item.lng)),
+    [vitimas]
+  )
+  const validShelters = useMemo(
+    () => abrigos.filter((item) => isValidCoord(item.lat) && isValidCoord(item.lng)),
+    [abrigos]
+  )
 
   useImperativeHandle(ref, () => ({
     flyTo(lat, lng, newZoom = 15) {

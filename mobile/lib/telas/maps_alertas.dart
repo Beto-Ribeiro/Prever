@@ -255,49 +255,58 @@ class _MapsAlertas extends State<Maps_alertas> {
   Position? position;
 
   Future<void> carregarIcones() async {
-    chuvaForteBluIcon = await criarIconeMarker('chuva forte - blu.png');
+    final icones = await Future.wait<BitmapDescriptor>([
+      criarIconeMarker('chuva forte - blu.png'),
+      criarIconeMarker('chuva forte - ora.png'),
+      criarIconeMarker('chuva forte - red.png'),
+      criarIconeMarker('chuva forte - yel.png'),
+      criarIconeMarker('deslizamento - blu.png'),
+      criarIconeMarker('deslizamento - ora.png'),
+      criarIconeMarker('deslizamento - red.png'),
+      criarIconeMarker('deslizamento - yel.png'),
+      criarIconeMarker('inundação - blu.png'),
+      criarIconeMarker('inundação - ora.png'),
+      criarIconeMarker('inundação - red.png'),
+      criarIconeMarker('inundação - yel.png'),
+      criarIconeMarker('tornado - blu.png'),
+      criarIconeMarker('tornado - ora.png'),
+      criarIconeMarker('tornado - red.png'),
+      criarIconeMarker('tornado - yel.png'),
+      criarIconeMarker('apple.png'),
+      criarIconeMarker('google_logo.png'),
+      criarIconeMarker('tipo_deslizamento.png'),
+      criarIconeMarker('tipo_inundacao.png'),
+      criarIconeMarker('tipo_tempestade.png'),
+      criarIconeMarker('tipo_tornado.png'),
+    ]);
 
-    chuvaForteOraIcon = await criarIconeMarker('chuva forte - ora.png');
+    chuvaForteBluIcon = icones[0];
+    chuvaForteOraIcon = icones[1];
+    chuvaForteRedIcon = icones[2];
+    chuvaForteYelIcon = icones[3];
 
-    chuvaForteRedIcon = await criarIconeMarker('chuva forte - red.png');
+    deslizamentoBluIcon = icones[4];
+    deslizamentoOraIcon = icones[5];
+    deslizamentoRedIcon = icones[6];
+    deslizamentoYelIcon = icones[7];
 
-    chuvaForteYelIcon = await criarIconeMarker('chuva forte - yel.png');
+    inundacaoBluIcon = icones[8];
+    inundacaoOraIcon = icones[9];
+    inundacaoRedIcon = icones[10];
+    inundacaoYelIcon = icones[11];
 
-    deslizamentoBluIcon = await criarIconeMarker('deslizamento - blu.png');
+    tornadoBluIcon = icones[12];
+    tornadoOraIcon = icones[13];
+    tornadoRedIcon = icones[14];
+    tornadoYelIcon = icones[15];
 
-    deslizamentoOraIcon = await criarIconeMarker('deslizamento - ora.png');
+    appleIcon = icones[16];
+    googleLogoIcon = icones[17];
 
-    deslizamentoRedIcon = await criarIconeMarker('deslizamento - red.png');
-
-    deslizamentoYelIcon = await criarIconeMarker('deslizamento - yel.png');
-
-    inundacaoBluIcon = await criarIconeMarker('inundação - blu.png');
-
-    inundacaoOraIcon = await criarIconeMarker('inundação - ora.png');
-
-    inundacaoRedIcon = await criarIconeMarker('inundação - red.png');
-
-    inundacaoYelIcon = await criarIconeMarker('inundação - yel.png');
-
-    tornadoBluIcon = await criarIconeMarker('tornado - blu.png');
-
-    tornadoOraIcon = await criarIconeMarker('tornado - ora.png');
-
-    tornadoRedIcon = await criarIconeMarker('tornado - red.png');
-
-    tornadoYelIcon = await criarIconeMarker('tornado - yel.png');
-
-    appleIcon = await criarIconeMarker('apple.png');
-
-    googleLogoIcon = await criarIconeMarker('google_logo.png');
-
-    tipoDeslizamentoIcon = await criarIconeMarker('tipo_deslizamento.png');
-
-    tipoInundacaoIcon = await criarIconeMarker('tipo_inundacao.png');
-
-    tipoTempestadeIcon = await criarIconeMarker('tipo_tempestade.png');
-
-    tipoTornadoIcon = await criarIconeMarker('tipo_tornado.png');
+    tipoDeslizamentoIcon = icones[18];
+    tipoInundacaoIcon = icones[19];
+    tipoTempestadeIcon = icones[20];
+    tipoTornadoIcon = icones[21];
   }
 
   Future<void> inicializarMapa() async {
@@ -337,37 +346,46 @@ class _MapsAlertas extends State<Maps_alertas> {
   @override
   void dispose() {
     _timer?.cancel();
+    if (_controller.isCompleted) {
+      _controller.future.then((c) => c.dispose());
+    }
     super.dispose();
   }
 
   Future<void> _GoToUserLocation({bool inicial = false}) async {
-    PermissionStatus status = await Permission.location.request();
+    try {
+      PermissionStatus status = await Permission.location.request();
 
-    if (!status.isGranted) {
-      return;
-    }
+      if (!status.isGranted) {
+        return;
+      }
 
-    position = await Geolocator.getCurrentPosition();
-    if (!mounted) return;
+      position = await Geolocator.getCurrentPosition().timeout(
+        const Duration(seconds: 12),
+      );
+      if (!mounted) return;
 
-    setState(() {
-      boolStatus = true;
-    });
+      setState(() {
+        boolStatus = true;
+      });
 
-    GoogleMapController controller = await _controller.future;
-    if (!mounted || (inicial && widget.relatoSelecionado != null)) return;
+      GoogleMapController controller = await _controller.future;
+      if (!mounted || (inicial && widget.relatoSelecionado != null)) return;
 
-    controller.animateCamera(
-      CameraUpdate.newLatLngZoom(
-        LatLng(
-          position!.latitude,
-          position!.longitude,
+      controller.animateCamera(
+        CameraUpdate.newLatLngZoom(
+          LatLng(
+            position!.latitude,
+            position!.longitude,
+          ),
+          15,
         ),
-        15,
-      ),
-    );
+      );
 
-    await carregarPins();
+      await carregarPins();
+    } catch (e) {
+      debugPrint('Erro ao obter localização no mapa: $e');
+    }
   }
 
   Future<BitmapDescriptor> criarIconeMarker(String arquivo) async {
