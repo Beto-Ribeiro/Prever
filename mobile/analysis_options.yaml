@@ -28,6 +28,8 @@ linter:
     camel_case_types: false
     non_constant_identifier_names: false
 analyzer:
+  errors:
+    deprecated_member_use: ignore
   exclude:
     - build/**
     - android/**

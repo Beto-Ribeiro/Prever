@@ -188,13 +188,38 @@ class _TelaPrincipalState extends State<TelaPrincipal>
         }
 
         // ====================================================================
-        // EXISTE UMA SESSÃO
+        // SESSÃO ENCERRADA
+        // ====================================================================
+
+        if (data.event == AuthChangeEvent.signedOut) {
+          setState(() {
+            nome = '';
+            tipoUsuario = '';
+            estalogado = false;
+            senhaCadastro = null;
+          });
+          return;
+        }
+
+        // ====================================================================
+        // EXISTE UMA SESSÃO (LOGIN DIRETO, OAUTH GOOGLE OU DEEP LINK DE E-MAIL)
         // ====================================================================
 
         if (data.session != null) {
+          if (data.event == AuthChangeEvent.signedIn) {
+            setState(() {
+              estalogado = true;
+              senhaCadastro = null;
+              // Redireciona para a Home quando o retorno de OAuth/confirmação
+              // ocorre a partir das telas de entrada/cadastro/confirmação.
+              if (_currentIndex >= 5 && _currentIndex <= 8) {
+                _currentIndex = 0;
+              }
+            });
+          }
+
           // Evita ficar consultando o perfil desnecessariamente
           // em eventos como tokenRefreshed.
-
           if (data.event == AuthChangeEvent.initialSession ||
               data.event == AuthChangeEvent.signedIn ||
               data.event == AuthChangeEvent.userUpdated) {
@@ -220,21 +245,14 @@ class _TelaPrincipalState extends State<TelaPrincipal>
 
   Future<void> carregarDados() async {
     try {
-      final userId = supabase.auth.currentUser?.id;
-
-      debugPrint(
-        '=== USER ID: $userId ===',
-      );
+      final currentUser = supabase.auth.currentUser;
+      final userId = currentUser?.id;
 
       // ----------------------------------------------------------------------
       // USUÁRIO NÃO ENCONTRADO
       // ----------------------------------------------------------------------
 
       if (userId == null) {
-        debugPrint(
-          '=== USUÁRIO NULO ===',
-        );
-
         if (mounted) {
           setState(() {
             carregando = false;
@@ -244,50 +262,99 @@ class _TelaPrincipalState extends State<TelaPrincipal>
         return;
       }
 
+      final metadata = currentUser?.userMetadata ?? const <String, dynamic>{};
+      final fallbackNome =
+          (metadata['prf_nome'] ??
+                  metadata['full_name'] ??
+                  metadata['name'] ??
+                  currentUser?.email?.split('@').first ??
+                  '')
+              .toString()
+              .trim();
+
       // ======================================================================
-      // PERFIL
+      // PERFIL + VÍNCULO DE CIDADÃO (INCLUINDO LOGIN GOOGLE OAUTH)
       // ======================================================================
 
       try {
-        final perfil = await supabase
+        Map<String, dynamic>? perfil = await supabase
             .from('Perfis')
             .select()
             .eq(
               'prf_id',
               userId,
             )
-            .limit(1)
-            .single();
+            .maybeSingle();
 
-        debugPrint(
-          '=== PERFIL OK: $perfil ===',
-        );
+        if (perfil == null) {
+          try {
+            await supabase.from('Perfis').insert({
+              'prf_id': userId,
+              'prf_nome': fallbackNome.isEmpty ? 'Cidadão' : fallbackNome,
+              'prf_tipo': 'cidadao',
+              'prf_permissoes': <String, dynamic>{},
+            });
+            perfil = {
+              'prf_id': userId,
+              'prf_nome': fallbackNome.isEmpty ? 'Cidadão' : fallbackNome,
+              'prf_tipo': 'cidadao',
+            };
+          } catch (_) {
+            // Ignora conflito concorrente com trigger ou política RLS.
+          }
+        }
+
+        // Garante registro em Cidadao para usuários OAuth poderem enviar relatos
+        // e registrar histórico médico sem erro de chave estrangeira.
+        final tipoAtual = (perfil?['prf_tipo'] ?? 'cidadao')
+            .toString()
+            .toLowerCase();
+        if (tipoAtual == 'cidadao' ||
+            tipoAtual == 'cidadão' ||
+            tipoAtual == 'pendente') {
+          try {
+            final cidadaoExistente = await supabase
+                .from('Cidadao')
+                .select('cid_id')
+                .eq('cid_id', userId)
+                .maybeSingle();
+            if (cidadaoExistente == null) {
+              await supabase.from('Cidadao').insert({'cid_id': userId});
+            }
+          } catch (_) {
+            // Segue normalmente se o registro já existir ou RLS restringir.
+          }
+        }
 
         if (!mounted) {
           return;
         }
 
+        final nomeResolvido = (perfil?['prf_nome'] ?? '').toString().trim();
+
         setState(() {
-          nome = perfil['prf_nome'] ?? '';
-
-          tipoUsuario = perfil['prf_tipo'] ?? '';
-
+          nome = nomeResolvido.isNotEmpty ? nomeResolvido : fallbackNome;
+          tipoUsuario = (perfil?['prf_tipo'] ?? 'cidadao').toString();
+          estalogado = true;
           carregando = false;
         });
       } catch (e) {
         debugPrint(
-          '=== ERRO PERFIL: $e ===',
+          'Erro ao consultar perfil: $e',
         );
 
         if (mounted) {
           setState(() {
+            if (nome.isEmpty && fallbackNome.isNotEmpty) {
+              nome = fallbackNome;
+            }
             carregando = false;
           });
         }
       }
     } catch (e) {
       debugPrint(
-        '=== ERRO AO CARREGAR DADOS: $e ===',
+        'Erro ao carregar dados: $e',
       );
 
       if (mounted) {

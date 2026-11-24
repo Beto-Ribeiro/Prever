@@ -24,12 +24,23 @@ create trigger protect_profile_role before update on public."Perfis" for each ro
 
 -- Metadados editáveis pelo usuário não concedem acesso institucional/admin.
 create or replace function public.handle_new_user() returns trigger language plpgsql security definer set search_path='' as $$
-declare v_type text;
+declare v_type text; v_name text;
 begin
  if new.email_confirmed_at is not null then
-  v_type := case when new.raw_user_meta_data->>'prf_tipo' in ('cidadao','cidadão') then 'cidadao' else 'pendente' end;
+  v_type := case
+   when lower(coalesce(new.raw_user_meta_data->>'prf_tipo','')) in ('cidadao','cidadão') then 'cidadao'
+   when lower(coalesce(new.raw_app_meta_data->>'provider','')) = 'google' and coalesce(new.raw_user_meta_data->>'prf_tipo','') = '' then 'cidadao'
+   else 'pendente'
+  end;
+  v_name := coalesce(
+   nullif(new.raw_user_meta_data->>'prf_nome',''),
+   nullif(new.raw_user_meta_data->>'full_name',''),
+   nullif(new.raw_user_meta_data->>'name',''),
+   split_part(new.email,'@',1),
+   'Usuário'
+  );
   insert into public."Perfis"(prf_id,prf_nome,prf_tipo,prf_email_contato,prf_permissoes)
-  values(new.id,coalesce(nullif(new.raw_user_meta_data->>'prf_nome',''),split_part(new.email,'@',1),'Usuário'),v_type,new.email,'{}') on conflict(prf_id) do nothing;
+  values(new.id,v_name,v_type,new.email,'{}') on conflict(prf_id) do nothing;
   if not found then return new; end if;
   if v_type='cidadao' then
    insert into public."Cidadao"(cid_id,cid_cpf,cid_rg,cid_data_nascimento)
