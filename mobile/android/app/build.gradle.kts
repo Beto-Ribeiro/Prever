@@ -14,6 +14,12 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+val dotenvProperties = Properties()
+val dotenvFile = rootProject.file("../.env")
+if (dotenvFile.exists()) {
+    dotenvFile.inputStream().use { dotenvProperties.load(it) }
+}
+
 val resolvedAppId =
     project.findProperty("PREVER_APP_ID")?.toString()
         ?: System.getenv("PREVER_APP_ID")
@@ -25,6 +31,7 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -42,6 +49,7 @@ android {
         manifestPlaceholders["GOOGLE_MAPS_API_KEY"] =
             project.findProperty("GOOGLE_MAPS_API_KEY")?.toString()
                 ?: System.getenv("GOOGLE_MAPS_API_KEY")
+                ?: dotenvProperties.getProperty("GOOGLE_MAPS_API_KEY")?.trim()
                 ?: ""
     }
 
@@ -70,4 +78,12 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+}
+
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
 }

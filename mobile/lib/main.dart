@@ -1,6 +1,7 @@
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'services/app_check_service.dart';
 import 'controles/controle_acessibilidade.dart';
 import 'telas/exportador_import.dart';
 
@@ -12,12 +13,13 @@ Future<void> main() async {
     await dotenv.load(fileName: ".env");
   } catch (_) {}
 
-  // Inicializa o Firebase (necessário para o Nimbo — chatbot IA)
+  // Inicializa o Firebase e o App Check (necessários para o Nimbo e o filtro Antifraude)
   final firebaseOptions = DefaultFirebaseOptions.currentPlatform;
   if (firebaseOptions.apiKey.isNotEmpty) {
     await Firebase.initializeApp(
       options: firebaseOptions,
     );
+    await configurarAppCheckMobile();
   }
 
   final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? '';
@@ -46,7 +48,7 @@ class MyApp extends StatelessWidget {
     final acessibilidade = context.watch<AccessibilityController>();
 
     return MaterialApp(
-      title: 'SMDN App',
+      title: 'PREVER',
       debugShowCheckedModeBanner: false,
 
       builder: (context, child) {

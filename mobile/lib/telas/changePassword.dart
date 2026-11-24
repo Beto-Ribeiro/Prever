@@ -87,7 +87,9 @@ class _changePassword_State extends State<ChangePassword> {
     try {
       await supabase.auth.resetPasswordForEmail(
         email,
-        redirectTo: 'prever://redefinir-senha',
+        redirectTo: Uri.base.scheme.startsWith('http')
+            ? Uri.base.origin
+            : 'prever://redefinir-senha',
       );
 
       if (!mounted) return;

@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:firebase_ai/firebase_ai.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -83,33 +85,32 @@ class ResultadoAntifraude {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// Filtro antifraude baseado em IA multimodal (Gemini via Firebase AI).
-///
-/// Analisa a coerência interna do relato verificando:
-///   - Tipo do desastre vs. descrição textual
-///   - Gravidade declarada vs. evidências visuais
-///   - Conteúdo da imagem vs. contexto do evento
-///   - Plausibilidade geral (ex.: receita de bolo num relato de inundação)
-///
-/// Uso:
-/// ```dart
-/// final resultado = await AntiFraudeService().analisarRelato(
-///   tipoDesastre: 'Alagamento',
-///   nivelGravidade: 'Severa',
-///   descricao: descricaoController.text,
-///   latitude: localizacaoSelecionada!.latitude,
-///   longitude: localizacaoSelecionada!.longitude,
-///   imagemBytes: imagemBytes,
-///   mimeTypeImagem: 'image/jpeg',
-/// );
-/// ```
 class AntiFraudeService {
   GenerativeModel? _model;
+
+  final Duration timeout;
+  final int maxRetries;
+  final Duration retryDelay;
+  final Future<String?> Function(
+    String promptTexto,
+    Uint8List imagemBytes,
+    String mimeTypeImagem,
+  )?
+  generatorOverride;
+
+  AntiFraudeService({
+    this.timeout = const Duration(seconds: 30),
+    this.maxRetries = 1,
+    this.retryDelay = const Duration(milliseconds: 900),
+    this.generatorOverride,
+  });
 
   // ── System prompt ───────────────────────────────────────────────────────────
   static const String _systemPrompt =
       'Você é um sistema especializado em detecção de fraudes em relatos de '
-      'desastres naturais. Sua missão é analisar relatos enviados por cidadãos '
-      'e determinar se são legítimos ou potencialmente fraudulentos.\n\n'
+      'desastres naturais da plataforma PREVER. Sua missão é analisar relatos '
+      'enviados por cidadãos e determinar se são legítimos ou potencialmente '
+      'fraudulentos.\n\n'
       'Você deve avaliar a COERÊNCIA entre:\n'
       '1. Tipo do desastre e a descrição textual fornecida\n'
       '2. Nível de gravidade declarado e as evidências visuais na foto\n'
@@ -140,28 +141,37 @@ class AntiFraudeService {
   // ── Inicialização do modelo ─────────────────────────────────────────────────
   Future<void> _initModel() async {
     if (_model != null) return;
+    if (Firebase.apps.isEmpty) {
+      throw StateError('Firebase não inicializado para análise antifraude.');
+    }
     _model = FirebaseAI.vertexAI(location: 'global').generativeModel(
       model: 'gemini-2.5-flash',
       systemInstruction: Content.system(_systemPrompt),
       generationConfig: GenerationConfig(
-        temperature: 0.2, // baixo = determinístico, mas evita resposta vazia
-        maxOutputTokens: 1024,
-        responseMimeType: 'application/json',
+        temperature: 0.2,
+        maxOutputTokens: 2048,
+        responseMimeType: kIsWeb ? null : 'application/json',
       ),
     );
   }
 
+  static bool _isTransient(Object error) {
+    if (error is TimeoutException) return true;
+    final text = error.toString().toLowerCase();
+    return text.contains('429') ||
+        text.contains('503') ||
+        text.contains('quota') ||
+        text.contains('resource-exhausted') ||
+        text.contains('resource_exhausted') ||
+        text.contains('unavailable') ||
+        text.contains('network') ||
+        text.contains('socketexception') ||
+        text.contains('timeout');
+  }
+
   // ── API Pública ─────────────────────────────────────────────────────────────
 
-  /// Analisa um relato e retorna o resultado antifraude.
-  ///
-  /// [tipoDesastre]    - ex.: 'Alagamento', 'Tornado', 'Desabamento', 'Chuva Forte'
-  /// [nivelGravidade]  - ex.: 'Leve', 'Moderada', 'Severa'
-  /// [descricao]       - texto livre digitado pelo usuário (pode ser vazio)
-  /// [latitude]        - coordenada geográfica do evento
-  /// [longitude]       - coordenada geográfica do evento
-  /// [imagemBytes]     - bytes da imagem anexada (obrigatório no fluxo atual)
-  /// [mimeTypeImagem]  - ex.: 'image/jpeg', 'image/png' (padrão: 'image/jpeg')
+  /// Analisa um relato e retorna o resultado antifraude (fail-safe em caso de falha).
   Future<ResultadoAntifraude> analisarRelato({
     required String tipoDesastre,
     required String nivelGravidade,
@@ -171,35 +181,59 @@ class AntiFraudeService {
     required Uint8List imagemBytes,
     String mimeTypeImagem = 'image/jpeg',
   }) async {
-    try {
-      await _initModel();
+    final promptTexto = _montarPrompt(
+      tipoDesastre: tipoDesastre,
+      nivelGravidade: nivelGravidade,
+      descricao: descricao,
+      latitude: latitude,
+      longitude: longitude,
+    );
 
-      // Monta o prompt textual com todos os metadados do relato
-      final promptTexto = _montarPrompt(
-        tipoDesastre: tipoDesastre,
-        nivelGravidade: nivelGravidade,
-        descricao: descricao,
-        latitude: latitude,
-        longitude: longitude,
-      );
+    Object? ultimoErro;
+    for (var tentativa = 0; tentativa <= maxRetries; tentativa++) {
+      try {
+        String? textoResposta;
+        if (generatorOverride != null) {
+          textoResposta = await generatorOverride!(
+            promptTexto,
+            imagemBytes,
+            mimeTypeImagem,
+          ).timeout(timeout);
+        } else {
+          await _initModel();
+          final parteImagem = InlineDataPart(mimeTypeImagem, imagemBytes);
+          final parteTexto = TextPart(promptTexto);
+          final resposta = await _model!
+              .generateContent([
+                Content.multi([parteTexto, parteImagem]),
+              ])
+              .timeout(timeout);
+          textoResposta = resposta.text;
+        }
 
-      // Parte visual: envia a imagem como InlineDataPart para análise multimodal
-      final parteImagem = InlineDataPart(mimeTypeImagem, imagemBytes);
-      final parteTexto = TextPart(promptTexto);
+        return parsearResposta(textoResposta);
+      } catch (e, stack) {
+        ultimoErro = e;
+        debugPrint(
+          '[AntiFraudeService] Tentativa ${tentativa + 1} falhou: $e',
+        );
+        debugPrint('[AntiFraudeService] Stack: $stack');
 
-      final resposta = await _model!.generateContent([
-        Content.multi([parteTexto, parteImagem]),
-      ]);
-
-      return _parsearResposta(resposta.text);
-    } catch (e, stack) {
-      debugPrint('[AntiFraudeService] Erro ao analisar relato: $e');
-      debugPrint('[AntiFraudeService] Stack: $stack');
-      return ResultadoAntifraude.erro(e.toString());
+        if (tentativa < maxRetries && _isTransient(e)) {
+          await Future<void>.delayed(retryDelay * (tentativa + 1));
+          continue;
+        }
+        break;
+      }
     }
+
+    final descricaoErro = ultimoErro is TimeoutException
+        ? 'Tempo limite excedido na verificação automática'
+        : 'Serviço de análise temporariamente indisponível';
+    return ResultadoAntifraude.erro(descricaoErro);
   }
 
-  // ── Helpers privados ────────────────────────────────────────────────────────
+  // ── Helpers ─────────────────────────────────────────────────────────────────
 
   String _montarPrompt({
     required String tipoDesastre,
@@ -221,20 +255,20 @@ LOCALIZAÇÃO: Latitude $latitude, Longitude $longitude
 [A imagem está incluída nesta requisição. Analise seu conteúdo visual.]
 
 === TAREFA ===
-Verifique se existe COERÊNCIA entre o tipo de desastre, o nível de gravidade, 
+Verifique se existe COERÊNCIA entre o tipo de desastre, o nível de gravidade,
 a descrição textual e o conteúdo visual da imagem.
 
 Retorne o JSON de análise conforme o formato definido.
 ''';
   }
 
-  ResultadoAntifraude _parsearResposta(String? textoResposta) {
+  @visibleForTesting
+  ResultadoAntifraude parsearResposta(String? textoResposta) {
     if (textoResposta == null || textoResposta.trim().isEmpty) {
       return ResultadoAntifraude.erro('Resposta vazia recebida do modelo');
     }
 
     try {
-      // Extrai apenas o bloco JSON, ignorando textos antes ou depois
       String json = textoResposta.trim();
       final match = RegExp(r'\{[\s\S]*\}').firstMatch(json);
       if (match != null) {
@@ -246,7 +280,7 @@ Retorne o JSON de análise conforme o formato definido.
       final double score =
           (dados['score_autenticidade'] as num?)?.toDouble() ?? 0.0;
 
-      // Override the boolean returned by the AI with a strict threshold
+      // Limite estrito de 80% para aprovação automática.
       final bool legitimo = score >= 0.80;
 
       final String motivo =
@@ -261,9 +295,8 @@ Retorne o JSON de análise conforme o formato definido.
       );
     } catch (e) {
       debugPrint('[AntiFraudeService] Erro ao parsear JSON: $e');
-      debugPrint('[AntiFraudeService] Resposta recebida: $textoResposta');
       return ResultadoAntifraude.erro(
-        'Formato de resposta inválido: $textoResposta',
+        'Formato de resposta inválido da análise automática',
       );
     }
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'exportador_import.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
@@ -41,7 +42,20 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
 
   final telMask = MaskTextInputFormatter(mask: '(##) #####-####');
 
+  @override
+  void dispose() {
+    _NomeController.dispose();
+    _CPFController.dispose();
+    _RgController.dispose();
+    _TelController.dispose();
+    _EmailController.dispose();
+    _SenhaController.dispose();
+    _ConSenhaController.dispose();
+    super.dispose();
+  }
+
   Future<void> _enviarDados() async {
+    if (_estaCarregando) return;
     setState(() {
       _estaCarregando = true;
     });
@@ -55,7 +69,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
 
       String tel = _TelController.text.trim().replaceAll(RegExp(r'[^0-9]'), '');
 
-      String email = _EmailController.text.trim();
+      String email = _EmailController.text.trim().toLowerCase();
 
       String data = _dateTime.toString();
 
@@ -177,7 +191,11 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
       final authResponse = await Supabase.instance.client.auth.signUp(
         email: email,
         password: senha,
-
+        // Deep link do app: faz o link do e-mail abrir o app no celular
+        // (em vez do Site URL, que aponta para o painel web na Vercel).
+        emailRedirectTo: kIsWeb
+            ? Uri.base.origin
+            : 'com.prever.app://login-callback',
         data: {
           'prf_tipo': 'cidadao',
           'prf_nome': nome,
@@ -187,32 +205,27 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
         },
       );
 
+      if (!mounted) return;
+
+      // Quando Email Enumeration Protection está ativo no Supabase e o e-mail já existe,
+      // user.identities vem vazio.
+      final identities = authResponse.user?.identities;
+      if (identities != null && identities.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Este e-mail já possui cadastro. Faça login ou recupere sua senha.',
+            ),
+          ),
+        );
+        return;
+      }
+
       if (authResponse.session != null) {
         widget.onChangePage(0);
       } else if (authResponse.user != null) {
         widget.onCadastroPendente(email, senha);
       }
-
-      debugPrint('=== CADASTRO: signUp concluído ===');
-
-      //if (user == null) {
-      //  ScaffoldMessenger.of(context).showSnackBar(
-      //    const SnackBar(
-      //      content: Text(
-      //        'Usuário não autenticado.',
-      //      ),
-      //    ),
-      //  );
-      //
-      //  setState(() {
-      //    _estaCarregando = false;
-      //  });
-      //
-      //  return;
-      //}
-      //else {
-      //  widget.onChangePage(0);
-      //}
 
       _NomeController.clear();
       _CPFController.clear();
@@ -224,11 +237,31 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'Cadastro Realizado com sucesso!',
+              authResponse.session != null
+                  ? 'Cadastro realizado com sucesso!'
+                  : 'Cadastro criado! Enviamos um link de confirmação para seu e-mail.',
             ),
           ),
+        );
+      }
+    } on AuthException catch (e) {
+      debugPrint('AuthException no cadastro: ${e.statusCode}');
+      if (mounted) {
+        final msg = e.message.toLowerCase();
+        String texto =
+            'Erro no cadastro. Verifique os dados e tente novamente.';
+        if (msg.contains('already registered') ||
+            msg.contains('already exists')) {
+          texto =
+              'Este e-mail já está cadastrado. Faça login ou recupere sua senha.';
+        } else if (msg.contains('rate limit') || e.statusCode == '429') {
+          texto =
+              'Muitas tentativas seguidas. Aguarde alguns instantes e tente novamente.';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(texto)),
         );
       }
     } catch (e) {
@@ -238,12 +271,12 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
           const SnackBar(content: Text('Erro no cadastro. Tente novamente.')),
         );
       }
-    }
-
-    if (mounted) {
-      setState(() {
-        _estaCarregando = false;
-      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _estaCarregando = false;
+        });
+      }
     }
   }
 
