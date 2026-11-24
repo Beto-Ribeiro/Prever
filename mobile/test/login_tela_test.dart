@@ -148,4 +148,94 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets(
+    'Botão Google OAuth envia deep link correto, bloqueia duplo clique e trata falhas',
+    (tester) async {
+      final oauthCompleter = Completer<bool>();
+      final redirectsRecebidos = <String>[];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SLogin(
+            title: 'Login',
+            onChangePage: (_) {},
+            onGoogleOAuth: (redirectTo) {
+              redirectsRecebidos.add(redirectTo);
+              return oauthCompleter.future;
+            },
+          ),
+        ),
+      );
+
+      final botaoGoogle = find.byKey(const Key('botao_login_google'));
+      expect(botaoGoogle, findsOneWidget);
+
+      await tester.ensureVisible(botaoGoogle);
+      await tester.tap(botaoGoogle);
+      await tester.pump();
+      // Segundo toque enquanto ainda está carregando deve ser ignorado.
+      await tester.tap(botaoGoogle);
+      await tester.pump();
+
+      expect(redirectsRecebidos, ['com.prever.app://login-callback']);
+
+      // Quando o navegador falha ao abrir (false), exibe feedback amigável.
+      oauthCompleter.complete(false);
+      await tester.pumpAndSettle();
+      expect(
+        find.text(
+          'Não foi possível abrir o navegador para entrar com o Google.',
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'Botão Google OAuth trata AuthException e erro inesperado sem vazar detalhes internos',
+    (tester) async {
+      var tentativa = 0;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SLogin(
+            title: 'Login',
+            onChangePage: (_) {},
+            onGoogleOAuth: (_) async {
+              tentativa++;
+              if (tentativa == 1) {
+                throw const AuthException('Provedor temporariamente offline');
+              }
+              throw StateError('stacktrace_secreto_123');
+            },
+          ),
+        ),
+      );
+
+      final botaoGoogle = find.byKey(const Key('botao_login_google'));
+      await tester.ensureVisible(botaoGoogle);
+      await tester.tap(botaoGoogle);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Erro no login Google: Provedor temporariamente offline'),
+        findsOneWidget,
+      );
+
+      ScaffoldMessenger.of(
+        tester.element(find.byType(SLogin)),
+      ).clearSnackBars();
+      await tester.pumpAndSettle();
+
+      await tester.tap(botaoGoogle);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Não foi possível entrar com o Google. Tente novamente.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('stacktrace_secreto_123'), findsNothing);
+    },
+  );
 }

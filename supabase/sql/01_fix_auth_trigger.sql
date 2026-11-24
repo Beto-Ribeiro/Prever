@@ -13,17 +13,19 @@ declare
   v_tipo text;
   v_nome text;
 begin
-  v_tipo := coalesce(
-    nullif(new.raw_user_meta_data->>'prf_tipo', ''),
-    'pendente'
-  );
+  v_tipo := case
+    when lower(coalesce(new.raw_user_meta_data->>'prf_tipo', '')) in ('cidadao', 'cidadão') then 'cidadao'
+    when lower(coalesce(new.raw_app_meta_data->>'provider', '')) = 'google'
+     and coalesce(new.raw_user_meta_data->>'prf_tipo', '') = '' then 'cidadao'
+    else coalesce(nullif(new.raw_user_meta_data->>'prf_tipo', ''), 'pendente')
+  end;
 
   v_nome := coalesce(
     nullif(new.raw_user_meta_data->>'prf_nome', ''),
     nullif(new.raw_user_meta_data->>'full_name', ''),
     nullif(new.raw_user_meta_data->>'name', ''),
     split_part(new.email, '@', 1),
-    'Usuário SMDN'
+    'Usuário PREVER'
   );
 
   if new.email_confirmed_at is not null then
@@ -58,7 +60,8 @@ begin
           new.raw_user_meta_data->>'cpf',
           new.raw_user_meta_data->>'rg',
           nullif(new.raw_user_meta_data->>'data_nascimento', '')::date
-        );
+        )
+        on conflict (cid_id) do nothing;
 
       elsif v_tipo = 'funcionario' then
 

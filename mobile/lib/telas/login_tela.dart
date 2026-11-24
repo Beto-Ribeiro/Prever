@@ -16,11 +16,13 @@ const String _googleLogoSvg = '''
 
 class SLogin extends StatefulWidget {
   final Function(int) onChangePage;
+  final Future<bool> Function(String redirectTo)? onGoogleOAuth;
 
   const SLogin({
     super.key,
     required this.title,
     required this.onChangePage,
+    this.onGoogleOAuth,
   });
 
   final String title;
@@ -43,13 +45,32 @@ class _SLoginState extends State<SLogin> {
   }
 
   Future<void> loginGoogle() async {
+    if (_estaCarregando) return;
+
+    setState(() => _estaCarregando = true);
+
     try {
-      await Supabase.instance.client.auth.signInWithOAuth(
-        OAuthProvider.google,
-        redirectTo: kIsWeb
-            ? Uri.base.origin
-            : 'com.prever.app://login-callback',
-      );
+      final redirectTo = kIsWeb
+          ? Uri.base.origin
+          : 'com.prever.app://login-callback';
+      final iniciouOAuth = widget.onGoogleOAuth != null
+          ? await widget.onGoogleOAuth!(redirectTo)
+          : await Supabase.instance.client.auth.signInWithOAuth(
+              OAuthProvider.google,
+              redirectTo: redirectTo,
+            );
+
+      if (!mounted) return;
+
+      if (!iniciouOAuth) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Não foi possível abrir o navegador para entrar com o Google.',
+            ),
+          ),
+        );
+      }
     } on AuthException catch (e) {
       if (!mounted) return;
 
@@ -58,14 +79,20 @@ class _SLoginState extends State<SLogin> {
           content: Text('Erro no login Google: ${e.message}'),
         ),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro inesperado: $e'),
+        const SnackBar(
+          content: Text(
+            'Não foi possível entrar com o Google. Tente novamente.',
+          ),
         ),
       );
+    } finally {
+      if (mounted) {
+        setState(() => _estaCarregando = false);
+      }
     }
   }
 
@@ -319,23 +346,30 @@ class _SLoginState extends State<SLogin> {
                               ),
 
                               // Botão Google em formato de pílula
-                              Material(
-                                color: const Color(0xFFE5E8EB),
-                                elevation: 6,
-                                shadowColor: Colors.black38,
-                                shape: const StadiumBorder(),
-                                child: InkWell(
-                                  customBorder: const StadiumBorder(),
-                                  onTap: _estaCarregando ? null : loginGoogle,
-                                  child: SizedBox(
-                                    width: 70,
-                                    height: 50,
-                                    child: Center(
-                                      child: SvgPicture.string(
-                                        _googleLogoSvg,
-                                        width: 26,
-                                        height: 26,
-                                        semanticsLabel: 'Continuar com Google',
+                              Semantics(
+                                button: true,
+                                enabled: !_estaCarregando,
+                                label: 'Continuar com Google',
+                                child: Material(
+                                  color: const Color(0xFFE5E8EB),
+                                  elevation: 6,
+                                  shadowColor: Colors.black38,
+                                  shape: const StadiumBorder(),
+                                  child: InkWell(
+                                    key: const Key('botao_login_google'),
+                                    customBorder: const StadiumBorder(),
+                                    onTap: _estaCarregando ? null : loginGoogle,
+                                    child: SizedBox(
+                                      width: 70,
+                                      height: 50,
+                                      child: Center(
+                                        child: SvgPicture.string(
+                                          _googleLogoSvg,
+                                          width: 26,
+                                          height: 26,
+                                          semanticsLabel:
+                                              'Continuar com Google',
+                                        ),
                                       ),
                                     ),
                                   ),

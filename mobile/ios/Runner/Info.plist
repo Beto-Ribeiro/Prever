@@ -74,6 +74,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.prever.app</string>
+				<string>prever</string>
 			</array>
 		</dict>
 	</array>
