@@ -1,4 +1,4 @@
-import 'package:branch1/services/severidade_relato.dart';
+import 'package:prever/services/severidade_relato.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

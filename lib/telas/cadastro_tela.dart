@@ -39,7 +39,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
 
   final _ConSenhaController = TextEditingController();
 
-  final cpfMask = MaskTextInputFormatter(mask: '###.###.###-##'); 
+  final cpfMask = MaskTextInputFormatter(mask: '###.###.###-##');
 
   final rgMask = MaskTextInputFormatter(mask: '##.###.###-#');
 
@@ -163,7 +163,9 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
       final authResponse = await Supabase.instance.client.auth.signUp(
         email: email,
         password: senha,
-
+        // Deep link do app: faz o link do e-mail abrir o app no celular
+        // (em vez do Site URL, que aponta para o painel web na Vercel).
+        emailRedirectTo: 'com.prever.app://login-callback',
         data: {
           'prf_tipo': 'cidadao',
           'prf_nome': nome,
@@ -173,7 +175,7 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
         },
       );
 
-      
+
       if (authResponse.session != null) {
         widget.onChangePage(0);
       } else if (authResponse.user != null) {
@@ -471,16 +473,16 @@ class _Cadastro_telaState extends State<Cadastro_tela> {
 
                               child: _estaCarregando
                                   ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
                                   : const Text(
-                                      'Enviar',
-                                        style: TextStyle(color: Colors.white)
-                                    ),
+                                  'Enviar',
+                                  style: TextStyle(color: Colors.white)
+                              ),
                             ),
                           ],
                         ),

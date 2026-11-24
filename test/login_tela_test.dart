@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:branch1/telas/login_tela.dart';
+import 'package:prever/telas/login_tela.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -58,7 +58,7 @@ void main() {
             return IndexedStack(
               index: pagina == 7 ? 0 : 1,
               children: [
-                sLogin(
+                SLogin(
                   title: 'Login',
                   onChangePage: (index) => setState(() => pagina = index),
                 ),
@@ -127,7 +127,7 @@ void main() {
               textScaler: TextScaler.linear(2),
               viewInsets: EdgeInsets.only(bottom: 250),
             ),
-            child: sLogin(
+            child: SLogin(
               title: 'Login',
               onChangePage: (index) => pagina = index,
             ),

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:prever/telas/formatadores/background_abs_code.dart';
 
+export 'login_tela.dart';
+
 class SLogin extends StatefulWidget {
   final Function(int) onChangePage;
 

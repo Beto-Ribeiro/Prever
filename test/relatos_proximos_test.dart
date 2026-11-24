@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:branch1/controles/controle_acessibilidade.dart';
-import 'package:branch1/services/relatos_proximos_service.dart';
-import 'package:branch1/telas/widgets/relatos_proximos.dart';
+import 'package:prever/controles/controle_acessibilidade.dart';
+import 'package:prever/services/relatos_proximos_service.dart';
+import 'package:prever/telas/widgets/relatos_proximos.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
