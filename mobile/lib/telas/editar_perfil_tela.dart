@@ -95,6 +95,17 @@ class _EditarPerfilTelaState extends State<EditarPerfilTela> {
     setState(() => salvando = true);
 
     try {
+      try {
+        final cid = await supabase
+            .from('Cidadao')
+            .select('cid_id')
+            .eq('cid_id', userId)
+            .maybeSingle();
+        if (cid == null) {
+          await supabase.from('Cidadao').insert({'cid_id': userId});
+        }
+      } catch (_) {}
+
       final existente = await supabase
           .from('Historico_Medicacao_Cidadao')
           .select('hmc_cid_id')
@@ -123,9 +134,14 @@ class _EditarPerfilTelaState extends State<EditarPerfilTela> {
       );
       widget.onChangePage(9); // volta para a tela de perfil
     } catch (e) {
+      debugPrint('Erro ao salvar histórico médico: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao salvar: $e')),
+        const SnackBar(
+          content: Text(
+            'Não foi possível salvar suas informações. Tente novamente.',
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => salvando = false);

@@ -24,10 +24,14 @@ export const SUPABASE_STORAGE_BUCKETS = Object.freeze({
 export const SUPABASE_EDGE_FUNCTIONS = Object.freeze({
   APPROVE_WEB_ACCESS_REQUEST: 'approve-web-access-request',
   SMDN_AI: 'smdn-ai',
+  ENVIAR_ALERTAS_WEB: 'enviar-alertas-web',
 })
 
 export const SUPABASE_RPCS = Object.freeze({
   ADMIN_UPDATE_USER_PROFILE: 'admin_update_user_profile',
   ADMIN_RESET_USER_PROFILE: 'admin_reset_user_profile',
+  ADMIN_SET_USER_PASSWORD: 'admin_set_user_password',
   REGISTER_USER_ACTIVITY: 'registrar_atividade_usuario',
+  REGISTRAR_DISPOSITIVO_ALERTA: 'registrar_dispositivo_alerta',
+  DESATIVAR_DISPOSITIVO_ALERTA: 'desativar_dispositivo_alerta',
 })

@@ -7,23 +7,49 @@ import { toFriendlyMessage } from '../utils/friendlyMessages.js'
 
 export const AuthContext = createContext()
 
-const SAVED_ACCOUNTS_KEY = 'smdn_saved_accounts_v1'
+const SAVED_ACCOUNTS_KEY = 'smdn_saved_accounts_v2'
+const LEGACY_SAVED_ACCOUNTS_KEY = 'smdn_saved_accounts_v1'
+const EPHEMERAL_SESSION_KEY = 'prever_ephemeral_session'
 const ACCOUNT_TTL_MS = 48 * 60 * 60 * 1000
+
+function sanitizeAccountRecord(item) {
+  if (!item?.id) return null
+  return {
+    id: String(item.id),
+    email: String(item.email || ''),
+    name: String(item.name || 'Usuário PREVER'),
+    roleLabel: String(item.roleLabel || 'Usuário'),
+    avatar: item.avatar || null,
+    lastAccess: Number(item.lastAccess) || Date.now(),
+  }
+}
 
 function readSavedAccounts() {
   try {
+    // Remove qualquer estrutura legada que armazenava tokens em texto puro no localStorage.
+    if (localStorage.getItem(LEGACY_SAVED_ACCOUNTS_KEY)) {
+      const migrated = JSON.parse(localStorage.getItem(LEGACY_SAVED_ACCOUNTS_KEY) || '[]')
+        .map(sanitizeAccountRecord)
+        .filter(Boolean)
+      localStorage.removeItem(LEGACY_SAVED_ACCOUNTS_KEY)
+      localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(migrated))
+      return migrated
+    }
     return JSON.parse(localStorage.getItem(SAVED_ACCOUNTS_KEY) || '[]')
+      .map(sanitizeAccountRecord)
+      .filter(Boolean)
   } catch {
     return []
   }
 }
 
 function writeSavedAccounts(accounts) {
-  localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(accounts))
+  const safe = (accounts || []).map(sanitizeAccountRecord).filter(Boolean)
+  localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(safe))
 }
 
 function publicAccountData(session, accessUser) {
-  if (!session?.user?.id || !session?.access_token || !session?.refresh_token) return null
+  if (!session?.user?.id) return null
 
   return {
     id: session.user.id,
@@ -32,14 +58,6 @@ function publicAccountData(session, accessUser) {
     roleLabel: accessUser?.roleLabel || accessUser?.role || 'Usuário',
     avatar: accessUser?.avatar || accessUser?.perfil?.prf_avatar_url || null,
     lastAccess: Date.now(),
-    session: {
-      access_token: session.access_token,
-      refresh_token: session.refresh_token,
-      expires_at: session.expires_at,
-      expires_in: session.expires_in,
-      token_type: session.token_type,
-      user: session.user,
-    },
   }
 }
 
@@ -114,6 +132,21 @@ export const AuthProvider = ({ children }) => {
 
     async function loadSession() {
       try {
+        // Se o login anterior não marcou "Mantenha-me logado" e o navegador foi fechado,
+        // encerra a sessão persistida antes de carregar o painel.
+        if (
+          localStorage.getItem(EPHEMERAL_SESSION_KEY) === '1' &&
+          sessionStorage.getItem(EPHEMERAL_SESSION_KEY) !== '1'
+        ) {
+          localStorage.removeItem(EPHEMERAL_SESSION_KEY)
+          await supabase.auth.signOut().catch(() => null)
+          if (mounted) {
+            setSession(null)
+            setUser(null)
+          }
+          return
+        }
+
         const { data, error } = await supabase.auth.getSession()
 
         if (error) throw error
@@ -165,7 +198,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [applySession])
 
-  const signIn = useCallback(async ({ email, password }) => {
+  const signIn = useCallback(async ({ email, password, rememberMe = true }) => {
     setAccessError('')
 
     const data = await signInWithEmailAndPassword({ email, password })
@@ -173,6 +206,14 @@ export const AuthProvider = ({ children }) => {
 
     if (!access?.allowed) {
       throw new Error(access?.reason || 'Usuário sem permissão para acessar o painel web.')
+    }
+
+    if (rememberMe === false) {
+      localStorage.setItem(EPHEMERAL_SESSION_KEY, '1')
+      sessionStorage.setItem(EPHEMERAL_SESSION_KEY, '1')
+    } else {
+      localStorage.removeItem(EPHEMERAL_SESSION_KEY)
+      sessionStorage.removeItem(EPHEMERAL_SESSION_KEY)
     }
 
     await recordLoginActivity(access.user?.id).catch((error) => {
@@ -184,6 +225,8 @@ export const AuthProvider = ({ children }) => {
 
   const signOut = useCallback(async () => {
     const currentUserId = session?.user?.id || user?.id
+    localStorage.removeItem(EPHEMERAL_SESSION_KEY)
+    sessionStorage.removeItem(EPHEMERAL_SESSION_KEY)
     await signOutFromSupabase()
     if (currentUserId) {
       setSavedAccounts(removeSavedAccount(currentUserId))
@@ -219,18 +262,18 @@ export const AuthProvider = ({ children }) => {
       throw new Error('Essa conta ficou mais de 48h sem acesso. Faça login novamente.')
     }
 
-    const { data, error } = await supabase.auth.setSession({
-      access_token: account.session.access_token,
-      refresh_token: account.session.refresh_token,
-    })
-
-    if (error || !data?.session) {
-      setSavedAccounts(removeSavedAccount(account.id))
-      throw new Error(toFriendlyMessage(error, 'Não foi possível alternar para essa conta. Faça login novamente.'))
+    // Por segurança (OWASP), tokens de sessão não ficam guardados em lista secundária no localStorage.
+    // Encerra a sessão local atual e solicita confirmação de senha da conta escolhida.
+    if (account.email) {
+      sessionStorage.setItem('prever_prefill_login_email', account.email)
     }
-
-    return applySession(data.session, { signOutWhenUnauthorized: false })
-  }, [applySession])
+    await supabase.auth.signOut({ scope: 'local' }).catch(() => null)
+    setSession(null)
+    setUser(null)
+    setAccessError(`Confirme a senha de ${account.email || account.name} para alternar de conta com segurança.`)
+    setRecoveryMode(false)
+    return null
+  }, [])
 
   const refreshUser = useCallback(async () => {
     const { data, error } = await supabase.auth.getSession()

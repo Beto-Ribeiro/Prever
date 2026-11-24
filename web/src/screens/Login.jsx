@@ -9,7 +9,7 @@ import SettingsPanel from '../components/SettingsPanel.jsx'
 import { useSmdnSettings } from '../hooks/useSmdnSettings.js'
 import { toFriendlyMessage } from '../utils/friendlyMessages.js'
 
-const Login = ({ view, setView, onLogin, onRegister }) => {
+const Login = ({ view, setView, onLogin, onRegister, initialError = '' }) => {
   const isRegister = view === 'cadastro'
   const { effectiveTheme } = useSmdnSettings()
   const logo = effectiveTheme === 'light' ? logoEscuro : logoClaro
@@ -17,13 +17,22 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
   const [institution, setInstitution] = useState('')
   const [name, setName] = useState('')
   const [role, setRole] = useState('')
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(() => {
+    try {
+      const prefill = window.sessionStorage?.getItem('prever_prefill_login_email') || ''
+      if (prefill) window.sessionStorage?.removeItem('prever_prefill_login_email')
+      return prefill
+    } catch {
+      return ''
+    }
+  })
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const activeError = error || (!isRegister ? initialError : '')
 
   const normalizedEmail = email.trim().toLowerCase()
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
@@ -123,9 +132,9 @@ const Login = ({ view, setView, onLogin, onRegister }) => {
                 : 'Acesso restrito a usuários autorizados para operação web.'}
             </p>
 
-            {error && (
+            {activeError && (
               <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700 leading-relaxed">
-                {error}
+                {activeError}
               </div>
             )}
 

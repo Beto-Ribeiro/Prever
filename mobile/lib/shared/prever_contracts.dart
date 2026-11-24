@@ -27,12 +27,13 @@ class PreverEdgeFunctions {
   const PreverEdgeFunctions._();
   static const String approveWebAccessRequest = 'approve-web-access-request';
   static const String smdnAi = 'smdn-ai';
+  static const String enviarAlertasWeb = 'enviar-alertas-web';
 }
 
 class PreverAntifraudConfig {
   const PreverAntifraudConfig._();
   static const double minLegitimateScore = 0.8;
-  static const String modelName = 'gemini-2.5-flash-lite';
+  static const String modelName = 'gemini-2.5-flash';
   static const String fallbackStatus = 'pendente_revisao';
 }
 

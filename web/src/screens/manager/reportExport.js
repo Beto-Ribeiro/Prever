@@ -15,14 +15,8 @@ export async function exportReport(data, start, end, type, format) {
   const sheets = buildReport(data, start, end, type)
   const filename = `abrigo-${start}-${end}`
   if (format === 'xlsx') {
-    const XLSX = await import('xlsx')
-    const book = XLSX.utils.book_new()
-    for (const [name, rows] of Object.entries(sheets)) {
-      // Force strings into text cells; user input is never an Excel formula.
-      const sheet = XLSX.utils.json_to_sheet(rows.length ? rows : [{ Informação: 'Nenhum registro no período.' }])
-      XLSX.utils.book_append_sheet(book, sheet, name)
-    }
-    XLSX.writeFile(book, `${filename}.xlsx`)
+    const { downloadXlsx } = await import('../../utils/xlsxWriter.js')
+    downloadXlsx(sheets, `${filename}.xlsx`)
     return
   }
   const { jsPDF } = await import('jspdf')

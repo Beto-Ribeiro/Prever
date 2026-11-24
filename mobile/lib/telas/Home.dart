@@ -64,12 +64,21 @@ class _Home_State extends State<Home> {
 
   final supabase = Supabase.instance.client;
 
-  Future<void> ValidarCPF() async {
-    final String cpfDigitadoLimpo = _SOSvalidateController.text
-        .trim()
-        .replaceAll(RegExp(r'[^0-9]'), '');
+  @override
+  void dispose() {
+    _SOSvalidateController.dispose();
+    super.dispose();
+  }
 
-    final userId = supabase.auth.currentUser?.id;
+  Future<void> ValidarCPF() async {
+    final textoDigitado = _SOSvalidateController.text.trim();
+    final String cpfDigitadoLimpo = textoDigitado.replaceAll(
+      RegExp(r'[^0-9]'),
+      '',
+    );
+
+    final currentUser = supabase.auth.currentUser;
+    final userId = currentUser?.id;
 
     if (userId == null) {
       return;
@@ -79,57 +88,92 @@ class _Home_State extends State<Home> {
         .from('Cidadao')
         .select('cid_cpf')
         .eq('cid_id', userId)
-        .single();
+        .maybeSingle();
 
-    final String cpfCompleto = data['cid_cpf'].toString();
-
+    final String cpfCompleto = (data?['cid_cpf'] ?? '').toString();
     final String cpfLimpo = cpfCompleto.replaceAll(RegExp(r'[^0-9]'), '');
-    final bool cpfValido =
-        cpfDigitadoLimpo.isNotEmpty &&
-        (cpfLimpo == cpfDigitadoLimpo ||
-            (cpfDigitadoLimpo.length == 3 &&
-                cpfLimpo.startsWith(cpfDigitadoLimpo)));
-    if (cpfValido) {
+
+    final emailPrefixo = (currentUser?.email ?? '').trim().toLowerCase();
+    final bool identidadeValida = cpfLimpo.isNotEmpty
+        ? (cpfDigitadoLimpo.isNotEmpty &&
+              (cpfLimpo == cpfDigitadoLimpo ||
+                  (cpfDigitadoLimpo.length == 3 &&
+                      cpfLimpo.startsWith(cpfDigitadoLimpo))))
+        : (textoDigitado.length >= 3 &&
+              emailPrefixo.startsWith(
+                textoDigitado.substring(0, 3).toLowerCase(),
+              ));
+
+    if (identidadeValida) {
       if (!mounted) return;
       setState(() {
         _sosEnviando = true;
       });
 
       Navigator.pop(context);
+      _SOSvalidateController.clear();
 
       if (!mounted) return;
 
-      Position posicao = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-        ),
-      );
+      try {
+        // Garante vínculo em Cidadao antes do insert de SOS (ex.: conta Google OAuth).
+        if (data == null) {
+          try {
+            await supabase.from('Cidadao').insert({'cid_id': userId});
+          } catch (_) {}
+        }
 
-      if (!mounted) return;
+        final Position posicao =
+            await Geolocator.getCurrentPosition(
+              locationSettings: const LocationSettings(
+                accuracy: LocationAccuracy.high,
+              ),
+            ).timeout(
+              const Duration(seconds: 12),
+            );
 
-      final String pontoGeografico =
-          'POINT(${posicao.longitude} ${posicao.latitude})';
+        if (!mounted) return;
 
-      await Criar_SOS(
-        context,
-        usuarioId: Supabase.instance.client.auth.currentUser!.id,
-        localizacao: pontoGeografico,
-        data: DateTime.now().toIso8601String(),
-        origem: 'SOS',
-      );
+        final String pontoGeografico =
+            'POINT(${posicao.longitude} ${posicao.latitude})';
 
-      // Atualiza estado para animar e
-      // desabilitar
-      if (mounted) {
-        setState(() {
-          _sosEnviado = true;
-          _sosEnviando = false;
-        });
+        await Criar_SOS(
+          context,
+          usuarioId: userId,
+          localizacao: pontoGeografico,
+          data: DateTime.now().toIso8601String(),
+          origem: 'SOS',
+        );
+
+        if (mounted) {
+          setState(() {
+            _sosEnviado = true;
+            _sosEnviando = false;
+          });
+        }
+      } catch (e) {
+        debugPrint('Erro ao obter localização para SOS: $e');
+        if (mounted) {
+          setState(() {
+            _sosEnviando = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Não foi possível obter sua localização para enviar o SOS. Verifique o GPS.',
+              ),
+            ),
+          );
+        }
       }
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('CPF inválido. Confira os dígitos informados.'),
+        SnackBar(
+          content: Text(
+            cpfLimpo.isNotEmpty
+                ? 'CPF inválido. Confira os três primeiros dígitos informados.'
+                : 'Confirme com os 3 primeiros caracteres do seu e-mail cadastrado.',
+          ),
         ),
       );
     }

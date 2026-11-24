@@ -43,7 +43,10 @@ class _Relatos_telaState extends State<Relatos_tela> {
   Set<Marker> markers = {};
   bool _isLoadingMap = true;
   bool _utilizarLocalizacaoAtual = true;
+  bool _enviandoRelato = false;
   ScrollPhysics _scrollPhysics = const ClampingScrollPhysics();
+
+  static const int _tamanhoMaximoImagemBytes = 10 * 1024 * 1024;
 
   // Rótulos e cores usados no seletor de severidade (Leve / Moderada / Severa)
   final List<String> _opcoesSeveridade = const ['Leve', 'Moderada', 'Severa'];
@@ -61,6 +64,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
 
   @override
   void dispose() {
+    mapController?.dispose();
     _descricaoController.dispose();
     _antiFraudeService.dispose();
     super.dispose();
@@ -72,7 +76,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
     if (status.isGranted) {
       _getCurrentLocation();
     } else {
-      setState(() => _isLoadingMap = false);
+      if (mounted) setState(() => _isLoadingMap = false);
     }
   }
 
@@ -83,7 +87,8 @@ class _Relatos_telaState extends State<Relatos_tela> {
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
         ),
-      );
+      ).timeout(const Duration(seconds: 12));
+      if (!mounted) return;
       LatLng posicaoAtual = LatLng(
         locationData.latitude,
         locationData.longitude,
@@ -102,7 +107,7 @@ class _Relatos_telaState extends State<Relatos_tela> {
       }
     } catch (e) {
       debugPrint("Erro ao obter localização: $e");
-      setState(() => _isLoadingMap = false);
+      if (mounted) setState(() => _isLoadingMap = false);
     }
   }
 
@@ -127,9 +132,21 @@ class _Relatos_telaState extends State<Relatos_tela> {
     );
 
     if (resultado != null) {
+      final arquivo = resultado.files.single;
+      final bytes = arquivo.bytes;
+      if (bytes != null && bytes.length > _tamanhoMaximoImagemBytes) {
+        if (mounted) {
+          _mostrarSnackBar(
+            'A imagem selecionada excede 10 MB. Escolha uma foto menor.',
+            Colors.orange,
+          );
+        }
+        return;
+      }
+      if (!mounted) return;
       setState(() {
-        imagemSelecionada = resultado.files.single;
-        imagemBytes = resultado.files.single.bytes;
+        imagemSelecionada = arquivo;
+        imagemBytes = bytes;
       });
     }
   }
@@ -206,8 +223,22 @@ class _Relatos_telaState extends State<Relatos_tela> {
     required String userId,
     required String pontoGeografico,
     required ResultadoAntifraude resultadoAntifraude,
+    required String extensaoImagem,
+    required String mimeTypeImagem,
   }) async {
     final supabase = Supabase.instance.client;
+
+    // Garante vínculo em Cidadao antes do insert (ex.: conta Google OAuth).
+    try {
+      final cid = await supabase
+          .from('Cidadao')
+          .select('cid_id')
+          .eq('cid_id', userId)
+          .maybeSingle();
+      if (cid == null) {
+        await supabase.from('Cidadao').insert({'cid_id': userId});
+      }
+    } catch (_) {}
 
     final List<Map<String, dynamic>> respostaRelato = await supabase
         .from('Relato')
@@ -229,17 +260,22 @@ class _Relatos_telaState extends State<Relatos_tela> {
 
     if (respostaRelato.isEmpty) {
       throw Exception(
-        'O relato foi salvo, mas não retornou os dados. Verifique o RLS.',
+        'O relato foi salvo, mas não retornou os dados.',
       );
     }
 
     final relatoId = respostaRelato.first['rel_id'];
-    final nomeArquivo = '${DateTime.now().millisecondsSinceEpoch}.png';
+    final nomeArquivo =
+        '${DateTime.now().millisecondsSinceEpoch}.$extensaoImagem';
     final path = 'relatos/$relatoId/$nomeArquivo';
 
     await supabase.storage
         .from('Fotos_Storage')
-        .uploadBinary(path, imagemBytes!);
+        .uploadBinary(
+          path,
+          imagemBytes!,
+          fileOptions: FileOptions(contentType: mimeTypeImagem),
+        );
 
     await supabase.from('Foto').insert({
       'fto_rel_id': relatoId,
@@ -265,16 +301,9 @@ class _Relatos_telaState extends State<Relatos_tela> {
 
   // ── Fluxo principal de envio com filtro antifraude ───────────────────────
 
-  /// Ponto de entrada quando o usuário toca em "Reportar".
-  ///
-  /// Fluxo:
-  ///   1. Valida campos obrigatórios
-  ///   2. Chama o [AntiFraudeService] (mostra diálogo de loading)
-  ///   3a. Se legítimo → grava direto no Supabase
-  ///   3b. Se suspeito → mostra diálogo ao usuário
-  ///     3b-i.  Confirma → grava com flag de revisão pendente
-  ///     3b-ii. Cancela  → retorna ao formulário para correção
   Future<void> enviarRelato() async {
+    if (_enviandoRelato) return;
+
     final supabase = Supabase.instance.client;
     final usuarioLogado = supabase.auth.currentUser;
 
@@ -288,6 +317,8 @@ class _Relatos_telaState extends State<Relatos_tela> {
 
     if (!_validarCampos()) return;
 
+    setState(() => _enviandoRelato = true);
+
     final String tipoDesastre = _mapearTipoDesastre(tipoSelecionado);
     final String nivelRisco = _mapearNivelRisco(nivelSelecionado);
     final String descricao = _descricaoController.text.trim();
@@ -295,8 +326,23 @@ class _Relatos_telaState extends State<Relatos_tela> {
     final String pontoGeografico =
         'POINT(${localizacaoSelecionada!.longitude} ${localizacaoSelecionada!.latitude})';
 
+    final rawExt = (imagemSelecionada?.extension ?? '').toLowerCase();
+    final String extensaoSegura = rawExt == 'png'
+        ? 'png'
+        : rawExt == 'webp'
+        ? 'webp'
+        : 'jpg';
+    final String mimeType = extensaoSegura == 'png'
+        ? 'image/png'
+        : extensaoSegura == 'webp'
+        ? 'image/webp'
+        : 'image/jpeg';
+
     // ── Etapa 1: Exibe diálogo de análise e chama o filtro antifraude ────
-    if (!mounted) return;
+    if (!mounted) {
+      _enviandoRelato = false;
+      return;
+    }
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -312,50 +358,65 @@ class _Relatos_telaState extends State<Relatos_tela> {
         latitude: localizacaoSelecionada!.latitude,
         longitude: localizacaoSelecionada!.longitude,
         imagemBytes: imagemBytes!,
-        mimeTypeImagem: imagemSelecionada?.extension?.toLowerCase() == 'png'
-            ? 'image/png'
-            : 'image/jpeg',
+        mimeTypeImagem: mimeType,
       );
     } catch (e) {
       resultado = ResultadoAntifraude.erro(e.toString());
     }
 
     // ── Fecha o diálogo de loading ────────────────────────────────────────
-    if (!mounted) return;
+    if (!mounted) {
+      _enviandoRelato = false;
+      return;
+    }
     Navigator.of(context).pop();
 
     // ── Etapa 2: Decide o próximo passo com base no resultado ─────────────
     if (resultado.status == StatusAntifraude.legitimo) {
-      // ✅ Relato legítimo → grava normalmente
-      await _concluirEnvio(
-        tipoDesastre: tipoDesastre,
-        nivelRisco: nivelRisco,
-        descricao: descricao,
-        userId: userId,
-        pontoGeografico: pontoGeografico,
-        resultado: resultado,
-      );
+      try {
+        await _concluirEnvio(
+          tipoDesastre: tipoDesastre,
+          nivelRisco: nivelRisco,
+          descricao: descricao,
+          userId: userId,
+          pontoGeografico: pontoGeografico,
+          resultado: resultado,
+          extensaoImagem: extensaoSegura,
+          mimeTypeImagem: mimeType,
+        );
+      } finally {
+        if (mounted) setState(() => _enviandoRelato = false);
+      }
     } else {
-      // ⚠️ Suspeito → mostra diálogo de aviso ao usuário
-      if (!mounted) return;
+      if (!mounted) {
+        _enviandoRelato = false;
+        return;
+      }
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => DialogoRelatoSuspeito(
           resultado: resultado,
           onConfirmarEnvio: () async {
-            Navigator.of(context).pop(); // fecha o diálogo de suspeita
-            await _concluirEnvio(
-              tipoDesastre: tipoDesastre,
-              nivelRisco: nivelRisco,
-              descricao: descricao,
-              userId: userId,
-              pontoGeografico: pontoGeografico,
-              resultado: resultado,
-            );
+            Navigator.of(context).pop();
+            try {
+              await _concluirEnvio(
+                tipoDesastre: tipoDesastre,
+                nivelRisco: nivelRisco,
+                descricao: descricao,
+                userId: userId,
+                pontoGeografico: pontoGeografico,
+                resultado: resultado,
+                extensaoImagem: extensaoSegura,
+                mimeTypeImagem: mimeType,
+              );
+            } finally {
+              if (mounted) setState(() => _enviandoRelato = false);
+            }
           },
           onCancelar: () {
-            Navigator.of(context).pop(); // fecha o diálogo, volta ao form
+            Navigator.of(context).pop();
+            if (mounted) setState(() => _enviandoRelato = false);
           },
         ),
       );
@@ -370,6 +431,8 @@ class _Relatos_telaState extends State<Relatos_tela> {
     required String userId,
     required String pontoGeografico,
     required ResultadoAntifraude resultado,
+    required String extensaoImagem,
+    required String mimeTypeImagem,
   }) async {
     try {
       await _gravarNoSupabase(
@@ -379,15 +442,23 @@ class _Relatos_telaState extends State<Relatos_tela> {
         userId: userId,
         pontoGeografico: pontoGeografico,
         resultadoAntifraude: resultado,
+        extensaoImagem: extensaoImagem,
+        mimeTypeImagem: mimeTypeImagem,
       );
       _limparFormulario();
 
       final mensagem = resultado.precisaRevisaoAdmin
           ? 'Relato enviado! Aguardando revisão de um administrador.'
           : 'Relato enviado com sucesso!';
-      _mostrarSnackBar(mensagem, Colors.green);
+      if (mounted) _mostrarSnackBar(mensagem, Colors.green);
     } catch (e) {
-      _mostrarSnackBar('Erro ao enviar: $e', Colors.red);
+      debugPrint('Erro ao gravar relato: $e');
+      if (mounted) {
+        _mostrarSnackBar(
+          'Não foi possível enviar o relato agora. Verifique sua conexão e tente novamente.',
+          Colors.red,
+        );
+      }
     }
   }
 

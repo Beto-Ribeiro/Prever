@@ -72,7 +72,7 @@ export const DEFAULT_WEB_PERMISSIONS = Object.freeze({
 
 export const ANTIFRAUD_CONFIG = Object.freeze({
   MIN_LEGITIMATE_SCORE: 0.8,
-  MODEL_NAME: 'gemini-2.5-flash-lite',
+  MODEL_NAME: 'gemini-2.5-flash',
   FALLBACK_STATUS: 'pendente_revisao',
 })
 

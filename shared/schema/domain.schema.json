@@ -69,7 +69,7 @@
     },
     "antifraudConfig": {
       "minLegitimateScore": 0.8,
-      "modelName": "gemini-2.5-flash-lite",
+      "modelName": "gemini-2.5-flash",
       "fallbackStatus": "pendente_revisao"
     }
   },
@@ -93,12 +93,16 @@
     },
     "edgeFunctions": {
       "APPROVE_WEB_ACCESS_REQUEST": "approve-web-access-request",
-      "SMDN_AI": "smdn-ai"
+      "SMDN_AI": "smdn-ai",
+      "ENVIAR_ALERTAS_WEB": "enviar-alertas-web"
     },
     "rpcs": {
       "ADMIN_UPDATE_USER_PROFILE": "admin_update_user_profile",
       "ADMIN_RESET_USER_PROFILE": "admin_reset_user_profile",
-      "REGISTER_USER_ACTIVITY": "registrar_atividade_usuario"
+      "ADMIN_SET_USER_PASSWORD": "admin_set_user_password",
+      "REGISTER_USER_ACTIVITY": "registrar_atividade_usuario",
+      "REGISTRAR_DISPOSITIVO_ALERTA": "registrar_dispositivo_alerta",
+      "DESATIVAR_DISPOSITIVO_ALERTA": "desativar_dispositivo_alerta"
     }
   },
   "dtos": {
