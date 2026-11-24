@@ -15,6 +15,7 @@ const firebaseConfig = {
   appId: getEnv('VITE_FIREBASE_APP_ID'),
 }
 
+
 const AVAILABLE_SCREENS = [
   'dashboard',
   'abrigos',
@@ -315,7 +316,7 @@ function parseAssistantPayload(rawText) {
   }
 }
 
-export async function askSmdnAssistant({
+export async function askPreverAssistant({
   message,
   currentScreen,
   screenTitle,

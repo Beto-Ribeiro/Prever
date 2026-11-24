@@ -4,9 +4,9 @@ import App from './App.jsx'
 import './index.css'
 import './accessibility.css'
 import { AuthProvider } from './context/AuthContext.jsx'
-import { applySmdnSettings, readSmdnSettings } from './hooks/useSmdnSettings.js'
+import { applyPreverSettings, readPreverSettings } from './hooks/usePreverSettings.js'
 
-applySmdnSettings(readSmdnSettings())
+applyPreverSettings(readPreverSettings())
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

@@ -161,7 +161,7 @@ export default function Auditoria() {
   }), [entries, users])
 
   useEffect(() => {
-    window.__SMDN_AI_AUDIT = entries.slice(0, 80).map((entry) => ({
+    window.__PREVER_AI_AUDIT = entries.slice(0, 80).map((entry) => ({
       id: entry.id,
       action: entry.action,
       actionLabel: entry.actionLabel,
@@ -172,14 +172,14 @@ export default function Auditoria() {
       at: entry.at,
       searchText: entry.searchText,
     }))
-    window.dispatchEvent(new CustomEvent('smdn-ai-audit-context-updated', {
-      detail: { entries: window.__SMDN_AI_AUDIT },
+    window.dispatchEvent(new CustomEvent('prever-ai-audit-context-updated', {
+      detail: { entries: window.__PREVER_AI_AUDIT },
     }))
   }, [entries])
 
   useEffect(() => {
     function handleAiAuditAction(event) {
-      const action = event?.detail || window.__SMDN_AI_PENDING_AUDIT_ACTION
+      const action = event?.detail || window.__PREVER_AI_PENDING_AUDIT_ACTION
       if (!action || entries.length === 0) return
 
       const query = action.query || ''
@@ -193,14 +193,14 @@ export default function Auditoria() {
         if (match) setSelectedEntry(match)
       }
 
-      window.__SMDN_AI_PENDING_AUDIT_ACTION = null
+      window.__PREVER_AI_PENDING_AUDIT_ACTION = null
     }
 
-    window.addEventListener('smdn-ai-audit-action', handleAiAuditAction)
-    handleAiAuditAction({ detail: window.__SMDN_AI_PENDING_AUDIT_ACTION })
+    window.addEventListener('prever-ai-audit-action', handleAiAuditAction)
+    handleAiAuditAction({ detail: window.__PREVER_AI_PENDING_AUDIT_ACTION })
 
     return () => {
-      window.removeEventListener('smdn-ai-audit-action', handleAiAuditAction)
+      window.removeEventListener('prever-ai-audit-action', handleAiAuditAction)
     }
   }, [entries])
 

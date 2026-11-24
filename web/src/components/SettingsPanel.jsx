@@ -1,6 +1,6 @@
 import { useDialogFocus } from '../hooks/useDialogFocus.js'
 import { useEffect, useRef, useState } from 'react'
-import { useSmdnSettings } from '../hooks/useSmdnSettings.js'
+import { usePreverSettings } from '../hooks/usePreverSettings.js'
 
 function GearIcon() {
   return (
@@ -57,7 +57,7 @@ function OptionGroup({ label, value, options, onChange }) {
 }
 
 export default function SettingsPanel({ variant = 'row', className = '', panelClassName = '', label }) {
-  const { settings, effectiveTheme, updateSetting, resetSettings } = useSmdnSettings()
+  const { settings, effectiveTheme, updateSetting, resetSettings } = usePreverSettings()
   const [open, setOpen] = useState(false)
   const panelRef = useRef(null)
   const buttonRef = useRef(null)

@@ -1,6 +1,6 @@
 import { canAccessWeb, normalizeRole } from '../../utils/webRoles.js'
 
-export const LEGACY_CHAT_KEY = 'smdn-nimbo-chat-unico-browser-v1'
+export const LEGACY_CHAT_KEY = 'prever-nimbo-chat-unico-browser-v1'
 export function allowedScreens(user) {
   const role = normalizeRole(user?.role)
   if (!canAccessWeb(role)) return []

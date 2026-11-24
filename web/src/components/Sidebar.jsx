@@ -5,7 +5,7 @@ import logoEscuro from '../assets/logo.svg'
 import faviconIcon from '../assets/favicon.svg'
 import SettingsPanel from './SettingsPanel.jsx'
 import AssistantWidget from './AssistantWidget.jsx'
-import { useSmdnSettings } from '../hooks/useSmdnSettings.js'
+import { usePreverSettings } from '../hooks/usePreverSettings.js'
 import { supabase } from '../backend/supabase/client.js'
 import { toFriendlyMessage } from '../utils/friendlyMessages.js'
 
@@ -131,7 +131,7 @@ const ADMIN_ITEMS = [
   { id: 'users', label: 'Lista de Usuário', icon: <FeatherIcon name="users" />, iconWhite: <FeatherIcon name="users" /> },
 ]
 
-const DASHBOARD_ALERTS_SEEN_KEY = 'smdn_dashboard_alerts_seen_count'
+const DASHBOARD_ALERTS_SEEN_KEY = 'prever_dashboard_alerts_seen_count'
 
 function readSeenDashboardAlerts() {
   return Number(localStorage.getItem(DASHBOARD_ALERTS_SEEN_KEY) || '0')
@@ -215,7 +215,7 @@ function NavButton({ item, currentScreen, setCurrentScreen, badge, collapsed = f
 
 export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
   const { user, isAdmin, savedAccounts, switchAccount, startAddAccount } = useAuth()
-  const { effectiveTheme } = useSmdnSettings()
+  const { effectiveTheme } = usePreverSettings()
   const { devBypassAuth, devBypassAdmin } = getLocalDevBypass()
   const showAdmin = isAdmin || devBypassAdmin
 
@@ -241,7 +241,7 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
   const [showProfilePopup, setShowProfilePopup] = useState(false)
   const [accountSwitchError, setAccountSwitchError] = useState('')
   const [notifications, setNotifications] = useState({ dashboard: '', admin: 0 })
-  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('smdn_sidebar_collapsed') === 'true')
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('prever_sidebar_collapsed') === 'true')
 
   const popupRef = useRef(null)
   const buttonRef = useRef(null)
@@ -323,7 +323,7 @@ export default function Sidebar({ currentScreen, setCurrentScreen, onLogout }) {
   }, [currentScreen, showAdmin])
 
   useEffect(() => {
-    localStorage.setItem('smdn_sidebar_collapsed', collapsed ? 'true' : 'false')
+    localStorage.setItem('prever_sidebar_collapsed', collapsed ? 'true' : 'false')
   }, [collapsed])
 
   async function handleSwitchAccount(accountId) {

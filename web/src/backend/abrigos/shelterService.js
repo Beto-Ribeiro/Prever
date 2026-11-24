@@ -187,7 +187,7 @@ export async function deleteShelter(id) {
 
 export function subscribeShelterChanges(callback) {
   const channel = supabase
-    .channel('smdn-abrigos')
+    .channel('prever-abrigos')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'Abrigo' }, callback)
     .subscribe()
 

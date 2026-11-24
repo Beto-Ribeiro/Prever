@@ -7,7 +7,7 @@ import { toFriendlyMessage } from '../utils/friendlyMessages.js'
 
 export const AuthContext = createContext()
 
-const SAVED_ACCOUNTS_KEY = 'smdn_saved_accounts_v1'
+const SAVED_ACCOUNTS_KEY = 'prever_saved_accounts_v1'
 const ACCOUNT_TTL_MS = 48 * 60 * 60 * 1000
 
 function readSavedAccounts() {

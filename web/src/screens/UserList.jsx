@@ -257,15 +257,15 @@ export default function UserList() {
   }, [users, query])
 
   useEffect(() => {
-    window.__SMDN_AI_USERS = users.map(userToAiContext)
-    window.dispatchEvent(new CustomEvent('smdn-ai-users-context-updated', {
-      detail: { users: window.__SMDN_AI_USERS },
+    window.__PREVER_AI_USERS = users.map(userToAiContext)
+    window.dispatchEvent(new CustomEvent('prever-ai-users-context-updated', {
+      detail: { users: window.__PREVER_AI_USERS },
     }))
   }, [users])
 
   useEffect(() => {
     function handleAiUserAction(event) {
-      const action = event?.detail || window.__SMDN_AI_PENDING_USER_ACTION
+      const action = event?.detail || window.__PREVER_AI_PENDING_USER_ACTION
       if (!action || users.length === 0) return
 
       const searchText = action.query || action.name || action.id || ''
@@ -283,14 +283,14 @@ export default function UserList() {
         }
       }
 
-      window.__SMDN_AI_PENDING_USER_ACTION = null
+      window.__PREVER_AI_PENDING_USER_ACTION = null
     }
 
-    window.addEventListener('smdn-ai-users-action', handleAiUserAction)
-    handleAiUserAction({ detail: window.__SMDN_AI_PENDING_USER_ACTION })
+    window.addEventListener('prever-ai-users-action', handleAiUserAction)
+    handleAiUserAction({ detail: window.__PREVER_AI_PENDING_USER_ACTION })
 
     return () => {
-      window.removeEventListener('smdn-ai-users-action', handleAiUserAction)
+      window.removeEventListener('prever-ai-users-action', handleAiUserAction)
     }
   }, [users, openEdit])
 
