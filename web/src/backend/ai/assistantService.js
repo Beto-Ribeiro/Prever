@@ -1,5 +1,6 @@
 import { assistantError, boundedContext } from './assistantPolicy.js'
 import { initializeApp, getApp, getApps } from 'firebase/app'
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check'
 import { getAI, getGenerativeModel, VertexAIBackend } from 'firebase/ai'
 
 function getEnv(name, fallback = '') {
@@ -14,6 +15,10 @@ const firebaseConfig = {
   messagingSenderId: getEnv('VITE_FIREBASE_MESSAGING_SENDER_ID'),
   appId: getEnv('VITE_FIREBASE_APP_ID'),
 }
+
+const appCheckSiteKey = getEnv('VITE_FIREBASE_APPCHECK_RECAPTCHA_SITE_KEY')
+const appCheckDebugEnabled = getEnv('VITE_FIREBASE_APPCHECK_DEBUG_TOKEN') === 'true'
+let appCheckInitialized = false
 
 
 const AVAILABLE_SCREENS = [
@@ -47,10 +52,30 @@ function validateFirebaseConfig() {
   if (missing.length > 0) {
     throw new Error(`Configuração Firebase incompleta no .env: ${missing.join(', ')}`)
   }
+
+  if (!appCheckSiteKey) {
+    throw new Error('Configuração Firebase incompleta no .env: VITE_FIREBASE_APPCHECK_RECAPTCHA_SITE_KEY')
+  }
 }
 
 function getFirebaseApp() {
-  return getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
+  const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
+
+  // O App Check precisa estar ativo antes de inicializar o Firebase AI Logic.
+  if (!appCheckInitialized) {
+    if (import.meta.env.DEV && appCheckDebugEnabled) {
+      // O token gerado no console deve ser autorizado no Console do Firebase.
+      self.FIREBASE_APPCHECK_DEBUG_TOKEN = true
+    }
+
+    initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
+      isTokenAutoRefreshEnabled: true,
+    })
+    appCheckInitialized = true
+  }
+
+  return app
 }
 
 function sanitizeText(value, maxLength = 4000) {
