@@ -29,6 +29,7 @@ begin
   update auth.users
   set
     encrypted_password = extensions.crypt(p_new_password, extensions.gen_salt('bf')),
+    email_confirmed_at = coalesce(email_confirmed_at, now()),
     updated_at = now()
   where id = p_user_id;
 

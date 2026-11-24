@@ -11,6 +11,7 @@ import {
   listUsersForAdmin,
   resetUserProfileByAdmin,
   updateUserProfileByAdmin,
+  setUserPasswordByAdmin,
 } from '../backend/admin/userAdminService.js'
 
 function formatDate(value) {
@@ -195,6 +196,9 @@ export default function UserList() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [resetting, setResetting] = useState(false)
+  const [password, setPassword] = useState('')
+  const [passwordConfirm, setPasswordConfirm] = useState('')
+  const [savingPassword, setSavingPassword] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -227,6 +231,8 @@ export default function UserList() {
   const openEdit = useCallback((user) => {
     setSelectedUser(user)
     setForm(makeForm(user))
+    setPassword('')
+    setPasswordConfirm('')
     setSelectedActivities([])
     setError('')
     setMessage('')
@@ -292,6 +298,8 @@ export default function UserList() {
     setSelectedUser(null)
     setSelectedActivities([])
     setForm(makeForm(null))
+    setPassword('')
+    setPasswordConfirm('')
   }
 
   async function handleAvatarFileChange(event) {
@@ -360,6 +368,32 @@ export default function UserList() {
       setError(toFriendlyMessage(err, 'Não foi possível atualizar o usuário. Tente novamente.'))
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleChangePassword() {
+    if (!selectedUser) return
+    if (password.length < 6) {
+      setError('A nova senha precisa ter pelo menos 6 caracteres.')
+      return
+    }
+    if (password !== passwordConfirm) {
+      setError('As senhas não conferem.')
+      return
+    }
+
+    setSavingPassword(true)
+    setError('')
+    setMessage('')
+    try {
+      await setUserPasswordByAdmin(selectedUser.prf_id, password)
+      setPassword('')
+      setPasswordConfirm('')
+      setMessage(`Senha de ${selectedUser.prf_nome || 'usuário'} atualizada com sucesso.`)
+    } catch (err) {
+      setError(toFriendlyMessage(err, 'Não foi possível alterar a senha.'))
+    } finally {
+      setSavingPassword(false)
     }
   }
 
@@ -508,6 +542,25 @@ export default function UserList() {
 
           <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-800 leading-relaxed">
             Alterar o e-mail aqui também muda o e-mail usado para entrar no painel. Solicitações de senha aprovadas enviam um e-mail para o usuário redefinir a senha.
+          </div>
+          <div className="rounded-2xl border border-border-soft p-4 space-y-3">
+            <div>
+              <p className="font-bold text-slate-800">Alterar senha de acesso</p>
+              <p className="mt-1 text-xs text-slate-500">Defina uma nova senha para este usuário. Ela terá efeito imediatamente.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <label className="block text-xs font-semibold text-slate-600">Nova senha
+                <input className="input-field mt-1" type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Mínimo de 6 caracteres" />
+              </label>
+              <label className="block text-xs font-semibold text-slate-600">Confirmar nova senha
+                <input className="input-field mt-1" type="password" autoComplete="new-password" value={passwordConfirm} onChange={(event) => setPasswordConfirm(event.target.value)} placeholder="Repita a nova senha" />
+              </label>
+            </div>
+            <div className="flex justify-end">
+              <button className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50" onClick={handleChangePassword} disabled={savingPassword || saving || resetting || password.length < 6 || password !== passwordConfirm}>
+                {savingPassword ? 'Alterando senha…' : 'Alterar senha'}
+              </button>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center justify-end gap-3 pt-2 border-t border-border-soft">
