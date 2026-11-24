@@ -22,6 +22,7 @@ android {
     }
 
     defaultConfig {
+        manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = "AIzaSyBnL7uRbt6ctHAZ9BbA6skZI2_cioCD8Gg"
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.branch1"
         // You can update the following values to match your application needs.
