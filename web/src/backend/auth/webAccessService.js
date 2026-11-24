@@ -186,25 +186,51 @@ export async function createWebAccessRequest({ institution, name, email, role, a
     saw_status: 'pendente',
   }
 
-  if (!payload.saw_nome || !payload.saw_email || !payload.saw_instituicao || !payload.saw_cargo || String(password || '').length < 6) {
-    throw new Error('Preencha todos os campos obrigatórios e informe uma senha com pelo menos 6 caracteres.')
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (
+    !payload.saw_nome ||
+    !payload.saw_email ||
+    !emailRegex.test(payload.saw_email) ||
+    !payload.saw_instituicao ||
+    !payload.saw_cargo ||
+    String(password || '').length < 6
+  ) {
+    throw new Error('Preencha todos os campos obrigatórios com um e-mail válido e senha de no mínimo 6 caracteres.')
   }
+
+  const emailRedirectTo =
+    typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : undefined
 
   // A senha é cadastrada pelo Supabase Auth (hash gerenciado pelo próprio serviço),
   // nunca é gravada na tabela pública de solicitações.
   const { data: signup, error: signupError } = await supabase.auth.signUp({
     email: payload.saw_email,
     password: String(password),
-    options: { data: { prf_nome: payload.saw_nome, prf_tipo: 'pendente' } },
+    options: {
+      ...(emailRedirectTo ? { emailRedirectTo } : {}),
+      data: { prf_nome: payload.saw_nome, prf_tipo: 'pendente' },
+    },
   })
 
-  if (signupError || !signup?.user) {
-    throw new Error('Não foi possível criar a conta com esse e-mail. Se você já possui uma conta, entre nela ou recupere sua senha.')
+  if (signupError) {
+    const errMsg = String(signupError.message || '').toLowerCase()
+    if (errMsg.includes('rate limit') || signupError.status === 429) {
+      throw new Error('Muitas solicitações seguidas para envio de e-mail. Aguarde alguns instantes e tente novamente.')
+    }
+    const alreadyExists =
+      errMsg.includes('already registered') || errMsg.includes('already been registered')
+    if (!alreadyExists) {
+      throw new Error('Não foi possível criar a conta com esse e-mail. Verifique o endereço informado e tente novamente.')
+    }
+  } else if (!signup?.user) {
+    throw new Error('Não foi possível criar a conta com esse e-mail. Tente novamente.')
   }
 
   // Quando a confirmação de e-mail está desativada, signUp pode criar uma sessão.
   // A conta continua sem permissão web até a aprovação administrativa.
-  if (signup.session) {
+  if (signup?.session) {
     await supabase.auth.signOut()
   }
 
@@ -223,5 +249,8 @@ export async function createWebAccessRequest({ institution, name, email, role, a
     throw error
   }
 
-  return { created: true }
+  return {
+    created: true,
+    emailConfirmationPending: Boolean(signup?.user && !signup?.session),
+  }
 }

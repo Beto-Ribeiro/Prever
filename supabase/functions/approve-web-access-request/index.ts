@@ -41,6 +41,13 @@ Deno.serve(async req => {
           return reply(503, { ok: false, message: 'Não foi possível enviar o convite. A solicitação continua pendente. Tente novamente mais tarde.' })
         }
       } else { targetId = invitation.data.user?.id; invited = true }
+    } else {
+      // Se a conta já foi criada via signUp com senha escolhida pelo solicitante,
+      // a aprovação explícita do administrador valida o e-mail para liberar o login imediato.
+      const existing = await server.auth.admin.getUserById(targetId)
+      if (existing.data?.user && !existing.data.user.email_confirmed_at) {
+        await server.auth.admin.updateUserById(targetId, { email_confirm: true })
+      }
     }
     if (!targetId) throw new Error('Missing target user')
     const { data: approved, error: approvalError } = await client.rpc('approve_web_access', { request_id: requestId, target_id: targetId, profile_type: profileType, shelter_id: shelterId || null })
@@ -48,7 +55,7 @@ Deno.serve(async req => {
       console.error('access_approval_failed', approvalError?.code)
       return reply(409, { ok: false, message: 'Não foi possível concluir a aprovação. Atualize a lista e tente novamente.' })
     }
-    return reply(200, { ok: true, message: invited ? 'Acesso aprovado. Um convite foi enviado por e-mail para definir a senha.' : 'Acesso aprovado. O usuário pode entrar com sua conta; se necessário, use “Esqueci minha senha”.' })
+    return reply(200, { ok: true, message: invited ? 'Acesso aprovado. Um convite foi enviado por e-mail para definir a senha.' : 'Acesso aprovado. O usuário já pode entrar com sua conta e senha cadastrada.' })
   } catch (error) {
     console.error('access_request_error', error instanceof Error ? error.name : 'unknown')
     return reply(500, { ok: false, message: 'Erro interno no banco de dados.' })
