@@ -16,7 +16,7 @@ import Card from '../components/Card'
 import externalIcon from '../assets/relatorios/external-link.svg'
 import { getRelatoriosData, subscribeRelatoriosChanges } from '../backend/relatorios/relatoriosService.js'
 import { toFriendlyMessage } from '../utils/friendlyMessages.js'
-import { useSmdnSettings } from '../hooks/useSmdnSettings.js'
+import { usePreverSettings } from '../hooks/usePreverSettings.js'
 
 // ─── Dependências de exportação carregadas sob demanda (code splitting) ──────
 
@@ -517,7 +517,7 @@ export default function Relatorios() {
   const reportRef                 = useRef(null)
 
   const { loading, error, data } = useReportData(period)
-  const { settings } = useSmdnSettings()
+  const { settings } = usePreverSettings()
   const accessibleStatus = getAccessibleStatusRows(data.byStatus, settings.colorBlind)
 
   const maxTotal = Math.max(1, ...data.monthly.map((m) => m.total))

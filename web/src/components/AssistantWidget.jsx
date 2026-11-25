@@ -2,10 +2,10 @@ import { captureScreenContext } from '../backend/ai/screenContextService.js'
 import { assistantError, allowedScreens, chatKey, LEGACY_CHAT_KEY, permittedActions } from '../backend/ai/assistantPolicy.js'
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import assistantIcon from '../assets/assistant/assistant-icon.svg'
-import { askSmdnAssistant } from '../backend/ai/assistantService.js'
-import { buildSmdnOperationalContext } from '../backend/ai/smdnContextService.js'
+import { askPreverAssistant } from '../backend/ai/assistantService.js'
+import { buildPreverOperationalContext } from '../backend/ai/preverContextService.js'
 import { useAuth } from '../hooks/useAuth.js'
-import { useSmdnSettings } from '../hooks/useSmdnSettings.js'
+import { usePreverSettings } from '../hooks/usePreverSettings.js'
 
 const SCREEN_CONTEXT = {
   dashboard: {
@@ -177,9 +177,9 @@ function UserAvatar({ account }) {
 }
 
 function clearPendingAiActions() {
-  window.__SMDN_AI_PENDING_USER_ACTION = null
-  window.__SMDN_AI_PENDING_DASHBOARD_ACTION = null
-  window.__SMDN_AI_PENDING_AUDIT_ACTION = null
+  window.__PREVER_AI_PENDING_USER_ACTION = null
+  window.__PREVER_AI_PENDING_DASHBOARD_ACTION = null
+  window.__PREVER_AI_PENDING_AUDIT_ACTION = null
 }
 
 function renderInlineMarkdown(text) {
@@ -246,7 +246,7 @@ export default function AssistantWidget(props) {
 }
 function AssistantWidgetSession({ currentScreen, setCurrentScreen, compact = false, dense = false }) {
   const { user, session } = useAuth()
-  const { settings } = useSmdnSettings()
+  const { settings } = usePreverSettings()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState(() => readStoredMessages(chatKey(user)))
   const requestRef = useRef(0)
@@ -402,9 +402,9 @@ function AssistantWidgetSession({ currentScreen, setCurrentScreen, compact = fal
           mode: 'open',
           query: action.query || action.name || action.id || '',
         }
-        window.__SMDN_AI_PENDING_USER_ACTION = detail
+        window.__PREVER_AI_PENDING_USER_ACTION = detail
         setCurrentScreen('users')
-        scheduleUiEvent('smdn-ai-users-action', detail, requestId)
+        scheduleUiEvent('prever-ai-users-action', detail, requestId)
       }
 
       if (action.type === 'filter_users') {
@@ -412,16 +412,16 @@ function AssistantWidgetSession({ currentScreen, setCurrentScreen, compact = fal
           mode: 'filter',
           query: action.query || action.role || action.type || '',
         }
-        window.__SMDN_AI_PENDING_USER_ACTION = detail
+        window.__PREVER_AI_PENDING_USER_ACTION = detail
         setCurrentScreen('users')
-        scheduleUiEvent('smdn-ai-users-action', detail, requestId)
+        scheduleUiEvent('prever-ai-users-action', detail, requestId)
       }
 
       if (action.type === 'open_dashboard_occurrence') {
         const detail = normalizeDashboardAction(action)
-        window.__SMDN_AI_PENDING_DASHBOARD_ACTION = detail
+        window.__PREVER_AI_PENDING_DASHBOARD_ACTION = detail
         setCurrentScreen('dashboard')
-        scheduleUiEvent('smdn-ai-dashboard-open-occurrence', detail, requestId)
+        scheduleUiEvent('prever-ai-dashboard-open-occurrence', detail, requestId)
       }
 
       if (action.type === 'filter_audit') {
@@ -430,9 +430,9 @@ function AssistantWidgetSession({ currentScreen, setCurrentScreen, compact = fal
           type: action.auditType || action.kind || action.filterType || '',
           openFirst: action.openFirst !== false,
         }
-        window.__SMDN_AI_PENDING_AUDIT_ACTION = detail
+        window.__PREVER_AI_PENDING_AUDIT_ACTION = detail
         setCurrentScreen('auditoria')
-        scheduleUiEvent('smdn-ai-audit-action', detail, requestId)
+        scheduleUiEvent('prever-ai-audit-action', detail, requestId)
       }
     }
   }
@@ -461,7 +461,7 @@ function AssistantWidgetSession({ currentScreen, setCurrentScreen, compact = fal
     setMessages((current) => [...current, userMessage])
 
     try {
-      const operationalContext = await buildSmdnOperationalContext({
+      const operationalContext = await buildPreverOperationalContext({
         question: cleanText,
         currentScreen,
         accountId,
@@ -475,7 +475,7 @@ function AssistantWidgetSession({ currentScreen, setCurrentScreen, compact = fal
         return
       }
 
-      const result = await askSmdnAssistant({
+      const result = await askPreverAssistant({
         message: cleanText,
         currentScreen,
         screenTitle: context.title,
@@ -652,12 +652,12 @@ function AssistantWidgetSession({ currentScreen, setCurrentScreen, compact = fal
             )}
 
             <form onSubmit={handleSubmit} className="space-y-2 pt-2">
-              <label htmlFor="smdn-ai-message" className="sr-only">
+              <label htmlFor="prever-ai-message" className="sr-only">
                 Mensagem para Nimbo
               </label>
 
               <textarea
-                id="smdn-ai-message"
+                id="prever-ai-message"
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
                 placeholder="Pergunte algo sobre esta tela..."

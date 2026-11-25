@@ -20,7 +20,7 @@ mock.module('../src/backend/supabase/client.js', {
   },
 })
 
-const { askSmdnAssistant, parseAssistantPayload } = await import('../src/backend/ai/assistantService.js')
+const { askPreverAssistant, parseAssistantPayload } = await import('../src/backend/ai/assistantService.js')
 
 test('pipeline IA Web faz retry em 429 e fallback automático entre provedores quando o primário falha', async () => {
   const calls = []
@@ -46,7 +46,7 @@ test('pipeline IA Web faz retry em 429 e fallback automático entre provedores q
     }
   }
 
-  const result = await askSmdnAssistant({
+  const result = await askPreverAssistant({
     message: 'Quais ocorrências críticas estão ativas?',
     currentScreen: 'dashboard',
     screenTitle: 'Dashboard',
@@ -69,7 +69,7 @@ test('pipeline IA Web interrompe fallback imediatamente quando a sessão expira 
 
   await assert.rejects(
     () =>
-      askSmdnAssistant({
+      askPreverAssistant({
         message: 'Resuma o abrigo',
         options: {
           retries: 0,

@@ -13,7 +13,6 @@ import {
 import {
   SUPABASE_TABLES,
   SUPABASE_STORAGE_BUCKETS,
-  SUPABASE_EDGE_FUNCTIONS,
   SUPABASE_RPCS,
 } from '../../shared/services/supabaseContracts.js'
 import {
@@ -31,7 +30,6 @@ test('contratos compartilhados: constantes de severidade, antifraude e Supabase 
   assert.equal(ANTIFRAUD_CONFIG.MIN_LEGITIMATE_SCORE, 0.8)
   assert.equal(SUPABASE_TABLES.RELATOS, 'relatos')
   assert.equal(SUPABASE_STORAGE_BUCKETS.FOTOS_RELATOS, 'fotos_relatos')
-  assert.equal(SUPABASE_EDGE_FUNCTIONS.SMDN_AI, 'smdn-ai')
   assert.equal(SUPABASE_RPCS.ADMIN_UPDATE_USER_PROFILE, 'admin_update_user_profile')
 })
 

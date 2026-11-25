@@ -41,7 +41,7 @@ const OccurrenceMarker = memo(function OccurrenceMarker({ item, colorBlind, onOc
   )
 
   const popupContent = (
-    <div className="smdn-map-popup text-slate-800 p-2 min-w-[200px]">
+    <div className="prever-map-popup text-slate-800 p-2 min-w-[200px]">
       <strong className="block mb-1">{item.titulo || 'Ocorrência'}</strong>
       <div className="mb-2">Severidade: {item.severidade || 'Moderado'}</div>
       {onOccurrenceDetails && (
@@ -89,7 +89,7 @@ const ShelterMarker = memo(function ShelterMarker({ item, isSelected, onShelterS
   )
 
   const popupContent = (
-    <div className="smdn-map-popup text-slate-800 p-2 min-w-[200px]">
+    <div className="prever-map-popup text-slate-800 p-2 min-w-[200px]">
       <strong className="block mb-1">{item.name || 'Abrigo'}</strong>
       <div className="text-sm">{[item.city, item.location].filter(Boolean).join(' · ') || 'Local não informado'}</div>
       <div className="text-sm mt-1"><b>Lotação:</b> {Number(item.occupied || 0)}/{Number(item.capacity || 0)}</div>
@@ -131,7 +131,7 @@ const VictimMarker = memo(function VictimMarker({ item, onVictimAssistance, savi
   )
 
   const popupContent = (
-    <div className="smdn-map-popup text-slate-800 p-2 min-w-[220px]">
+    <div className="prever-map-popup text-slate-800 p-2 min-w-[220px]">
       <strong className="block mb-1">{item.name || 'Vítima localizada'}</strong>
       <div className="text-sm mb-1">{item.source === 'localizacao_dispositivo' ? 'Localização do dispositivo' : 'Último relato com localização'}</div>
       <div className="text-sm mb-2">
@@ -282,7 +282,7 @@ const MapView = forwardRef(function MapView(
   // Hide the Google Maps alpha development banner
   useEffect(() => {
     const interval = setInterval(() => {
-      document.querySelectorAll('.smdn-map-root .gm-style').forEach(mapContainer => {
+      document.querySelectorAll('.prever-map-root .gm-style').forEach(mapContainer => {
         const warningElements = Array.from(mapContainer.querySelectorAll('div')).filter(
           el => el.textContent && el.textContent.includes('fins de desenvolvimento')
         );
@@ -336,7 +336,7 @@ const MapView = forwardRef(function MapView(
   )
 
   return (
-    <div className="relative w-full h-full smdn-map-root">
+    <div className="relative w-full h-full prever-map-root">
 
       {is3D ? (
         <Map3D 

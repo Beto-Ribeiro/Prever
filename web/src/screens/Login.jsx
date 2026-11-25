@@ -6,12 +6,12 @@ import logoClaro from '../assets/logo-claro.svg'
 import logoEscuro from '../assets/logo.svg'
 import mapBg from '../assets/map-bg.png'
 import SettingsPanel from '../components/SettingsPanel.jsx'
-import { useSmdnSettings } from '../hooks/useSmdnSettings.js'
+import { usePreverSettings } from '../hooks/usePreverSettings.js'
 import { toFriendlyMessage } from '../utils/friendlyMessages.js'
 
 const Login = ({ view, setView, onLogin, onRegister, initialError = '' }) => {
   const isRegister = view === 'cadastro'
-  const { effectiveTheme } = useSmdnSettings()
+  const { effectiveTheme } = usePreverSettings()
   const logo = effectiveTheme === 'light' ? logoEscuro : logoClaro
 
   const [institution, setInstitution] = useState('')

@@ -535,19 +535,19 @@ html[data-theme='dark'] .severity-shape {
 }
 
 html[data-colorblind='true'] .severity-shape-critical,
-html[data-colorblind='true'] .smdn-occurrence-critical {
+html[data-colorblind='true'] .prever-occurrence-critical {
   --severity-color: #005cab !important;
   --marker-color: #005cab !important;
 }
 
 html[data-colorblind='true'] .severity-shape-severe,
-html[data-colorblind='true'] .smdn-occurrence-severe {
+html[data-colorblind='true'] .prever-occurrence-severe {
   --severity-color: #d95f02 !important;
   --marker-color: #d95f02 !important;
 }
 
 html[data-colorblind='true'] .severity-shape-regular,
-html[data-colorblind='true'] .smdn-occurrence-regular {
+html[data-colorblind='true'] .prever-occurrence-regular {
   --severity-color: #7570b3 !important;
   --marker-color: #7570b3 !important;
 }
@@ -693,7 +693,7 @@ html[data-theme='dark'] .gm-style .gm-ui-hover-effect {
 }
 
 /* Fallback for Map3D Popovers or generic popup containers */
-html[data-theme='dark'] .smdn-map-popup {
+html[data-theme='dark'] .prever-map-popup {
   color: rgb(226 232 240);
 }
 

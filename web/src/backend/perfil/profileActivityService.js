@@ -90,7 +90,7 @@ function buildLoginContext(userId) {
   ].join('|')
 
   const fingerprint = simpleHash(fingerprintSource)
-  const storageKey = `smdn-login-known:${userId}:${fingerprint}`
+  const storageKey = `prever-login-known:${userId}:${fingerprint}`
   const browserSeenBefore = window.localStorage?.getItem(storageKey) === '1'
 
   try {

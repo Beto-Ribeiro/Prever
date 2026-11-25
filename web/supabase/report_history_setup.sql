@@ -1,4 +1,4 @@
--- Applied to SMDN for the report history card. No report contents are stored.
+-- Applied to PREVER for the report history card. No report contents are stored.
 begin;
 create table if not exists public.shelter_report_history (
  id uuid primary key default gen_random_uuid(),

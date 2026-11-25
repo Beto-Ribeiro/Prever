@@ -7,8 +7,9 @@ import { toFriendlyMessage } from '../utils/friendlyMessages.js'
 
 export const AuthContext = createContext()
 
-const SAVED_ACCOUNTS_KEY = 'smdn_saved_accounts_v2'
+const SAVED_ACCOUNTS_KEY = 'prever_saved_accounts_v2'
 const LEGACY_SAVED_ACCOUNTS_KEY = 'smdn_saved_accounts_v1'
+const LEGACY_SAVED_ACCOUNTS_KEY_PREVER_V1 = 'prever_saved_accounts_v1'
 const EPHEMERAL_SESSION_KEY = 'prever_ephemeral_session'
 const ACCOUNT_TTL_MS = 48 * 60 * 60 * 1000
 
@@ -32,6 +33,7 @@ function readSavedAccounts() {
         .map(sanitizeAccountRecord)
         .filter(Boolean)
       localStorage.removeItem(LEGACY_SAVED_ACCOUNTS_KEY)
+      localStorage.removeItem(LEGACY_SAVED_ACCOUNTS_KEY_PREVER_V1)
       localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(migrated))
       return migrated
     }

@@ -15,7 +15,7 @@ import {
   subscribeDashboardChanges,
   updateVictimAssistance,
 } from '../backend/dashboard/dashboardService.js'
-import { useSmdnSettings } from '../hooks/useSmdnSettings.js'
+import { usePreverSettings } from '../hooks/usePreverSettings.js'
 import {
   formatOccurrenceDate,
   updateOcorrenciaStatus,
@@ -215,7 +215,7 @@ export default function Dashboard() {
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const { settings, effectiveTheme } = useSmdnSettings()
+  const { settings, effectiveTheme } = usePreverSettings()
   const [mapMode, setMapMode] = useState(normalizeMapMode(settings.defaultMapMode))
   const [mapType, setMapType] = useState('roadmap')
   const [showMapSettings, setShowMapSettings] = useState(false)
@@ -305,19 +305,19 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
-    window.__SMDN_AI_DASHBOARD = {
+    window.__PREVER_AI_DASHBOARD = {
       stats: dashboard.stats,
       recentOccurrences: dashboard.recentOccurrences.map(occurrenceToAiContext),
       victims: dashboard.victims,
     }
-    window.dispatchEvent(new CustomEvent('smdn-ai-dashboard-context-updated', {
-      detail: window.__SMDN_AI_DASHBOARD,
+    window.dispatchEvent(new CustomEvent('prever-ai-dashboard-context-updated', {
+      detail: window.__PREVER_AI_DASHBOARD,
     }))
   }, [dashboard])
 
   useEffect(() => {
     function handleAiOpenOccurrence(event) {
-      const detail = event?.detail || window.__SMDN_AI_PENDING_DASHBOARD_ACTION
+      const detail = event?.detail || window.__PREVER_AI_PENDING_DASHBOARD_ACTION
       if (!detail || dashboard.recentOccurrences.length === 0) return
 
       const occurrence = findOccurrenceByAiQuery(dashboard.recentOccurrences, detail)
@@ -326,14 +326,14 @@ export default function Dashboard() {
         handleOccClick(occurrence)
       }
 
-      window.__SMDN_AI_PENDING_DASHBOARD_ACTION = null
+      window.__PREVER_AI_PENDING_DASHBOARD_ACTION = null
     }
 
-    window.addEventListener('smdn-ai-dashboard-open-occurrence', handleAiOpenOccurrence)
-    handleAiOpenOccurrence({ detail: window.__SMDN_AI_PENDING_DASHBOARD_ACTION })
+    window.addEventListener('prever-ai-dashboard-open-occurrence', handleAiOpenOccurrence)
+    handleAiOpenOccurrence({ detail: window.__PREVER_AI_PENDING_DASHBOARD_ACTION })
 
     return () => {
-      window.removeEventListener('smdn-ai-dashboard-open-occurrence', handleAiOpenOccurrence)
+      window.removeEventListener('prever-ai-dashboard-open-occurrence', handleAiOpenOccurrence)
     }
   }, [dashboard.recentOccurrences])
 

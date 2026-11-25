@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-export const SETTINGS_STORAGE_KEY = 'smdn:settings:v1'
+export const SETTINGS_STORAGE_KEY = 'prever:settings:v1'
 
 export const DEFAULT_SETTINGS = {
   theme: 'system',
@@ -51,7 +51,7 @@ function safeJsonParse(value) {
   }
 }
 
-export function readSmdnSettings() {
+export function readPreverSettings() {
   if (typeof window === 'undefined') return DEFAULT_SETTINGS
 
   try { return normalizeSettings(safeJsonParse(window.localStorage.getItem(SETTINGS_STORAGE_KEY))) }
@@ -67,7 +67,7 @@ export function getEffectiveTheme(theme) {
   return theme === 'light' ? 'light' : 'dark'
 }
 
-export function applySmdnSettings(settings) {
+export function applyPreverSettings(settings) {
   if (typeof document === 'undefined') return
 
   const next = normalizeSettings(settings)
@@ -85,48 +85,48 @@ export function applySmdnSettings(settings) {
   root.dataset.promptRecommendations = next.promptRecommendationsDisabled ? 'off' : 'on'
 }
 
-export function saveSmdnSettings(settings) {
+export function savePreverSettings(settings) {
   const next = normalizeSettings(settings)
 
   if (typeof window !== 'undefined') {
     try { window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(next)) } catch { /* Still apply settings for this session. */ }
-    window.dispatchEvent(new CustomEvent('smdn-settings-change', { detail: next }))
+    window.dispatchEvent(new CustomEvent('prever-settings-change', { detail: next }))
   }
 
-  applySmdnSettings(next)
+  applyPreverSettings(next)
   return next
 }
 
-export function useSmdnSettings() {
+export function usePreverSettings() {
   const [, setSystemRevision] = useState(0)
-  const [settings, setSettings] = useState(() => readSmdnSettings())
+  const [settings, setSettings] = useState(() => readPreverSettings())
 
   useEffect(() => {
-    applySmdnSettings(settings)
+    applyPreverSettings(settings)
   }, [settings])
 
   useEffect(() => {
     function handleExternalChange(event) {
-      setSettings(normalizeSettings(event.detail || readSmdnSettings()))
+      setSettings(normalizeSettings(event.detail || readPreverSettings()))
     }
 
     function handleStorage(event) {
       if (event.key === SETTINGS_STORAGE_KEY) {
-        setSettings(readSmdnSettings())
+        setSettings(readPreverSettings())
       }
     }
 
     const media = window.matchMedia?.('(prefers-color-scheme: light)')
     const motionMedia = window.matchMedia?.('(prefers-reduced-motion: reduce)')
-    const handleMediaChange = () => { applySmdnSettings(readSmdnSettings()); setSystemRevision(value => value + 1) }
+    const handleMediaChange = () => { applyPreverSettings(readPreverSettings()); setSystemRevision(value => value + 1) }
 
-    window.addEventListener('smdn-settings-change', handleExternalChange)
+    window.addEventListener('prever-settings-change', handleExternalChange)
     window.addEventListener('storage', handleStorage)
     media?.addEventListener?.('change', handleMediaChange)
     motionMedia?.addEventListener?.('change', handleMediaChange)
 
     return () => {
-      window.removeEventListener('smdn-settings-change', handleExternalChange)
+      window.removeEventListener('prever-settings-change', handleExternalChange)
       window.removeEventListener('storage', handleStorage)
       media?.removeEventListener?.('change', handleMediaChange)
       motionMedia?.removeEventListener?.('change', handleMediaChange)
@@ -137,11 +137,11 @@ export function useSmdnSettings() {
 
   function updateSetting(key, value) {
     const next = { ...settings, [key]: value }
-    setSettings(saveSmdnSettings(next))
+    setSettings(savePreverSettings(next))
   }
 
   function resetSettings() {
-    setSettings(saveSmdnSettings(DEFAULT_SETTINGS))
+    setSettings(savePreverSettings(DEFAULT_SETTINGS))
   }
 
   return {

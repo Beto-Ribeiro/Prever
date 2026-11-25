@@ -56,7 +56,11 @@ function getFirebaseApp() {
   const app = getApps().length > 0 ? getApp() : initializeApp(config)
 
   if (!appCheckInitialized && typeof window !== 'undefined') {
-    const siteKey = getEnv('VITE_FIREBASE_APP_CHECK_SITE_KEY')
+    const siteKey = getEnv('VITE_FIREBASE_APPCHECK_RECAPTCHA_SITE_KEY') || getEnv('VITE_FIREBASE_APP_CHECK_SITE_KEY')
+    if (import.meta.env.DEV && getEnv('VITE_FIREBASE_APPCHECK_DEBUG_TOKEN') === 'true') {
+      // O token gerado no console deve ser autorizado no Console do Firebase.
+      self.FIREBASE_APPCHECK_DEBUG_TOKEN = true
+    }
     const providerMode = getEnv('VITE_FIREBASE_APP_CHECK_PROVIDER', 'enterprise').toLowerCase()
     if (siteKey) {
       try {
@@ -412,7 +416,7 @@ async function callFirebaseVertexTransport(payload, timeoutMs) {
 
 async function callVercelApiTransport(payload, timeoutMs) {
   if (typeof fetch !== 'function') {
-    throw new Error('Fetch indisponível para /api/smdn-ai')
+    throw new Error('Fetch indisponível para /api/prever-ai')
   }
   const { data: sessionData } = await supabase.auth.getSession()
   const accessToken = sessionData?.session?.access_token
@@ -424,7 +428,7 @@ async function callVercelApiTransport(payload, timeoutMs) {
   const timer = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
-    const response = await fetch('/api/smdn-ai', {
+    const response = await fetch('/api/prever-ai', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -473,7 +477,7 @@ async function callSupabaseEdgeTransport(payload, timeoutMs) {
   }
 }
 
-export async function askSmdnAssistant({
+export async function askPreverAssistant({
   message,
   currentScreen,
   screenTitle,

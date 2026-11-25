@@ -9,7 +9,7 @@ async function read(query) {
   if (result.error) throw result.error
   return result
 }
-export async function buildSmdnOperationalContext({ question = '', currentScreen = '', accountId, screenContext = null } = {}) {
+export async function buildPreverOperationalContext({ question = '', currentScreen = '', accountId, screenContext = null } = {}) {
   const { data, error } = await supabase.auth.getUser()
   if (error || !data?.user || data.user.id !== accountId) throw new Error('Sessão expirada.')
   const access = await getWebAccessForUser(data.user)

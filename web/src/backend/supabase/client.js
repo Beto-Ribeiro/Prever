@@ -19,7 +19,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // Apenas em desenvolvimento local: facilita testar o Auth no console do navegador.
 // Exemplo no DevTools:
-// await window.smdnSupabase.auth.getSession()
+// await window.preverSupabase.auth.getSession()
 if (import.meta.env.DEV && typeof window !== 'undefined') {
-  window.smdnSupabase = supabase
+  window.preverSupabase = supabase
 }
