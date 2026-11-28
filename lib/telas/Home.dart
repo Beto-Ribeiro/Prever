@@ -31,42 +31,20 @@ class Home extends StatefulWidget {
 
 
 
-Future<void> Criar_SOS(
-  BuildContext context, {
+Future<void> Criar_SOS({
   required String usuarioId,
   required String localizacao,
   required String data,
-  required String origem,
 }) async {
   final supabase = Supabase.instance.client;
 
-  
-
-  Position posicao = await Geolocator.getCurrentPosition(
-    locationSettings: const LocationSettings(
-      accuracy: LocationAccuracy.high,
-    ),
-  );
-
-  final String pontoGeografico =
-      'POINT(${posicao.longitude} ${posicao.latitude})';
-
-  try {
-    await supabase.from('Relato').insert({
-      'rel_cid_id': usuarioId,
-      'rel_tipo_desastre': "SOS",
-      'rel_descricao': "Auxílio",
-      'rel_localizacao': localizacao,
-      'rel_data_hora': data,
-    });
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Erro'),
-        duration: Duration(seconds: 3),
-      ),
-    );
-  }
+  await supabase.from('Relato').insert({
+    'rel_cid_id': usuarioId,
+    'rel_tipo_desastre': "SOS",
+    'rel_descricao': "Auxílio",
+    'rel_localizacao': localizacao,
+    'rel_data_hora': data,
+  });
 }
 
 //Message box para avisar que o relato foi enviado, ficou redundante.
@@ -79,86 +57,66 @@ class _Home_State extends State<Home> {
 
   final supabase = Supabase.instance.client;
 
-  Future<void> ValidarCPF() async {
-    String cpfDigitado = _SOSvalidateController.text.trim();
-
-    final userId = supabase.auth.currentUser?.id;
-
-    if (userId == null) {
-      return;
+  Future<String?> _validarCpf(String cpfDigitado, String userId) async {
+    if (!RegExp(r'^[0-9]{3}$').hasMatch(cpfDigitado)) {
+      return 'Digite os três primeiros dígitos do CPF.';
     }
-
     final data = await supabase
         .from('Cidadao')
         .select('cid_cpf')
-        .eq('cid_id', userId).single();
-
-    final String cpfCompleto = data['cid_cpf'].toString();
-
-    final String cpfLimpo = cpfCompleto.replaceAll(RegExp(r'[^0-9]'), '');
-    if (cpfLimpo == cpfDigitado) {
-        setState(() {
-          _sosEnviando = true;
-        });
-
-        Navigator.pop(context);
-
-        Position posicao = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.high,
-          ),
-        );
-
-        final String pontoGeografico =
-            'POINT(${posicao.longitude} ${posicao.latitude})';
-
-        await Criar_SOS(
-          context,
-          usuarioId: Supabase.instance.client.auth.currentUser!.id,
-          localizacao: pontoGeografico,
-          data: DateTime.now().toIso8601String(),
-          origem: 'SOS',
-        );
-
-        // Atualiza estado para animar e
-        // desabilitar
-        setState(() {
-          _sosEnviado = true;
-          _sosEnviando = false;
-        });
+        .eq('cid_id', userId)
+        .maybeSingle();
+    final cpfCompleto = data?['cid_cpf']?.toString() ?? '';
+    final cpfLimpo = cpfCompleto.replaceAll(RegExp(r'[^0-9]'), '');
+    if (cpfLimpo.length != 11) {
+      return 'CPF indisponível no cadastro.';
     }
+    if (!cpfLimpo.startsWith(cpfDigitado)) {
+      return 'Os dígitos não conferem com o CPF cadastrado.';
+    }
+    return null;
   }
 
-  ValidacaoIdentidade(BuildContext context) {
-    showDialog(
+  @override
+  void dispose() {
+    _SOSvalidateController.dispose();
+    super.dispose();
+  }
+
+  Future<void> ValidacaoIdentidade(BuildContext context) async {
+    _SOSvalidateController.clear();
+    String? erroCpf;
+    bool validando = false;
+    final usuarioId = await showDialog<String>(
       context: context,
       barrierColor: Colors.black54,
       barrierDismissible: false,
-      builder: (context) {
-        return Center(
+      builder: (context) => StatefulBuilder(
+        builder: (context, atualizarDialogo) => Center(
           child: Material(
             color: Colors.transparent,
             child: Container(
               padding: EdgeInsets.fromLTRB(20, 0, 20, 25),
               width: 350,
-              height: 300,
+              constraints: const BoxConstraints(minHeight: 300),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  InkWell(
-                    child: Icon(Icons.close),
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                  )
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      InkWell(
+                        child: Icon(Icons.close),
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                      ),
                     ],
                   ),
                   Text.rich(
@@ -169,9 +127,7 @@ class _Home_State extends State<Home> {
                         fontWeight: FontWeight.bold,
                       ),
                       children: [
-                        const TextSpan(
-                          text: "Insira os ",
-                        ),
+                        const TextSpan(text: "Insira os "),
 
                         WidgetSpan(
                           alignment: PlaceholderAlignment.middle,
@@ -195,37 +151,39 @@ class _Home_State extends State<Home> {
                           ),
                         ),
 
-                        const TextSpan(
-                          text: " seu CPF",
-                        ),
+                        const TextSpan(text: " seu CPF"),
                       ],
                     ),
                     textAlign: TextAlign.center,
                   ),
                   Text(
                     "Precisamos confirmar sua identidade para emitir um alerta SOS",
-                    style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.black
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.black),
                     textAlign: TextAlign.center,
                   ),
-                  SizedBox(
-                    height: 25,
-                  ),
+                  SizedBox(height: 25),
                   SizedBox(
                     width: 200,
-                    height: 50,
                     child: TextField(
                       textAlign: TextAlign.center,
                       textAlignVertical: TextAlignVertical.center,
                       controller: _SOSvalidateController,
-                      maxLength: 14,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      maxLength: 3,
                       maxLines: 1,
+                      enabled: !validando,
+                      onChanged: (_) {
+                        if (erroCpf != null) {
+                          atualizarDialogo(() => erroCpf = null);
+                        }
+                      },
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
                         contentPadding: EdgeInsets.zero,
                         hintText: 'CPF...',
+                        errorText: erroCpf,
+                        errorMaxLines: 3,
                       ),
                     ),
                   ),
@@ -237,14 +195,52 @@ class _Home_State extends State<Home> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red[900],
                         ),
-                        onPressed: () async {
-                          try {
-                            await ValidarCPF();
-                          } catch (e) {
-                            print('Falha ao enviar SOS');
-                          }
-                        },
-                        child: Text("Enviar", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
+                        onPressed: validando
+                            ? null
+                            : () async {
+                                if (validando) return;
+                                final userId = supabase.auth.currentUser?.id;
+                                if (userId == null) {
+                                  atualizarDialogo(
+                                    () => erroCpf =
+                                        'Entre na sua conta para enviar o SOS.',
+                                  );
+                                  return;
+                                }
+                                atualizarDialogo(() {
+                                  validando = true;
+                                  erroCpf = null;
+                                });
+                                String? erro;
+                                try {
+                                  erro = await _validarCpf(
+                                    _SOSvalidateController.text,
+                                    userId,
+                                  );
+                                } catch (_) {
+                                  erro =
+                                      'Não foi possível consultar o CPF. Tente novamente.';
+                                }
+                                if (!context.mounted ||
+                                    ModalRoute.of(context)?.isCurrent != true) {
+                                  return;
+                                }
+                                if (erro == null) {
+                                  Navigator.pop(context, userId);
+                                  return;
+                                }
+                                atualizarDialogo(() {
+                                  validando = false;
+                                  erroCpf = erro;
+                                });
+                              },
+                        child: Text(
+                          "Enviar",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -252,9 +248,35 @@ class _Home_State extends State<Home> {
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
+    if (!mounted || usuarioId == null || _sosEnviando || _sosEnviado) return;
+
+    setState(() => _sosEnviando = true);
+    try {
+      final posicao = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+      if (!mounted) return;
+      await Criar_SOS(
+        usuarioId: usuarioId,
+        localizacao: 'POINT(${posicao.longitude} ${posicao.latitude})',
+        data: DateTime.now().toIso8601String(),
+      );
+      if (mounted) setState(() => _sosEnviado = true);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(this.context).showSnackBar(
+        const SnackBar(
+          content: Text('Não foi possível enviar o SOS. Tente novamente.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _sosEnviando = false);
+    }
   }
 
   @override
@@ -460,7 +482,7 @@ class _Home_State extends State<Home> {
                             absorbing: _sosEnviado,
                             child: InkWell(
                               borderRadius: BorderRadius.circular(150),
-                              onTap: _sosEnviado
+                              onTap: _sosEnviado || _sosEnviando
                                   ? null
                                   : () => ValidacaoIdentidade(context),
                               child: Stack(
